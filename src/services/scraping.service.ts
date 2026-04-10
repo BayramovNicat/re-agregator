@@ -4,7 +4,7 @@
  * computing price_per_sqm before persistence.
  */
 
-import type { IScraper, ScrapedListing } from '../scrapers/base.scraper.js';
+import type { IScraper, ScrapedListing, ScraperOptions } from '../scrapers/base.scraper.js';
 import { prisma } from '../utils/prisma.js';
 
 export interface ScrapeResult {
@@ -30,7 +30,7 @@ export class ScrapingService {
    * Triggers all registered scrapers sequentially and persists results.
    * Returns a per-platform summary of what was upserted vs skipped.
    */
-  async runAll(): Promise<ScrapeResult[]> {
+  async runAll(options?: ScraperOptions): Promise<ScrapeResult[]> {
     const results: ScrapeResult[] = [];
 
     for (const scraper of this.scrapers) {
@@ -42,7 +42,7 @@ export class ScrapingService {
       };
 
       try {
-        const listings = await scraper.scrape();
+        const listings = await scraper.scrape(options);
         const { persisted, skipped, errors } = await this.persistListings(listings);
         result.persisted = persisted;
         result.skipped = skipped;

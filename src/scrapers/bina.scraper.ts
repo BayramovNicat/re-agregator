@@ -1,0 +1,256 @@
+/**
+ * Real bina.az scraper.
+ *
+ * bina.az is a Next.js SPA backed by a GraphQL API at /graphql.
+ * The API is NOT protected by Cloudflare — plain HTTPS fetch with browser-like
+ * headers is sufficient. No Playwright or stealth plugin required.
+ *
+ * Data flow:
+ *  1. Paginate itemsConnection (cursor-based) to get bulk listing fields.
+ *  2. Batch aliased item(id: ...) queries per page to fetch title + description
+ *     (urgency detection lives in those text fields).
+ *  3. Derive district from location.slug using slugToDistrict().
+ */
+
+import { BaseScraper, type ScrapedListing, type ScraperOptions } from './base.scraper.js';
+import { slugToDistrict } from '../utils/district-normalizer.js';
+
+const GRAPHQL_URL = 'https://bina.az/graphql';
+const ITEM_BASE_URL = 'https://bina.az/items';
+
+/** Filter params for "apartments for sale in Baku" */
+const DEFAULT_FILTER = { categoryId: '1', cityId: '1', leased: false };
+
+const REQUEST_HEADERS: Record<string, string> = {
+  'Content-Type': 'application/json',
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
+    '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'application/json',
+  'Origin': 'https://bina.az',
+  'Referer': 'https://bina.az/baki/alqi-satqi/menziller',
+  'Accept-Language': 'az-AZ,az;q=0.9,en;q=0.8',
+};
+
+// ── GraphQL response shapes ───────────────────────────────────────────────────
+
+interface GQLResponse<T> {
+  data?: T;
+  errors?: Array<{ message: string; path?: string[] }>;
+}
+
+interface ESItemNode {
+  id: string;
+  rooms: number | null;
+  floor: number | null;
+  price: { value: number; currency: string };
+  area: { value: number };
+  location: { name: string; slug: string; id: string };
+}
+
+interface PageInfo {
+  hasNextPage: boolean;
+  endCursor: string;
+}
+
+interface ItemsConnectionData {
+  itemsConnection: {
+    pageInfo: PageInfo;
+    edges: Array<{ node: ESItemNode }>;
+  };
+}
+
+interface ItemDetail {
+  title: string;
+  description: string;
+  updatedAt: string;
+}
+
+// ── Scraper ───────────────────────────────────────────────────────────────────
+
+export class BinaScraper extends BaseScraper {
+  readonly platform = 'bina.az';
+
+  async scrape(options: ScraperOptions = {}): Promise<ScrapedListing[]> {
+    const { maxPages = 20, delayMs = 800 } = options;
+    const all: ScrapedListing[] = [];
+
+    let cursor: string | null = null;
+    let page = 0;
+    let hasNext = true;
+
+    console.log(`[${this.platform}] Starting GraphQL scrape (maxPages=${maxPages})...`);
+
+    while (hasNext && page < maxPages) {
+      page++;
+
+      const { edges, pageInfo } = await this.fetchPage(cursor);
+
+      if (edges.length === 0) break;
+
+      // Fetch full item details in one batched GraphQL request
+      const ids = edges.map((e) => e.node.id);
+      const details = await this.batchFetchDetails(ids);
+
+      for (const { node } of edges) {
+        const price = node.price.value;
+        const area = node.area.value;
+        if (price <= 0 || area <= 0) continue;
+
+        const detail = details[node.id];
+        const urgencyText = `${detail?.title ?? ''} ${detail?.description ?? ''}`;
+
+        all.push({
+          source_url: `${ITEM_BASE_URL}/${node.id}`,
+          source_platform: this.platform,
+          price,
+          currency: node.price.currency,
+          area_sqm: area,
+          district: slugToDistrict(node.location.slug),
+          rooms: node.rooms ?? undefined,
+          floor: node.floor ?? undefined,
+          description: detail?.description,
+          is_urgent: this.isUrgent(urgencyText),
+          posted_date: detail?.updatedAt ? new Date(detail.updatedAt) : undefined,
+        });
+      }
+
+      console.log(
+        `[${this.platform}] Page ${page}: ${edges.length} listings fetched` +
+          ` (total so far: ${all.length})`,
+      );
+
+      hasNext = pageInfo.hasNextPage;
+      cursor = pageInfo.endCursor;
+
+      if (hasNext && page < maxPages) {
+        await this.delay(delayMs + Math.random() * 400);
+      }
+    }
+
+    console.log(`[${this.platform}] Done — ${all.length} listings scraped.`);
+    return all;
+  }
+
+  // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /**
+   * Fetches one page of listings from itemsConnection.
+   * Uses cursor-based pagination (Relay spec); pass null for the first page.
+   */
+  private async fetchPage(
+    after: string | null,
+  ): Promise<{ edges: Array<{ node: ESItemNode }>; pageInfo: PageInfo }> {
+    const afterArg = after ? `, after: "${after}"` : '';
+
+    const query = /* graphql */ `
+      {
+        itemsConnection(
+          filter: {
+            categoryId: "${DEFAULT_FILTER.categoryId}"
+            cityId: "${DEFAULT_FILTER.cityId}"
+            leased: ${DEFAULT_FILTER.leased}
+          }
+          ${afterArg}
+        ) {
+          pageInfo { hasNextPage endCursor }
+          edges {
+            node {
+              id
+              rooms
+              floor
+              price { value currency }
+              area  { value }
+              location { name slug id }
+            }
+          }
+        }
+      }
+    `;
+
+    const json = await this.gql<ItemsConnectionData>(query);
+    return json.itemsConnection;
+  }
+
+  /**
+   * Batches up to N item(id:) queries in a single GraphQL request using field aliases.
+   * Returns a map of itemId → { title, description, updatedAt }.
+   *
+   * GraphQL aliases let us send:
+   *   { i123: item(id:"123") { title description } i456: item(id:"456") { ... } }
+   *
+   * Partial errors (e.g. a listing removed between queries) are tolerated.
+   */
+  private async batchFetchDetails(ids: string[]): Promise<Record<string, ItemDetail>> {
+    const fields = ids
+      .map((id) => `i${id}: item(id: "${id}") { title description updatedAt }`)
+      .join('\n');
+
+    const query = `{ ${fields} }`;
+
+    const raw = await this.gqlRaw<Record<string, ItemDetail>>(query);
+
+    // Collect whatever came back; ignore errors for individual items
+    const result: Record<string, ItemDetail> = {};
+    for (const id of ids) {
+      const detail = raw[`i${id}`];
+      if (detail) result[id] = detail;
+    }
+    return result;
+  }
+
+  /**
+   * Executes a GraphQL query and returns data, throwing on hard errors.
+   */
+  private async gql<T>(query: string): Promise<T> {
+    const resp = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: REQUEST_HEADERS,
+      body: JSON.stringify({ query }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`[${this.platform}] HTTP ${resp.status} ${resp.statusText}`);
+    }
+
+    const json = (await resp.json()) as GQLResponse<T>;
+
+    if (json.errors?.length && !json.data) {
+      throw new Error(
+        `[${this.platform}] GraphQL error: ${json.errors[0]?.message}`,
+      );
+    }
+
+    return json.data as T;
+  }
+
+  /**
+   * Like gql() but returns the raw data object and tolerates partial errors
+   * (used for batch item detail queries where some items may be deleted).
+   */
+  private async gqlRaw<T extends Record<string, unknown>>(query: string): Promise<T> {
+    const resp = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: REQUEST_HEADERS,
+      body: JSON.stringify({ query }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(`[${this.platform}] HTTP ${resp.status} ${resp.statusText}`);
+    }
+
+    const json = (await resp.json()) as GQLResponse<T>;
+
+    if (json.errors?.length) {
+      const fatals = json.errors.filter((e) => !e.path); // errors without a path are fatal
+      if (fatals.length > 0) {
+        throw new Error(`[${this.platform}] Fatal GraphQL error: ${fatals[0]?.message}`);
+      }
+      console.warn(
+        `[${this.platform}] ${json.errors.length} partial error(s) in batch (items may have been removed)`,
+      );
+    }
+
+    return (json.data ?? {}) as T;
+  }
+}
