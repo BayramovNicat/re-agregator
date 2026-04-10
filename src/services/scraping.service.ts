@@ -6,6 +6,7 @@
 
 import type { IScraper, ScrapedListing, ScraperOptions, ScrapeProgressEvent } from '../scrapers/base.scraper.js';
 import { prisma } from '../utils/prisma.js';
+import { Prisma } from '@prisma/client';
 
 export interface ScrapeResult {
   platform: string;
@@ -74,61 +75,117 @@ export class ScrapingService {
     let skipped = 0;
     const errors: string[] = [];
 
-    for (const listing of listings) {
-      try {
-        const price_per_sqm =
-          listing.area_sqm > 0
-            ? parseFloat((listing.price / listing.area_sqm).toFixed(2))
-            : 0;
+    if (listings.length === 0) return { persisted, skipped, errors };
 
-        await prisma.property.upsert({
-          where: { source_url: listing.source_url },
-          update: {
-            price: listing.price,
-            area_sqm: listing.area_sqm,
-            price_per_sqm,
-            district: listing.district,
-            location_name: listing.location_name,
-            latitude: listing.latitude,
-            longitude: listing.longitude,
-            rooms: listing.rooms,
-            floor: listing.floor,
-            total_floors: listing.total_floors,
-            category: listing.category,
-            has_document: listing.has_document,
-            has_mortgage: listing.has_mortgage,
-            has_repair: listing.has_repair,
-            description: listing.description,
-            is_urgent: listing.is_urgent,
-            posted_date: listing.posted_date,
-          },
-          create: {
-            source_url: listing.source_url,
-            price: listing.price,
-            area_sqm: listing.area_sqm,
-            price_per_sqm,
-            district: listing.district,
-            location_name: listing.location_name,
-            latitude: listing.latitude,
-            longitude: listing.longitude,
-            rooms: listing.rooms,
-            floor: listing.floor,
-            total_floors: listing.total_floors,
-            category: listing.category,
-            has_document: listing.has_document,
-            has_mortgage: listing.has_mortgage,
-            has_repair: listing.has_repair,
-            description: listing.description,
-            is_urgent: listing.is_urgent,
-            posted_date: listing.posted_date,
-          },
-        });
-        persisted++;
-      } catch (err) {
-        skipped++;
-        errors.push(
-          `${listing.source_url}: ${err instanceof Error ? err.message : String(err)}`,
+    // Pre-compute price_per_sqm and normalise nullables for all rows up front.
+    const rows = listings.map((l) => ({
+      source_url:    l.source_url,
+      price:         l.price,
+      area_sqm:      l.area_sqm,
+      price_per_sqm: l.area_sqm > 0 ? parseFloat((l.price / l.area_sqm).toFixed(2)) : 0,
+      district:      l.district,
+      location_name: l.location_name ?? null,
+      latitude:      l.latitude      ?? null,
+      longitude:     l.longitude     ?? null,
+      rooms:         l.rooms         ?? null,
+      floor:         l.floor         ?? null,
+      total_floors:  l.total_floors  ?? null,
+      category:      l.category      ?? null,
+      has_document:  l.has_document  ?? null,
+      has_mortgage:  l.has_mortgage  ?? null,
+      has_repair:    l.has_repair    ?? null,
+      description:   l.description   ?? null,
+      is_urgent:     l.is_urgent,
+      posted_date:   l.posted_date   ?? null,
+    }));
+
+    // 20 params per row → max safe chunk well below PG's 65 535-param limit.
+    const CHUNK_SIZE = 500;
+
+    for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+      const chunk = rows.slice(i, i + CHUNK_SIZE);
+      try {
+        const now = new Date();
+        const valueFragments = chunk.map(
+          (r) => Prisma.sql`(
+            ${r.source_url}, ${r.price}, ${r.area_sqm}, ${r.price_per_sqm},
+            ${r.district}, ${r.location_name}, ${r.latitude}, ${r.longitude},
+            ${r.rooms}, ${r.floor}, ${r.total_floors}, ${r.category},
+            ${r.has_document}, ${r.has_mortgage}, ${r.has_repair},
+            ${r.description}, ${r.is_urgent}, ${r.posted_date},
+            ${now}, ${now}
+          )`,
         );
+
+        const affected = await prisma.$executeRaw`
+          INSERT INTO "Property" (
+            source_url, price, area_sqm, price_per_sqm,
+            district, location_name, latitude, longitude,
+            rooms, floor, total_floors, category,
+            has_document, has_mortgage, has_repair,
+            description, is_urgent, posted_date,
+            created_at, updated_at
+          )
+          VALUES ${Prisma.join(valueFragments)}
+          ON CONFLICT (source_url) DO UPDATE SET
+            price         = EXCLUDED.price,
+            area_sqm      = EXCLUDED.area_sqm,
+            price_per_sqm = EXCLUDED.price_per_sqm,
+            district      = EXCLUDED.district,
+            location_name = EXCLUDED.location_name,
+            latitude      = EXCLUDED.latitude,
+            longitude     = EXCLUDED.longitude,
+            rooms         = EXCLUDED.rooms,
+            floor         = EXCLUDED.floor,
+            total_floors  = EXCLUDED.total_floors,
+            category      = EXCLUDED.category,
+            has_document  = EXCLUDED.has_document,
+            has_mortgage  = EXCLUDED.has_mortgage,
+            has_repair    = EXCLUDED.has_repair,
+            description   = EXCLUDED.description,
+            is_urgent     = EXCLUDED.is_urgent,
+            posted_date   = EXCLUDED.posted_date,
+            updated_at    = now()
+        `;
+
+        persisted += affected;
+      } catch (err) {
+        // Chunk failed — fall back to row-by-row to isolate the bad listing.
+        console.warn(
+          `[ScrapingService] Batch upsert failed at offset ${i}, falling back to row-by-row:`,
+          err,
+        );
+        for (const r of chunk) {
+          try {
+            await prisma.property.upsert({
+              where:  { source_url: r.source_url },
+              update: {
+                price: r.price, area_sqm: r.area_sqm, price_per_sqm: r.price_per_sqm,
+                district: r.district, location_name: r.location_name,
+                latitude: r.latitude, longitude: r.longitude,
+                rooms: r.rooms, floor: r.floor, total_floors: r.total_floors,
+                category: r.category, has_document: r.has_document,
+                has_mortgage: r.has_mortgage, has_repair: r.has_repair,
+                description: r.description, is_urgent: r.is_urgent,
+                posted_date: r.posted_date,
+              },
+              create: {
+                source_url: r.source_url, price: r.price, area_sqm: r.area_sqm,
+                price_per_sqm: r.price_per_sqm, district: r.district,
+                location_name: r.location_name, latitude: r.latitude,
+                longitude: r.longitude, rooms: r.rooms, floor: r.floor,
+                total_floors: r.total_floors, category: r.category,
+                has_document: r.has_document, has_mortgage: r.has_mortgage,
+                has_repair: r.has_repair, description: r.description,
+                is_urgent: r.is_urgent, posted_date: r.posted_date,
+              },
+            });
+            persisted++;
+          } catch (e) {
+            skipped++;
+            errors.push(`${r.source_url}: ${e instanceof Error ? e.message : String(e)}`);
+          }
+        }
       }
     }
 
