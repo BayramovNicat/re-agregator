@@ -70,7 +70,7 @@ interface ESItemNode {
   floor: number | null;
   price: { value: number; currency: string };
   area: { value: number };
-  location: { name: string; slug: string; id: string };
+  location: { name: string; slug: string; id: string; latitude: number | null; longitude: number | null };
 }
 
 interface PageInfo {
@@ -126,13 +126,21 @@ export class BinaScraper extends BaseScraper {
         const detail = details[node.id];
         const urgencyText = `${detail?.title ?? ''} ${detail?.description ?? ''}`;
 
+        const normalizedDistrict = slugToDistrict(node.location.slug);
+        // Fall back to the exact location name from the API when district can't be resolved
+        const district =
+          normalizedDistrict === 'Unknown' ? node.location.name : normalizedDistrict;
+
         all.push({
           source_url: `${ITEM_BASE_URL}/${node.id}`,
           source_platform: this.platform,
           price,
           currency: node.price.currency,
           area_sqm: area,
-          district: slugToDistrict(node.location.slug),
+          district,
+          location_name: node.location.name,
+          latitude: node.location.latitude ?? undefined,
+          longitude: node.location.longitude ?? undefined,
           rooms: node.rooms ?? undefined,
           floor: node.floor ?? undefined,
           description: detail?.description,
@@ -197,7 +205,7 @@ export class BinaScraper extends BaseScraper {
               floor
               price { value currency }
               area  { value }
-              location { name slug id }
+              location { name slug id latitude longitude }
             }
           }
         }

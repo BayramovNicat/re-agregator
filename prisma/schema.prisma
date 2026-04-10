@@ -16,6 +16,9 @@ model Property {
   area_sqm        Decimal   @db.Decimal(8, 2)
   price_per_sqm   Decimal   @db.Decimal(10, 2)
   district        String
+  location_name   String?
+  latitude        Float?
+  longitude       Float?
   rooms           Int?
   floor           Int?
   total_floors    Int?

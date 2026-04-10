@@ -11,6 +11,9 @@ export interface ScrapedListing {
   currency: string;
   area_sqm: number;
   district: string;
+  location_name?: string;
+  latitude?: number;
+  longitude?: number;
   rooms?: number;
   floor?: number;
   total_floors?: number;
