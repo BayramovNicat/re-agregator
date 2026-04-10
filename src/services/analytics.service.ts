@@ -59,6 +59,8 @@ export class AnalyticsService {
       hasRepair?: boolean;
       isUrgent?: boolean;
       category?: string;
+      limit?: number;
+      offset?: number;
     } = {},
   ) {
     const {
@@ -66,6 +68,7 @@ export class AnalyticsService {
       minRooms, maxRooms, minFloor, maxFloor,
       maxTotalFloors, hasDocument, hasMortgage,
       hasRepair, isUrgent, category,
+      limit = 200, offset = 0,
     } = filters;
 
     const factor = (100 - thresholdPercent) / 100.0;
@@ -118,6 +121,7 @@ export class AnalyticsService {
       FROM "Property" p, avg_cte
       WHERE ${Prisma.join(conditions, ' AND ')}
       ORDER BY p.price_per_sqm ASC
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     if (rows.length === 0) return [];

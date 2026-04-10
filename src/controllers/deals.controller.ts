@@ -46,6 +46,18 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
     return Response.json({ error: '"threshold" must be a number between 0 and 100' }, { status: 400 });
   }
 
+  const limitRaw = q.get('limit');
+  const limit = limitRaw !== null ? Number(limitRaw) : 200;
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+    return Response.json({ error: '"limit" must be an integer between 1 and 1000' }, { status: 400 });
+  }
+
+  const offsetRaw = q.get('offset');
+  const offset = offsetRaw !== null ? Number(offsetRaw) : 0;
+  if (!Number.isInteger(offset) || offset < 0) {
+    return Response.json({ error: '"offset" must be a non-negative integer' }, { status: 400 });
+  }
+
   function optNum(val: string | null): number | undefined {
     if (val === null || val === '') return undefined;
     const n = Number(val);
@@ -73,8 +85,10 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
       hasRepair:      optBool(q.get('hasRepair')),
       isUrgent:       optBool(q.get('isUrgent')),
       category:       q.get('category') ?? undefined,
+      limit,
+      offset,
     });
-    return Response.json({ location, threshold_pct: thresholdPct, count: listings.length, data: listings }, {
+    return Response.json({ location, threshold_pct: thresholdPct, limit, offset, count: listings.length, data: listings }, {
       headers: { 'Cache-Control': 'no-store' },
     });
   } catch (err) {
