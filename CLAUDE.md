@@ -109,3 +109,23 @@ bun --hot ./index.ts
 ```
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
+
+## Project: re-agregator
+
+Real estate deal aggregator for the Baku market (bina.az). Bun + TypeScript + PostgreSQL (Prisma).
+
+### Key conventions
+
+- Server entry point: `src/index.ts` — uses `Bun.serve()` with typed route handlers. No Express, no framework.
+- Database: Prisma with PostgreSQL. Client singleton at `src/utils/prisma.ts`. Use `bun run db:push` for schema changes during development.
+- Scrapers implement the abstract interface in `src/scrapers/base.scraper.ts`. Add new sources there.
+- All deal-scoring logic lives in `src/services/analytics.service.ts`. Thresholds and tier labels are defined in `classifyDeal()`.
+- Location names come from bina.az and are normalised in `src/utils/district-normalizer.ts` before being stored as `location_name`.
+- Static frontend files go in `public/`. The server serves them with a SPA fallback in the `fetch()` handler.
+- Run dev server: `bun run dev` (hot reload). Type-check: `bun run typecheck`.
+
+### Data model (Property)
+
+Core fields: `source_url` (unique), `price`, `area_sqm`, `price_per_sqm`, `district`, `location_name`, `rooms`, `floor`, `total_floors`, `category`, `has_document`, `has_mortgage`, `has_repair`, `is_urgent`, `posted_date`.
+
+Indexes on: `district`, `location_name`, `is_urgent`, `price_per_sqm`, `(location_name, price_per_sqm)`.
