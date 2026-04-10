@@ -3,9 +3,9 @@
  *
  * Deal Score methodology:
  * ─────────────────────────────────────────────────────────────
- *   discount_percent = ((district_avg - property_price_per_sqm) / district_avg) × 100
+ *   discount_percent = ((location_avg - property_price_per_sqm) / location_avg) × 100
  *
- *   A positive value means the property is cheaper than the district average.
+ *   A positive value means the property is cheaper than the location average.
  *   A negative value means it is more expensive.
  *
  * Tier thresholds:
@@ -23,9 +23,9 @@ export type DealTier = 'High Value Deal' | 'Good Deal' | 'Fair Price' | 'Overpri
 export interface DealScore {
   propertyId: number;
   source_url: string;
-  district: string;
+  location_name: string;
   price_per_sqm: number;
-  district_avg_price_per_sqm: number;
+  location_avg_price_per_sqm: number;
   /** Positive = cheaper than average; negative = more expensive */
   discount_percent: number;
   tier: DealTier;
@@ -44,12 +44,12 @@ function classifyDeal(discountPercent: number): DealTier {
 
 export class AnalyticsService {
   /**
-   * Returns the mean price_per_sqm across all valid listings in a district.
+   * Returns the mean price_per_sqm across all valid listings in a location.
    * Excludes listings with price_per_sqm = 0 (data-quality guard).
    */
-  async getDistrictAvgPricePerSqm(district: string): Promise<number> {
+  async getLocationAvgPricePerSqm(location: string): Promise<number> {
     const result = await prisma.property.aggregate({
-      where: { district, price_per_sqm: { gt: 0 } },
+      where: { location_name: location, price_per_sqm: { gt: 0 } },
       _avg: { price_per_sqm: true },
     });
 
@@ -67,14 +67,14 @@ export class AnalyticsService {
   }
 
   /**
-   * Returns properties in a district priced at least `thresholdPercent`% below
-   * the district average price_per_sqm, with deal-score metadata attached.
+   * Returns properties in a location priced at least `thresholdPercent`% below
+   * the location average price_per_sqm, with deal-score metadata attached.
    *
-   * @param district - Canonical district name (use BakuDistrict enum values)
+   * @param location - Exact location_name value (e.g. "Memar Əcəmi m.")
    * @param thresholdPercent - Minimum discount to qualify (default: 10%)
    */
-  async getUndervaluedByDistrict(district: string, thresholdPercent = 10) {
-    const avg = await this.getDistrictAvgPricePerSqm(district);
+  async getUndervaluedByLocation(location: string, thresholdPercent = 10) {
+    const avg = await this.getLocationAvgPricePerSqm(location);
 
     if (avg === 0) return [];
 
@@ -86,7 +86,7 @@ export class AnalyticsService {
 
     const properties = await prisma.property.findMany({
       where: {
-        district,
+        location_name: location,
         price_per_sqm: { gt: 0, lte: maxPricePerSqm },
       },
       orderBy: { price_per_sqm: 'asc' },
@@ -103,7 +103,7 @@ export class AnalyticsService {
         price: parseFloat(p.price.toString()),
         area_sqm: parseFloat(p.area_sqm.toString()),
         price_per_sqm: pricePerSqm,
-        district_avg_price_per_sqm: parseFloat(avg.toFixed(2)),
+        location_avg_price_per_sqm: parseFloat(avg.toFixed(2)),
         discount_percent: discountPercent,
         tier: classifyDeal(discountPercent),
       };
@@ -111,16 +111,16 @@ export class AnalyticsService {
   }
 
   /**
-   * Calculates the full deal-score breakdown for every listing in a district.
+   * Calculates the full deal-score breakdown for every listing in a location.
    * Useful for building leaderboard / ranking views.
    */
-  async getDealScoresForDistrict(district: string): Promise<DealScore[]> {
-    const avg = await this.getDistrictAvgPricePerSqm(district);
+  async getDealScoresForLocation(location: string): Promise<DealScore[]> {
+    const avg = await this.getLocationAvgPricePerSqm(location);
 
     if (avg === 0) return [];
 
     const properties = await prisma.property.findMany({
-      where: { district, price_per_sqm: { gt: 0 } },
+      where: { location_name: location, price_per_sqm: { gt: 0 } },
     });
 
     return properties.map((p) => {
@@ -132,9 +132,9 @@ export class AnalyticsService {
       return {
         propertyId: p.id,
         source_url: p.source_url,
-        district: p.district,
+        location_name: p.location_name ?? '',
         price_per_sqm: pricePerSqm,
-        district_avg_price_per_sqm: parseFloat(avg.toFixed(2)),
+        location_avg_price_per_sqm: parseFloat(avg.toFixed(2)),
         discount_percent: discountPercent,
         tier: classifyDeal(discountPercent),
       };

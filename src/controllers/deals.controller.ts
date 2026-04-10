@@ -14,12 +14,12 @@ export async function getUrgentDeals(_req: Request, res: Response): Promise<void
   }
 }
 
-/** GET /api/deals/undervalued?district={name}&threshold={pct} */
+/** GET /api/deals/undervalued?location={name}&threshold={pct} */
 export async function getUndervaluedDeals(req: Request, res: Response): Promise<void> {
-  const { district, threshold } = req.query;
+  const { location, threshold } = req.query;
 
-  if (!district || typeof district !== 'string') {
-    res.status(400).json({ error: 'Query parameter "district" is required' });
+  if (!location || typeof location !== 'string') {
+    res.status(400).json({ error: 'Query parameter "location" is required' });
     return;
   }
 
@@ -31,8 +31,8 @@ export async function getUndervaluedDeals(req: Request, res: Response): Promise<
   }
 
   try {
-    const listings = await analytics.getUndervaluedByDistrict(district, thresholdPct);
-    res.json({ district, threshold_pct: thresholdPct, count: listings.length, data: listings });
+    const listings = await analytics.getUndervaluedByLocation(location, thresholdPct);
+    res.json({ location, threshold_pct: thresholdPct, count: listings.length, data: listings });
   } catch (err) {
     console.error('[DealsController] getUndervaluedDeals:', err);
     res.status(500).json({ error: 'Failed to fetch undervalued listings' });

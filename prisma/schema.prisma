@@ -31,7 +31,8 @@ model Property {
   updated_at      DateTime  @updatedAt
 
   @@index([district])
+  @@index([location_name])
   @@index([is_urgent])
   @@index([price_per_sqm])
-  @@index([district, price_per_sqm])
+  @@index([location_name, price_per_sqm])
 }
