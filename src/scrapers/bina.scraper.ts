@@ -68,6 +68,10 @@ interface ESItemNode {
   id: string;
   rooms: number | null;
   floor: number | null;
+  floors: number | null;
+  hasMortgage: boolean | null;
+  hasRepair: boolean | null;
+  hasBillOfSale: boolean | null;
   price: { value: number; currency: string };
   area: { value: number };
   location: { name: string; slug: string; id: string; latitude: number | null; longitude: number | null };
@@ -89,6 +93,7 @@ interface ItemDetail {
   title: string;
   description: string;
   updatedAt: string;
+  category: { name: string } | null;
 }
 
 // ── Scraper ───────────────────────────────────────────────────────────────────
@@ -143,6 +148,11 @@ export class BinaScraper extends BaseScraper {
           longitude: node.location.longitude ?? undefined,
           rooms: node.rooms ?? undefined,
           floor: node.floor ?? undefined,
+          total_floors: node.floors ?? undefined,
+          category: detail?.category?.name,
+          has_document: node.hasBillOfSale ?? undefined,
+          has_mortgage: node.hasMortgage ?? undefined,
+          has_repair: node.hasRepair ?? undefined,
           description: detail?.description,
           is_urgent: this.isUrgent(urgencyText),
           posted_date: detail?.updatedAt ? new Date(detail.updatedAt) : undefined,
@@ -203,6 +213,10 @@ export class BinaScraper extends BaseScraper {
               id
               rooms
               floor
+              floors
+              hasMortgage
+              hasRepair
+              hasBillOfSale
               price { value currency }
               area  { value }
               location { name slug id latitude longitude }
@@ -227,7 +241,7 @@ export class BinaScraper extends BaseScraper {
    */
   private async batchFetchDetails(ids: string[]): Promise<Record<string, ItemDetail>> {
     const fields = ids
-      .map((id) => `i${id}: item(id: "${id}") { title description updatedAt }`)
+      .map((id) => `i${id}: item(id: "${id}") { title description updatedAt category { name } }`)
       .join('\n');
 
     const query = `{ ${fields} }`;

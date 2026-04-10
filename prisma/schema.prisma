@@ -22,6 +22,10 @@ model Property {
   rooms           Int?
   floor           Int?
   total_floors    Int?
+  category        String?
+  has_document    Boolean?
+  has_mortgage    Boolean?
+  has_repair      Boolean?
   description     String?
   is_urgent       Boolean   @default(false)
   posted_date     DateTime?

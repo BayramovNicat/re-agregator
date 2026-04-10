@@ -17,6 +17,10 @@ export interface ScrapedListing {
   rooms?: number;
   floor?: number;
   total_floors?: number;
+  category?: string;
+  has_document?: boolean;
+  has_mortgage?: boolean;
+  has_repair?: boolean;
   description?: string;
   is_urgent: boolean;
   posted_date?: Date;
