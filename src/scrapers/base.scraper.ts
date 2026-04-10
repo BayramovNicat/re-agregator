@@ -1,0 +1,71 @@
+/**
+ * Base scraper interface and abstract class.
+ * Every new real estate platform scraper must implement IScraper.
+ * Common parsing utilities live in BaseScraper so subclasses don't repeat them.
+ */
+
+export interface ScrapedListing {
+  source_url: string;
+  source_platform: string;
+  price: number;
+  currency: string;
+  area_sqm: number;
+  district: string;
+  rooms?: number;
+  floor?: number;
+  total_floors?: number;
+  description?: string;
+  is_urgent: boolean;
+  posted_date?: Date;
+}
+
+export interface ScraperOptions {
+  /** Maximum number of listing pages to crawl (default: unlimited) */
+  maxPages?: number;
+  /** Milliseconds to wait between HTTP requests to avoid rate-limiting */
+  delayMs?: number;
+}
+
+/** Contract every scraper implementation must satisfy */
+export interface IScraper {
+  /** The platform identifier (e.g. 'bina.az') stored in the DB */
+  readonly platform: string;
+  scrape(options?: ScraperOptions): Promise<ScrapedListing[]>;
+}
+
+/** Abstract base providing shared parsing helpers */
+export abstract class BaseScraper implements IScraper {
+  abstract readonly platform: string;
+  abstract scrape(options?: ScraperOptions): Promise<ScrapedListing[]>;
+
+  /**
+   * Returns true if the listing text contains the Azerbaijani word for "urgent".
+   * Listings marked "təcili" are typically priced to sell quickly.
+   */
+  protected isUrgent(text: string): boolean {
+    return /təcili/i.test(text);
+  }
+
+  /**
+   * Parses a price string into a number.
+   * Handles formats like "125 000 AZN", "₼125,000", "95000".
+   */
+  protected parsePrice(raw: string): number {
+    const cleaned = raw.replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+  }
+
+  /**
+   * Parses an area string into a number (square metres).
+   * Handles formats like "78 m²", "78.5 kv.m", "110kvm".
+   */
+  protected parseArea(raw: string): number {
+    const cleaned = raw.replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+  }
+
+  /** Resolves after `ms` milliseconds — use between requests to be polite to servers */
+  protected async delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+}
