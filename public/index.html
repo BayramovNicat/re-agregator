@@ -176,7 +176,8 @@
       }
 
       /* dialog backdrop — ::backdrop pseudo */
-      #map-modal::backdrop {
+      #map-modal::backdrop,
+      #desc-modal::backdrop {
         background: hsl(0 0% 0% / 0.8);
         backdrop-filter: blur(4px);
       }
@@ -536,6 +537,52 @@
       </div>
     </dialog>
 
+    <!-- description modal -->
+    <dialog
+      id="desc-modal"
+      aria-labelledby="desc-modal-title"
+      class="p-0 border-0 bg-transparent max-w-[100vw] max-h-[100vh] w-full h-full"
+    >
+      <div
+        class="bg-[hsl(240_10%_5.5%)] border border-border rounded-xl shadow-2xl w-[min(560px,calc(100vw-2rem))] flex flex-col overflow-hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-border gap-4"
+        >
+          <span
+            id="desc-modal-title"
+            class="text-[0.9rem] font-semibold text-foreground truncate"
+            >Description</span
+          >
+          <button
+            id="desc-modal-close"
+            aria-label="Close"
+            class="w-7 h-7 rounded-md border-none bg-transparent text-muted-foreground cursor-pointer flex items-center justify-center shrink-0 transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="px-5 py-4 overflow-y-auto max-h-[60vh]">
+          <p
+            id="desc-modal-body"
+            class="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
+          ></p>
+        </div>
+      </div>
+    </dialog>
+
     <!-- card template -->
     <template id="card-tpl">
       <article
@@ -652,26 +699,49 @@
               <path d="M7 17 17 7" />
             </svg>
           </a>
-          <button
-            class="map-pin-btn hidden text-xs text-muted-foreground bg-transparent border-none cursor-pointer p-0 inline-flex items-center gap-1 transition-colors hover:text-foreground"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+          <div class="flex items-center gap-3">
+            <button
+              class="desc-btn hidden text-xs text-muted-foreground bg-transparent border-none cursor-pointer p-0 inline-flex items-center gap-1 transition-colors hover:text-foreground"
             >
-              <path
-                d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
-              />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            Map
-          </button>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              Description
+            </button>
+            <button
+              class="map-pin-btn hidden text-xs text-muted-foreground bg-transparent border-none cursor-pointer p-0 inline-flex items-center gap-1 transition-colors hover:text-foreground"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+                />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              Map
+            </button>
+          </div>
         </div>
       </article>
     </template>
@@ -755,6 +825,14 @@
 
         if (!p.has_repair) {
           tpl.querySelector(".no-repair-icon").classList.remove("hidden");
+        }
+
+        const descBtn = tpl.querySelector(".desc-btn");
+        if (p.description) {
+          descBtn.classList.remove("hidden");
+          descBtn.addEventListener("click", () => {
+            openDescModal(p.description, p.location_name ?? p.district ?? "");
+          });
         }
 
         const pinBtn = tpl.querySelector(".map-pin-btn");
@@ -887,6 +965,24 @@
         });
 
       document.getElementById("map-modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) e.currentTarget.close();
+      });
+
+      // ── Description modal ──────────────────────────────────────────
+      function openDescModal(text, label) {
+        document.getElementById("desc-modal-title").textContent =
+          label || "Description";
+        document.getElementById("desc-modal-body").textContent = text;
+        document.getElementById("desc-modal").showModal();
+      }
+
+      document
+        .getElementById("desc-modal-close")
+        .addEventListener("click", () => {
+          document.getElementById("desc-modal").close();
+        });
+
+      document.getElementById("desc-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) e.currentTarget.close();
       });
       // ───────────────────────────────────────────────────────────────
