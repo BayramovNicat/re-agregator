@@ -601,6 +601,10 @@
               class="tier text-[0.7rem] font-medium px-2 py-0.5 rounded-full whitespace-nowrap border border-transparent"
             ></span>
             <div class="flex items-center gap-1.5 h-full">
+              <span class="is-urgent-icon hidden tooltip-wrap" style="color: hsl(0 84% 60% / 0.85)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+                <span class="tooltip-content">Urgent</span>
+              </span>
               <span class="no-repair-icon hidden tooltip-wrap" style="color: hsl(38 92% 50% / 0.75)">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -818,6 +822,10 @@
         tierEl.style.borderColor = ts.border;
 
         tpl.querySelector(".link").href = p.source_url;
+
+        if (p.is_urgent) {
+          tpl.querySelector(".is-urgent-icon").classList.remove("hidden");
+        }
 
         if (p.has_document) {
           tpl.querySelector(".has-document-icon").classList.remove("hidden");
