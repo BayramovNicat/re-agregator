@@ -6,9 +6,7 @@
 
 export interface ScrapedListing {
   source_url: string;
-  source_platform: string;
   price: number;
-  currency: string;
   area_sqm: number;
   district: string;
   location_name?: string;

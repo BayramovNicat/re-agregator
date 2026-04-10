@@ -101,13 +101,10 @@ export class ScrapingService {
             description: listing.description,
             is_urgent: listing.is_urgent,
             posted_date: listing.posted_date,
-            scraped_at: new Date(),
           },
           create: {
             source_url: listing.source_url,
-            source_platform: listing.source_platform,
             price: listing.price,
-            currency: listing.currency,
             area_sqm: listing.area_sqm,
             price_per_sqm,
             district: listing.district,

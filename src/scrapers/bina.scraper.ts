@@ -148,9 +148,7 @@ export class BinaScraper extends BaseScraper {
 
         all.push({
           source_url: `${ITEM_BASE_URL}/${node.id}`,
-          source_platform: this.platform,
           price,
-          currency: node.price.currency,
           area_sqm: area,
           district,
           location_name: node.location.name,

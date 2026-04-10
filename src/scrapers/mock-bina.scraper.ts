@@ -131,9 +131,7 @@ export class MockBinaScraper extends BaseScraper {
 
       listings.push({
         source_url: item.url,
-        source_platform: this.platform,
         price,
-        currency: 'AZN',
         area_sqm,
         district,
         description: item.descriptionText,
