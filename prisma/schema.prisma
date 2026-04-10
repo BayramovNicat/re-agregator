@@ -36,4 +36,6 @@ model Property {
   @@index([price_per_sqm])
   @@index([location_name, price_per_sqm])
   @@index([location_name, is_urgent, posted_date])
+  @@index([district, price_per_sqm])
+  @@index([location_name, district, posted_date])
 }
