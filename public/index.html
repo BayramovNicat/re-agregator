@@ -51,6 +51,14 @@
         box-sizing: border-box;
       }
 
+      /* remove default focus outline everywhere; restore only for keyboard nav */
+      *:focus { outline: none; }
+      *:focus-visible {
+        outline: 2px solid hsl(240 4.9% 83.9%);
+        outline-offset: 2px;
+        border-radius: 0.375rem;
+      }
+
       /* dark color-scheme for native widgets */
       select,
       input[type="range"] {
