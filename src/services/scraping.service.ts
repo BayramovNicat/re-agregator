@@ -4,7 +4,7 @@
  * computing price_per_sqm before persistence.
  */
 
-import type { IScraper, ScrapedListing, ScraperOptions } from '../scrapers/base.scraper.js';
+import type { IScraper, ScrapedListing, ScraperOptions, ScrapeProgressEvent } from '../scrapers/base.scraper.js';
 import { prisma } from '../utils/prisma.js';
 
 export interface ScrapeResult {
@@ -43,6 +43,7 @@ export class ScrapingService {
 
       try {
         const listings = await scraper.scrape(options);
+        options?.onProgress?.({ type: 'persisting', platform: scraper.platform, count: listings.length });
         const { persisted, skipped, errors } = await this.persistListings(listings);
         result.persisted = persisted;
         result.skipped = skipped;
@@ -50,15 +51,19 @@ export class ScrapingService {
         console.log(
           `[ScrapingService] ${scraper.platform}: persisted=${persisted} skipped=${skipped}`,
         );
+        options?.onProgress?.({ type: 'done', platform: scraper.platform, persisted, skipped });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         console.error(`[ScrapingService] ${scraper.platform} failed: ${message}`);
         result.errors.push(message);
+        options?.onProgress?.({ type: 'error', platform: scraper.platform, message });
       }
 
       results.push(result);
     }
 
+    const total_persisted = results.reduce((sum, r) => sum + r.persisted, 0);
+    options?.onProgress?.({ type: 'complete', total_persisted });
     return results;
   }
 

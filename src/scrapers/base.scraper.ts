@@ -19,11 +19,21 @@ export interface ScrapedListing {
   posted_date?: Date;
 }
 
+export type ScrapeProgressEvent =
+  | { type: 'start'; platform: string; maxPages: number }
+  | { type: 'page'; platform: string; page: number; fetched: number; total: number }
+  | { type: 'persisting'; platform: string; count: number }
+  | { type: 'done'; platform: string; persisted: number; skipped: number }
+  | { type: 'error'; platform: string; message: string }
+  | { type: 'complete'; total_persisted: number };
+
 export interface ScraperOptions {
   /** Maximum number of listing pages to crawl (default: unlimited) */
   maxPages?: number;
   /** Milliseconds to wait between HTTP requests to avoid rate-limiting */
   delayMs?: number;
+  /** Optional callback for streaming progress events */
+  onProgress?: (event: ScrapeProgressEvent) => void;
 }
 
 /** Contract every scraper implementation must satisfy */

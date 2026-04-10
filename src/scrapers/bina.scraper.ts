@@ -80,6 +80,7 @@ export class BinaScraper extends BaseScraper {
     let hasNext = true;
 
     console.log(`[${this.platform}] Starting GraphQL scrape (maxPages=${maxPages})...`);
+    options.onProgress?.({ type: 'start', platform: this.platform, maxPages });
 
     while (hasNext && page < maxPages) {
       page++;
@@ -119,6 +120,13 @@ export class BinaScraper extends BaseScraper {
         `[${this.platform}] Page ${page}: ${edges.length} listings fetched` +
           ` (total so far: ${all.length})`,
       );
+      options.onProgress?.({
+        type: 'page',
+        platform: this.platform,
+        page,
+        fetched: edges.length,
+        total: all.length,
+      });
 
       hasNext = pageInfo.hasNextPage;
       cursor = pageInfo.endCursor;

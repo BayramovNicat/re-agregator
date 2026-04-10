@@ -21,4 +21,5 @@ app.listen(PORT, () => {
   console.log('  GET  /api/deals/urgent');
   console.log('  GET  /api/deals/undervalued?district=Yasamal&threshold=10');
   console.log('  POST /api/scrape/trigger');
+  console.log('  GET  /api/scrape/stream?maxPages=20&delayMs=800');
 });
