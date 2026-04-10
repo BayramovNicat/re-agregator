@@ -43,7 +43,7 @@ export class AnalyticsService {
       _avg: { price_per_sqm: true },
     });
 
-    return parseFloat((result._avg.price_per_sqm ?? 0).toString());
+    return Number(result._avg.price_per_sqm ?? 0);
   }
 
   /**
