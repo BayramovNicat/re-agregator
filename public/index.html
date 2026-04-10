@@ -52,7 +52,9 @@
       }
 
       /* remove default focus outline everywhere; restore only for keyboard nav */
-      *:focus { outline: none; }
+      *:focus {
+        outline: none;
+      }
       *:focus-visible {
         outline: 2px solid hsl(240 4.9% 83.9%);
         outline-offset: 2px;
@@ -193,6 +195,35 @@
       .leaflet-control-zoom a:hover {
         background: hsl(240 3.7% 15.9%) !important;
         color: hsl(0 0% 98%) !important;
+      }
+
+      /* shadcn-style tooltip */
+      .tooltip-wrap {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+      }
+      .tooltip-wrap .tooltip-content {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%) scale(0.95);
+        white-space: nowrap;
+        background: hsl(0 0% 98%);
+        color: hsl(240 10% 3.9%);
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 4px 8px;
+        border-radius: 6px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.1s, transform 0.1s;
+        z-index: 50;
+        box-shadow: 0 2px 8px hsl(0 0% 0% / 0.35);
+      }
+      .tooltip-wrap:hover .tooltip-content {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
       }
 
       /* marker pulse — @keyframes */
@@ -518,9 +549,55 @@
               class="price text-2xl font-bold tracking-tight text-foreground leading-tight"
             ></p>
           </div>
-          <span
-            class="tier text-[0.7rem] font-medium px-2 py-0.5 rounded-full whitespace-nowrap border border-transparent mt-0.5 shrink-0"
-          ></span>
+          <div class="flex flex-col items-end gap-1 shrink-0 h-full">
+            <span
+              class="tier text-[0.7rem] font-medium px-2 py-0.5 rounded-full whitespace-nowrap border border-transparent"
+            ></span>
+            <div class="flex items-center gap-1.5 h-full">
+              <span class="no-repair-icon hidden tooltip-wrap" style="color: hsl(38 92% 50% / 0.75)">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect width="16" height="6" x="2" y="2" rx="2" />
+                  <path
+                    d="M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+                  />
+                  <rect width="4" height="6" x="8" y="16" rx="1" />
+                </svg>
+                <span class="tooltip-content">No repair</span>
+              </span>
+              <span class="has-document-icon hidden tooltip-wrap" style="color: hsl(217 91% 60% / 0.75)">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                  />
+                  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                  <path d="M10 9H8" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" />
+                </svg>
+                <span class="tooltip-content">Has document</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <!-- separator -->
@@ -671,6 +748,14 @@
         tierEl.style.borderColor = ts.border;
 
         tpl.querySelector(".link").href = p.source_url;
+
+        if (p.has_document) {
+          tpl.querySelector(".has-document-icon").classList.remove("hidden");
+        }
+
+        if (!p.has_repair) {
+          tpl.querySelector(".no-repair-icon").classList.remove("hidden");
+        }
 
         const pinBtn = tpl.querySelector(".map-pin-btn");
         if (p.latitude != null && p.longitude != null) {
