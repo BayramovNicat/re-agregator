@@ -34,19 +34,6 @@ function classifyDeal(discountPercent: number): DealTier {
 
 export class AnalyticsService {
   /**
-   * Returns the mean price_per_sqm across all valid listings in a location.
-   * Excludes listings with price_per_sqm = 0 (data-quality guard).
-   */
-  async getLocationAvgPricePerSqm(location: string): Promise<number> {
-    const result = await prisma.property.aggregate({
-      where: { location_name: location, price_per_sqm: { gt: 0 } },
-      _avg: { price_per_sqm: true },
-    });
-
-    return Number(result._avg.price_per_sqm ?? 0);
-  }
-
-  /**
    * Returns properties in a location priced at least `thresholdPercent`% below
    * the location average price_per_sqm, with deal-score metadata attached.
    * Uses a single CTE query to compute the avg and fetch matching rows together.
