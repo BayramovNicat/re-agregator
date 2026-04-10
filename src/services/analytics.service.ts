@@ -57,6 +57,19 @@ export class AnalyticsService {
   }
 
   /**
+   * Returns all distinct non-null location_name values, sorted alphabetically.
+   */
+  async getDistinctLocations(): Promise<string[]> {
+    const rows = await prisma.property.findMany({
+      where: { location_name: { not: null } },
+      select: { location_name: true },
+      distinct: ['location_name'],
+      orderBy: { location_name: 'asc' },
+    });
+    return rows.map(r => r.location_name as string);
+  }
+
+  /**
    * Returns all properties with is_urgent = true, newest first.
    */
   async getUrgentListings() {
@@ -73,21 +86,61 @@ export class AnalyticsService {
    * @param location - Exact location_name value (e.g. "Memar Əcəmi m.")
    * @param thresholdPercent - Minimum discount to qualify (default: 10%)
    */
-  async getUndervaluedByLocation(location: string, thresholdPercent = 10) {
+  async getUndervaluedByLocation(
+    location: string,
+    thresholdPercent = 10,
+    filters: {
+      minPrice?: number;
+      maxPrice?: number;
+      minArea?: number;
+      maxArea?: number;
+      minRooms?: number;
+      maxRooms?: number;
+      minFloor?: number;
+      maxFloor?: number;
+      maxTotalFloors?: number;
+      hasDocument?: boolean;
+      hasMortgage?: boolean;
+      hasRepair?: boolean;
+      isUrgent?: boolean;
+      category?: string;
+    } = {},
+  ) {
     const avg = await this.getLocationAvgPricePerSqm(location);
 
     if (avg === 0) return [];
 
-    /**
-     * Upper bound for price_per_sqm to be at least `thresholdPercent`% below average.
-     * e.g. avg=1000, threshold=10 → maxPricePerSqm=900
-     */
     const maxPricePerSqm = avg * (1 - thresholdPercent / 100);
+
+    const {
+      minPrice, maxPrice, minArea, maxArea,
+      minRooms, maxRooms, minFloor, maxFloor,
+      maxTotalFloors, hasDocument, hasMortgage,
+      hasRepair, isUrgent, category,
+    } = filters;
 
     const properties = await prisma.property.findMany({
       where: {
         location_name: location,
         price_per_sqm: { gt: 0, lte: maxPricePerSqm },
+        ...(minPrice !== undefined || maxPrice !== undefined
+          ? { price: { ...(minPrice !== undefined && { gte: minPrice }), ...(maxPrice !== undefined && { lte: maxPrice }) } }
+          : {}),
+        ...(minArea !== undefined || maxArea !== undefined
+          ? { area_sqm: { ...(minArea !== undefined && { gte: minArea }), ...(maxArea !== undefined && { lte: maxArea }) } }
+          : {}),
+        ...(minRooms !== undefined || maxRooms !== undefined
+          ? { rooms: { ...(minRooms !== undefined && { gte: minRooms }), ...(maxRooms !== undefined && { lte: maxRooms }) } }
+          : {}),
+        ...(minFloor !== undefined || maxFloor !== undefined
+          ? { floor: { ...(minFloor !== undefined && { gte: minFloor }), ...(maxFloor !== undefined && { lte: maxFloor }) } }
+          : {}),
+        ...(maxTotalFloors !== undefined && { total_floors: { lte: maxTotalFloors } }),
+        ...(hasDocument !== undefined && { has_document: hasDocument }),
+        ...(hasMortgage !== undefined && { has_mortgage: hasMortgage }),
+        ...(hasRepair !== undefined && { has_repair: hasRepair }),
+        ...(isUrgent !== undefined && { is_urgent: isUrgent }),
+        ...(category !== undefined && { category }),
       },
       orderBy: { price_per_sqm: 'asc' },
     });
