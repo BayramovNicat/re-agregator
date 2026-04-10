@@ -21,7 +21,9 @@ export async function getLocations(_req: Request): Promise<Response> {
       cachedLocations = rows.map((r) => r.location_name);
       locationsCachedAt = now;
     }
-    return Response.json({ data: cachedLocations });
+    return Response.json({ data: cachedLocations }, {
+      headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=60' },
+    });
   } catch (err) {
     console.error('[DealsController] getLocations:', err);
     return Response.json({ error: 'Failed to fetch locations' }, { status: 500 });
@@ -72,7 +74,9 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
       isUrgent:       optBool(q.get('isUrgent')),
       category:       q.get('category') ?? undefined,
     });
-    return Response.json({ location, threshold_pct: thresholdPct, count: listings.length, data: listings });
+    return Response.json({ location, threshold_pct: thresholdPct, count: listings.length, data: listings }, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
   } catch (err) {
     console.error('[DealsController] getUndervaluedDeals:', err);
     return Response.json({ error: 'Failed to fetch undervalued listings' }, { status: 500 });
