@@ -32,7 +32,7 @@
         --border-h: #2e2e3e;
         --text: #e8e8f0;
         --text-2: #9898b0;
-        --muted: #5a5a72;
+        --muted: #8b8bac;
         --accent: #6366f1;
         --accent-h: #818cf8;
         --accent-dim: rgba(99, 102, 241, 0.12);
@@ -1640,11 +1640,10 @@
     </div>
     <div class="disc-wrap">
       <div class="disc-top">
-        <span class="disc-lbl">Below market avg</span>
+        <span class="disc-lbl">Market avg ₼${fmt(p.location_avg_price_per_sqm, 0)}/m²</span>
         <span class="disc-val" style="color:${t.c}">-${p.discount_percent}%</span>
       </div>
       <div class="disc-bar"><div class="disc-fill" style="width:${barW}%;background:${t.hex}"></div></div>
-      <div class="disc-avg">Market avg ₼${fmt(p.location_avg_price_per_sqm, 0)}/m²</div>
     </div>
     <div class="card-stats">
       <div class="stat-c"><div class="stat-c-lbl">Area</div><div class="stat-c-val">${fmt(p.area_sqm, 1)} m²</div></div>
