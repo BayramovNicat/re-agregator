@@ -238,37 +238,57 @@
         box-shadow: 0 0 0 3px var(--accent-dim);
       }
 
+      .tbadge {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--accent);
+        background: var(--accent-dim);
+        padding: 2px 8px;
+        border-radius: 999px;
+        letter-spacing: 0.02em;
+      }
+      .range-box {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        padding: 0 14px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .range-box:hover {
+        border-color: var(--border-h);
+      }
+      .range-box:focus-within {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-dim);
+      }
       input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
-        height: 4px;
-        background: var(--surface-3);
+        height: 5px;
+        background: linear-gradient(to right, var(--accent) var(--p, 18.36%), var(--muted) var(--p, 18.36%));
         border-radius: 999px;
         outline: none;
         cursor: pointer;
-        margin-top: 6px;
+        margin: 0;
       }
       input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         width: 18px;
         height: 18px;
-        background: var(--text);
+        background: var(--bg);
         border-radius: 50%;
-        border: 2px solid var(--bg);
-        box-shadow: 0 0 0 2px var(--text);
+        border: 2px solid var(--accent);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         cursor: pointer;
-        transition: transform 0.1s;
+        transition: transform 0.1s, background 0.15s;
       }
       input[type="range"]::-webkit-slider-thumb:hover {
         transform: scale(1.15);
-      }
-      .slider-marks {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 5px;
+        background: var(--surface-2);
       }
 
       .btn-primary {
@@ -1102,14 +1122,13 @@
             </select>
           </div>
           <div class="field">
-            <span class="flabel"
-              >Discount threshold —
-              <span id="tval" style="color: var(--text); font-weight: 600"
-                >10%</span
-              ></span
-            >
-            <input type="range" id="thresh" min="1" max="50" value="10" />
-            <div class="slider-marks"><span>1%</span><span>50%</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="flabel">Discount threshold</span>
+              <span id="tval" class="tbadge">10%</span>
+            </div>
+            <div class="range-box">
+              <input type="range" id="thresh" min="1" max="50" value="10" />
+            </div>
           </div>
           <div class="field">
             <span class="flabel" style="visibility: hidden">Go</span>
@@ -1966,9 +1985,16 @@
       // ── Events ────────────────────────────────────────────────────────────────
       ge("search-btn").addEventListener("click", () => doSearch(false));
       ge("load-more-btn").addEventListener("click", () => doSearch(true));
+      function updateThreshBg() {
+        const t = ge("thresh");
+        const p = ((t.value - t.min) / (t.max - t.min)) * 100;
+        t.style.setProperty("--p", `${p}%`);
+      }
       ge("thresh").addEventListener("input", (e) => {
         ge("tval").textContent = `${e.target.value}%`;
+        updateThreshBg();
       });
+      updateThreshBg();
       ge("sort-sel").addEventListener("change", render);
 
       ge("vgrid").addEventListener("click", () => {
@@ -2033,8 +2059,7 @@
         try {
           const r = await fetch("/api/deals/locations");
           const d = await r.json();
-          sel.innerHTML =
-            '<option value="" disabled selected>Select a location…</option>';
+          sel.innerHTML = "";
           d.data.forEach((loc) => {
             const o = document.createElement("option");
             o.value = o.textContent = loc;
