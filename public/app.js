@@ -6,6 +6,7 @@ let currentView = "grid";
 let showingSaved = false;
 const renderedSet = new Set();
 const bookmarks = new Set(JSON.parse(localStorage.getItem("re-bm") || "[]"));
+const hidden = new Set(JSON.parse(localStorage.getItem("re-hidden") || "[]"));
 const PAGE = 50;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -27,6 +28,19 @@ function timeAgo(s) {
 
 function saveBM() {
 	localStorage.setItem("re-bm", JSON.stringify([...bookmarks]));
+}
+
+function saveHidden() {
+	localStorage.setItem("re-hidden", JSON.stringify([...hidden]));
+}
+
+function hideItem(url) {
+	hidden.add(url);
+	bookmarks.delete(url);
+	saveBM();
+	saveHidden();
+	toast("Item hidden");
+	render();
 }
 
 function toast(msg, err = false) {
@@ -118,9 +132,14 @@ function buildCard(p) {
                                                                                                                                       </div>
                                                                                                                                       <div class="card-right">
                                                                                                                                         <span class="tier-badge" style="color:${t.c};background:${t.bg};border-color:${t.b}">${p.tier}</span>
-                                                                                                                                        <button type="button" class="bmark-btn${bm ? " on" : ""}" title="${bm ? "Remove" : "Save"}" data-url="${p.source_url}">
-                                                                                                                                          <svg width="12" height="12" viewBox="0 0 24 24" fill="${bm ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                                                                                                                                        </button>
+                                                                                                                                        <div style="display:flex;gap:4px;align-items:center">
+                                                                                                                                          <button type="button" class="bmark-btn${bm ? " on" : ""}" title="${bm ? "Remove" : "Save"}" data-url="${p.source_url}">
+                                                                                                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="${bm ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                                                                                                                          </button>
+                                                                                                                                          <button type="button" class="hide-btn" title="Hide this listing" data-url="${p.source_url}">
+                                                                                                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                                                                                                          </button>
+                                                                                                                                        </div>
                                                                                                                                       </div>
                                                                                                                                     </div>
                                                                                                                                     <div class="disc-wrap">
@@ -149,6 +168,7 @@ function buildCard(p) {
                                                                                                                                     </div>`;
 
 	el.querySelector(".bmark-btn").addEventListener("click", () => toggleBM(p));
+	el.querySelector(".hide-btn").addEventListener("click", () => hideItem(p.source_url));
 	if (p.description)
 		el.querySelector(".desc-btn").addEventListener("click", () =>
 			openDesc(p.description),
@@ -179,11 +199,15 @@ function buildRow(p) {
                                                                                                                                       <button type="button" class="bmark-btn${bm ? " on" : ""}" data-url="${p.source_url}" title="Save">
                                                                                                                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="${bm ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                                                                                                                       </button>
+                                                                                                                                      <button type="button" class="hide-btn" title="Hide listing" data-url="${p.source_url}">
+                                                                                                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                                                                                                                                      </button>
                                                                                                                                       ${p.latitude != null ? `<button type="button" class="icon-btn map-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg></button>` : ""}
                                                                                                                                     </div>
                                                                                                                                     <a class="card-link" href="${p.source_url}" target="_blank" rel="noopener" style="white-space:nowrap">View ↗</a>`;
 
 	el.querySelector(".bmark-btn").addEventListener("click", () => toggleBM(p));
+	el.querySelector(".hide-btn").addEventListener("click", () => hideItem(p.source_url));
 	if (p.latitude != null)
 		el.querySelector(".map-btn").addEventListener("click", () =>
 			openMap(p.latitude, p.longitude, p.location_name ?? p.district ?? ""),
@@ -211,7 +235,7 @@ function render() {
 
 	let list = showingSaved
 		? allResults.filter((p) => bookmarks.has(p.source_url))
-		: allResults;
+		: allResults.filter((p) => !hidden.has(p.source_url));
 	list = sorted(list);
 
 	if (!list.length) {

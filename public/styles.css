@@ -731,6 +731,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
 	border-color: var(--yellow-b);
 	background: var(--yellow-dim);
 }
+.hide-btn {
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: none;
+	border: 1px solid var(--border);
+	border-radius: var(--r-sm);
+	color: var(--muted);
+	transition: all 0.15s;
+}
+.hide-btn:hover {
+	color: var(--red);
+	border-color: var(--red-b);
+	background: var(--red-dim);
+}
 
 /* Discount bar */
 .disc-top {
