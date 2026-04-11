@@ -309,6 +309,7 @@ function updateChips() {
 		["hasDocument", "Has document"],
 		["hasMortgage", "Mortgage"],
 		["isUrgent", "Urgent only"],
+		["notLastFloor", "Not last floor"],
 	];
 	checks.forEach(([id, lbl]) => {
 		if (ge(id).checked)
@@ -409,6 +410,7 @@ async function doSearch(more = false) {
 		if (cb("hasDocument")) p.set("hasDocument", "true");
 		if (cb("hasMortgage")) p.set("hasMortgage", "true");
 		if (cb("isUrgent")) p.set("isUrgent", "true");
+		if (cb("notLastFloor")) p.set("notLastFloor", "true");
 
 		const res = await fetch(`/api/deals/undervalued?${p}`);
 		const d = await res.json();
@@ -686,7 +688,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 // Live chip updates
-["hasRepair", "hasDocument", "hasMortgage", "isUrgent"].forEach((id) => {
+["hasRepair", "hasDocument", "hasMortgage", "isUrgent", "notLastFloor"].forEach((id) => {
 	ge(id).addEventListener("change", updateChips);
 });
 [
@@ -736,6 +738,7 @@ checkIfPresent("hasRepair", "hasRepair");
 checkIfPresent("hasDocument", "hasDocument");
 checkIfPresent("hasMortgage", "hasMortgage");
 checkIfPresent("isUrgent", "isUrgent");
+checkIfPresent("notLastFloor", "notLastFloor");
 
 updateChips();
 

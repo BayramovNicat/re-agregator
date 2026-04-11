@@ -90,6 +90,7 @@ export class AnalyticsService {
 			hasMortgage?: boolean;
 			hasRepair?: boolean;
 			isUrgent?: boolean;
+			notLastFloor?: boolean;
 			category?: string;
 			limit?: number;
 			offset?: number;
@@ -110,6 +111,7 @@ export class AnalyticsService {
 			hasMortgage,
 			hasRepair,
 			isUrgent,
+			notLastFloor,
 			category,
 			limit = 200,
 			offset = 0,
@@ -151,6 +153,8 @@ export class AnalyticsService {
 			conditions.push(Prisma.sql`p.has_repair = ${hasRepair}`);
 		if (isUrgent !== undefined)
 			conditions.push(Prisma.sql`p.is_urgent = ${isUrgent}`);
+		if (notLastFloor)
+			conditions.push(Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`);
 		if (category !== undefined)
 			conditions.push(Prisma.sql`p.category = ${category}`);
 
@@ -231,6 +235,7 @@ export class AnalyticsService {
 			hasMortgage?: boolean;
 			hasRepair?: boolean;
 			isUrgent?: boolean;
+			notLastFloor?: boolean;
 			category?: string;
 			limit?: number;
 			offset?: number;
@@ -251,6 +256,7 @@ export class AnalyticsService {
 			hasMortgage,
 			hasRepair,
 			isUrgent,
+			notLastFloor,
 			category,
 			limit = 200,
 			offset = 0,
@@ -292,6 +298,8 @@ export class AnalyticsService {
 			conditions.push(Prisma.sql`p.has_repair = ${hasRepair}`);
 		if (isUrgent !== undefined)
 			conditions.push(Prisma.sql`p.is_urgent = ${isUrgent}`);
+		if (notLastFloor)
+			conditions.push(Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`);
 		if (category !== undefined)
 			conditions.push(Prisma.sql`p.category = ${category}`);
 
