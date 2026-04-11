@@ -94,6 +94,8 @@ interface ItemDetail {
   description: string;
   updatedAt: string;
   category: { name: string } | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 // ── Scraper ───────────────────────────────────────────────────────────────────
@@ -153,8 +155,8 @@ export class BinaScraper extends BaseScraper {
           area_sqm: area,
           district,
           location_name: node.location.name,
-          latitude: node.location.latitude ?? undefined,
-          longitude: node.location.longitude ?? undefined,
+          latitude: detail?.latitude ?? node.location.latitude ?? undefined,
+          longitude: detail?.longitude ?? node.location.longitude ?? undefined,
           rooms: node.rooms ?? undefined,
           floor: node.floor ?? undefined,
           total_floors: node.floors ?? undefined,
@@ -274,7 +276,7 @@ export class BinaScraper extends BaseScraper {
    */
   private async batchFetchDetails(ids: string[]): Promise<Record<string, ItemDetail>> {
     const fields = ids
-      .map((id) => `i${id}: item(id: "${id}") { title description updatedAt category { name } }`)
+      .map((id) => `i${id}: item(id: "${id}") { title description updatedAt category { name } latitude longitude }`)
       .join('\n');
 
     const query = `{ ${fields} }`;
