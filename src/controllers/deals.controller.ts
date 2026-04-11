@@ -3,6 +3,10 @@ import { queryRaw } from '../utils/prisma.js';
 
 const analytics = new AnalyticsService();
 
+type TrendCacheEntry = { data: Awaited<ReturnType<typeof analytics.getPriceTrend>>; cachedAt: number };
+const trendCache = new Map<string, TrendCacheEntry>();
+const TREND_TTL_MS = 30 * 60_000; // 30 min — data changes only on scrape cycles
+
 let cachedLocations: string[] | null = null;
 let locationsCachedAt = 0;
 const LOCATIONS_TTL_MS = 60 * 60_000; // 60 min — location list changes at most every scrape cycle
@@ -27,6 +31,30 @@ export async function getLocations(_req: Request): Promise<Response> {
   } catch (err) {
     console.error('[DealsController] getLocations:', err);
     return Response.json({ error: 'Failed to fetch locations' }, { status: 500 });
+  }
+}
+
+/** GET /api/deals/trend?location=X — weekly avg ₼/m² for the sparkline */
+export async function getTrend(req: Request): Promise<Response> {
+  const location = new URL(req.url).searchParams.get('location');
+  if (!location) {
+    return Response.json({ error: 'Query parameter "location" is required' }, { status: 400 });
+  }
+  const cached = trendCache.get(location);
+  if (cached && Date.now() - cached.cachedAt < TREND_TTL_MS) {
+    return Response.json({ location, data: cached.data }, {
+      headers: { 'Cache-Control': 'public, max-age=1800, stale-while-revalidate=300' },
+    });
+  }
+  try {
+    const data = await analytics.getPriceTrend(location);
+    trendCache.set(location, { data, cachedAt: Date.now() });
+    return Response.json({ location, data }, {
+      headers: { 'Cache-Control': 'public, max-age=1800, stale-while-revalidate=300' },
+    });
+  } catch (err) {
+    console.error('[DealsController] getTrend:', err);
+    return Response.json({ error: 'Failed to fetch trend data' }, { status: 500 });
   }
 }
 

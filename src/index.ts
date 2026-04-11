@@ -1,4 +1,4 @@
-import { getUndervaluedDeals, getLocations } from './controllers/deals.controller.js';
+import { getUndervaluedDeals, getLocations, getTrend } from './controllers/deals.controller.js';
 import { streamScrape } from './controllers/scrape.controller.js';
 import { ScrapingService } from './services/scraping.service.js';
 import { BinaScraper } from './scrapers/bina.scraper.js';
@@ -29,6 +29,7 @@ Bun.serve({
       },
     },
     '/api/deals/locations':   { GET: getLocations },
+    '/api/deals/trend':       { GET: getTrend },
     '/api/deals/undervalued': { GET: getUndervaluedDeals },
     '/api/scrape/stream':     { GET: streamScrape },
   },

@@ -32,7 +32,35 @@ function classifyDeal(discountPercent: number): DealTier {
   return 'Overpriced';
 }
 
+export type TrendPoint = { week: Date; avg_ppsm: number; listing_count: number };
+
 export class AnalyticsService {
+  /**
+   * Returns weekly average price_per_sqm for a location over the last 16 weeks.
+   * Used to power the sparkline trend chart in the UI.
+   */
+  async getPriceTrend(location: string): Promise<TrendPoint[]> {
+    type Row = { week: Date; avg_ppsm: number; listing_count: bigint };
+    const rows = await queryRaw<Row[]>`
+      SELECT
+        DATE_TRUNC('week', created_at)            AS week,
+        ROUND(AVG(price_per_sqm)::numeric, 0)     AS avg_ppsm,
+        COUNT(*)                                   AS listing_count
+      FROM "Property"
+      WHERE location_name = ${location}
+        AND price_per_sqm > 0
+        AND created_at >= NOW() - INTERVAL '16 weeks'
+      GROUP BY DATE_TRUNC('week', created_at)
+      ORDER BY week ASC
+    `;
+    return rows.map((r) => ({
+      week: r.week,
+      avg_ppsm: Number(r.avg_ppsm),
+      listing_count: Number(r.listing_count),
+    }));
+  }
+
+
   /**
    * Returns properties in a location priced at least `thresholdPercent`% below
    * the location average price_per_sqm, with deal-score metadata attached.
