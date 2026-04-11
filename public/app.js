@@ -748,3 +748,129 @@ updateChips();
 		ge("health-txt").textContent = "Down";
 	}
 })();
+
+// ── Heatmap ───────────────────────────────────────────────────────────────
+const DISTRICT_COORDS = {
+	Nasimi: [40.3777, 49.8432],
+	Yasamal: [40.3853, 49.8213],
+	Nərimanov: [40.4109, 49.868],
+	Sabunçu: [40.4352, 49.938],
+	Nizami: [40.3924, 49.8528],
+	Binəqədi: [40.4426, 49.8345],
+	Xətai: [40.3777, 49.8792],
+	Suraxanı: [40.3951, 49.9641],
+	Səbail: [40.3642, 49.835],
+	Qaradağ: [40.2032, 49.9462],
+	Pirallahı: [40.5157, 49.9965],
+	Abşeron: [40.5127, 49.8372],
+};
+
+let hmap = null;
+const hmLayers = [];
+
+function priceColor(val, min, max) {
+	const t = Math.max(0, Math.min(1, (val - min) / (max - min || 1)));
+	// green → yellow → red
+	if (t < 0.5) {
+		const r = Math.round(34 + (245 - 34) * (t * 2));
+		const g = Math.round(197 + (158 - 197) * (t * 2));
+		const b = Math.round(94 + (11 - 94) * (t * 2));
+		return `rgb(${r},${g},${b})`;
+	}
+	const u = (t - 0.5) * 2;
+	const r = Math.round(245 + (239 - 245) * u);
+	const g = Math.round(158 + (68 - 158) * u);
+	const b = Math.round(11 + (68 - 11) * u);
+	return `rgb(${r},${g},${b})`;
+}
+
+function renderHeatmap(data) {
+	hmap.invalidateSize();
+	hmLayers.forEach((l) => hmap.removeLayer(l));
+	hmLayers.length = 0;
+
+	const prices = data.map((d) => d.avg_price_per_sqm);
+	const minP = Math.min(...prices);
+	const maxP = Math.max(...prices);
+	const maxCount = Math.max(...data.map((d) => d.count));
+
+	data.forEach((d) => {
+		const coords = DISTRICT_COORDS[d.district];
+		if (!coords) return;
+		const color = priceColor(d.avg_price_per_sqm, minP, maxP);
+		const radius = 350 + (d.count / maxCount) * 550;
+		const circle = L.circle(coords, {
+			radius,
+			color,
+			fillColor: color,
+			fillOpacity: 0.55,
+			weight: 1.5,
+			opacity: 0.8,
+		}).addTo(hmap);
+		circle.bindTooltip(
+			`<div class="hm-tip">
+        <div class="hm-tip-name">${d.district}</div>
+        <div class="hm-tip-price">₼ ${fmt(d.avg_price_per_sqm, 0)}<span>/m²</span></div>
+        <div class="hm-tip-count">${d.count.toLocaleString()} listings</div>
+      </div>`,
+			{ sticky: true, opacity: 1, className: "hm-tooltip" },
+		);
+		hmLayers.push(circle);
+	});
+
+	// Fit to circles
+	if (hmLayers.length) {
+		const group = L.featureGroup(hmLayers);
+		hmap.fitBounds(group.getBounds().pad(0.12));
+	}
+
+	// Legend
+	const steps = 5;
+	let legendHtml =
+		'<div class="hm-legend-label">Avg ₼/m²</div><div class="hm-legend-scale">';
+	for (let i = 0; i <= steps; i++) {
+		const v = minP + (i / steps) * (maxP - minP);
+		const c = priceColor(v, minP, maxP);
+		legendHtml += `<div class="hm-legend-step"><div class="hm-legend-dot" style="background:${c}"></div><span>${fmt(v, 0)}</span></div>`;
+	}
+	legendHtml += "</div>";
+	ge("heatmap-legend").innerHTML = legendHtml;
+}
+
+ge("heatmap-btn").addEventListener("click", () => {
+	ge("heatmap-modal").showModal();
+	// Wait one frame so the dialog has real pixel dimensions before Leaflet touches it
+	requestAnimationFrame(() => {
+		if (!hmap) {
+			hmap = L.map("heatmap-ct", {
+				zoomControl: true,
+				attributionControl: false,
+			});
+			L.tileLayer(
+				"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+				{ subdomains: "abcd", maxZoom: 19 },
+			).addTo(hmap);
+			hmap.setView([40.38, 49.87], 11);
+		} else {
+			hmap.invalidateSize();
+		}
+
+		fetch("/api/heatmap")
+			.then((r) => r.json())
+			.then((d) => {
+				if (d.error) {
+					toast(d.error, true);
+					return;
+				}
+				renderHeatmap(d.data);
+			})
+			.catch((e) => toast(e.message, true));
+	});
+});
+
+ge("heatmap-close").addEventListener("click", () =>
+	ge("heatmap-modal").close(),
+);
+ge("heatmap-modal").addEventListener("click", (e) => {
+	if (e.target === e.currentTarget) e.currentTarget.close();
+});

@@ -77,6 +77,45 @@ export async function getTrend(req: Request): Promise<Response> {
 	}
 }
 
+/** GET /api/heatmap — avg price_per_sqm + listing count per district */
+export async function getHeatmap(_req: Request): Promise<Response> {
+	try {
+		const rows = await queryRaw<
+			{ district: string; avg_ppsm: number; count: bigint }[]
+		>`
+      SELECT
+        district,
+        ROUND(AVG(price_per_sqm))::int AS avg_ppsm,
+        COUNT(*)::bigint AS count
+      FROM "Property"
+      WHERE district IS NOT NULL
+        AND district != 'Unknown'
+        AND price_per_sqm > 0
+      GROUP BY district
+      ORDER BY avg_ppsm DESC
+    `;
+		const data = rows.map((r) => ({
+			district: r.district,
+			avg_price_per_sqm: Number(r.avg_ppsm),
+			count: Number(r.count),
+		}));
+		return Response.json(
+			{ data },
+			{
+				headers: {
+					"Cache-Control": "public, max-age=900, stale-while-revalidate=300",
+				},
+			},
+		);
+	} catch (err) {
+		console.error("[DealsController] getHeatmap:", err);
+		return Response.json(
+			{ error: "Failed to fetch heatmap data" },
+			{ status: 500 },
+		);
+	}
+}
+
 /** GET /api/deals/undervalued */
 export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const url = new URL(req.url);
