@@ -140,6 +140,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 			{ status: 400 },
 		);
 	}
+	const isAll = location === "__all__";
 
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
@@ -179,30 +180,30 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 		return val === "true";
 	}
 
+	const filterArgs = {
+		minPrice: optNum(q.get("minPrice")),
+		maxPrice: optNum(q.get("maxPrice")),
+		minArea: optNum(q.get("minArea")),
+		maxArea: optNum(q.get("maxArea")),
+		minRooms: optNum(q.get("minRooms")),
+		maxRooms: optNum(q.get("maxRooms")),
+		minFloor: optNum(q.get("minFloor")),
+		maxFloor: optNum(q.get("maxFloor")),
+		minTotalFloors: optNum(q.get("minTotalFloors")),
+		maxTotalFloors: optNum(q.get("maxTotalFloors")),
+		hasDocument: optBool(q.get("hasDocument")),
+		hasMortgage: optBool(q.get("hasMortgage")),
+		hasRepair: optBool(q.get("hasRepair")),
+		isUrgent: optBool(q.get("isUrgent")),
+		category: q.get("category") ?? undefined,
+		limit,
+		offset,
+	};
+
 	try {
-		const { total, data } = await analytics.getUndervaluedByLocation(
-			location,
-			thresholdPct,
-			{
-				minPrice: optNum(q.get("minPrice")),
-				maxPrice: optNum(q.get("maxPrice")),
-				minArea: optNum(q.get("minArea")),
-				maxArea: optNum(q.get("maxArea")),
-				minRooms: optNum(q.get("minRooms")),
-				maxRooms: optNum(q.get("maxRooms")),
-				minFloor: optNum(q.get("minFloor")),
-				maxFloor: optNum(q.get("maxFloor")),
-				minTotalFloors: optNum(q.get("minTotalFloors")),
-				maxTotalFloors: optNum(q.get("maxTotalFloors")),
-				hasDocument: optBool(q.get("hasDocument")),
-				hasMortgage: optBool(q.get("hasMortgage")),
-				hasRepair: optBool(q.get("hasRepair")),
-				isUrgent: optBool(q.get("isUrgent")),
-				category: q.get("category") ?? undefined,
-				limit,
-				offset,
-			},
-		);
+		const { total, data } = isAll
+			? await analytics.getUndervaluedAll(thresholdPct, filterArgs)
+			: await analytics.getUndervaluedByLocation(location, thresholdPct, filterArgs);
 		return Response.json(
 			{
 				location,

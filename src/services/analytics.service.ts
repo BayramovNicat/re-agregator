@@ -209,4 +209,147 @@ export class AnalyticsService {
 			})),
 		};
 	}
+
+	/**
+	 * Same as getUndervaluedByLocation but across all locations.
+	 * Each property is compared against its own location's avg price_per_sqm.
+	 */
+	async getUndervaluedAll(
+		thresholdPercent = 10,
+		filters: {
+			minPrice?: number;
+			maxPrice?: number;
+			minArea?: number;
+			maxArea?: number;
+			minRooms?: number;
+			maxRooms?: number;
+			minFloor?: number;
+			maxFloor?: number;
+			minTotalFloors?: number;
+			maxTotalFloors?: number;
+			hasDocument?: boolean;
+			hasMortgage?: boolean;
+			hasRepair?: boolean;
+			isUrgent?: boolean;
+			category?: string;
+			limit?: number;
+			offset?: number;
+		} = {},
+	) {
+		const {
+			minPrice,
+			maxPrice,
+			minArea,
+			maxArea,
+			minRooms,
+			maxRooms,
+			minFloor,
+			maxFloor,
+			minTotalFloors,
+			maxTotalFloors,
+			hasDocument,
+			hasMortgage,
+			hasRepair,
+			isUrgent,
+			category,
+			limit = 200,
+			offset = 0,
+		} = filters;
+
+		const factor = (100 - thresholdPercent) / 100.0;
+
+		const conditions: Prisma.Sql[] = [
+			Prisma.sql`p.location_name IS NOT NULL`,
+			Prisma.sql`p.price_per_sqm > 0`,
+			Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`,
+		];
+
+		if (minPrice !== undefined)
+			conditions.push(Prisma.sql`p.price >= ${minPrice}`);
+		if (maxPrice !== undefined)
+			conditions.push(Prisma.sql`p.price <= ${maxPrice}`);
+		if (minArea !== undefined)
+			conditions.push(Prisma.sql`p.area_sqm >= ${minArea}`);
+		if (maxArea !== undefined)
+			conditions.push(Prisma.sql`p.area_sqm <= ${maxArea}`);
+		if (minRooms !== undefined)
+			conditions.push(Prisma.sql`p.rooms >= ${minRooms}`);
+		if (maxRooms !== undefined)
+			conditions.push(Prisma.sql`p.rooms <= ${maxRooms}`);
+		if (minFloor !== undefined)
+			conditions.push(Prisma.sql`p.floor >= ${minFloor}`);
+		if (maxFloor !== undefined)
+			conditions.push(Prisma.sql`p.floor <= ${maxFloor}`);
+		if (minTotalFloors !== undefined)
+			conditions.push(Prisma.sql`p.total_floors >= ${minTotalFloors}`);
+		if (maxTotalFloors !== undefined)
+			conditions.push(Prisma.sql`p.total_floors <= ${maxTotalFloors}`);
+		if (hasDocument !== undefined)
+			conditions.push(Prisma.sql`p.has_document = ${hasDocument}`);
+		if (hasMortgage !== undefined)
+			conditions.push(Prisma.sql`p.has_mortgage = ${hasMortgage}`);
+		if (hasRepair !== undefined)
+			conditions.push(Prisma.sql`p.has_repair = ${hasRepair}`);
+		if (isUrgent !== undefined)
+			conditions.push(Prisma.sql`p.is_urgent = ${isUrgent}`);
+		if (category !== undefined)
+			conditions.push(Prisma.sql`p.category = ${category}`);
+
+		type Row = {
+			id: number;
+			source_url: string;
+			price: number;
+			area_sqm: number;
+			price_per_sqm: number;
+			district: string;
+			location_name: string | null;
+			latitude: number | null;
+			longitude: number | null;
+			rooms: number | null;
+			floor: number | null;
+			total_floors: number | null;
+			category: string | null;
+			has_document: boolean | null;
+			has_mortgage: boolean | null;
+			has_repair: boolean | null;
+			description: string | null;
+			is_urgent: boolean;
+			posted_date: Date | null;
+			created_at: Date;
+			updated_at: Date;
+			location_avg_price_per_sqm: number;
+			discount_percent: number;
+			total_count: bigint;
+		};
+
+		const rows = await queryRaw<Row[]>`
+      WITH loc_avg AS (
+        SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
+        FROM "Property"
+        WHERE location_name IS NOT NULL AND price_per_sqm > 0
+        GROUP BY location_name
+      )
+      SELECT
+        p.*,
+        ROUND(loc_avg.avg_ppsm::numeric, 2)                                                AS location_avg_price_per_sqm,
+        ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent,
+        COUNT(*) OVER ()                                                                    AS total_count
+      FROM "Property" p
+      JOIN loc_avg ON p.location_name = loc_avg.location_name
+      WHERE ${Prisma.join(conditions, " AND ")}
+      ORDER BY discount_percent DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+
+		if (rows.length === 0) return { total: 0, data: [] };
+
+		const total = Number(rows[0]?.total_count);
+		return {
+			total,
+			data: rows.map(({ total_count: _, ...p }) => ({
+				...p,
+				tier: classifyDeal(p.discount_percent),
+			})),
+		};
+	}
 }

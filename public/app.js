@@ -410,7 +410,7 @@ async function doSearch(more = false) {
 			`${window.location.pathname}?${urlParams.toString()}`,
 		);
 
-		if (!more) fetchTrend(loc);
+		if (!more && loc !== "__all__") fetchTrend(loc);
 
 		if (!allResults.length) {
 			show("s-empty");
@@ -722,6 +722,10 @@ updateChips();
 		const r = await fetch("/api/deals/locations");
 		const d = await r.json();
 		sel.innerHTML = "";
+		const allOpt = document.createElement("option");
+		allOpt.value = "__all__";
+		allOpt.textContent = "All locations";
+		sel.appendChild(allOpt);
 		d.data.forEach((loc) => {
 			const o = document.createElement("option");
 			o.value = o.textContent = loc;
