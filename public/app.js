@@ -799,26 +799,20 @@ function renderHeatmap(data) {
       </div>`,
 			{ sticky: true, opacity: 1, className: "hm-tooltip" },
 		);
+		circle.on("click", () => {
+			ge("heatmap-modal").close();
+			ge("loc").value = d.location_name;
+			doSearch(false);
+		});
 		hmLayers.push(circle);
 	});
 
-	// Fit to circles
-	if (hmLayers.length) {
+	// Fit to circles only if no saved state exists
+	const saved = localStorage.getItem("hmap-view");
+	if (hmLayers.length && !saved) {
 		const group = L.featureGroup(hmLayers);
 		hmap.fitBounds(group.getBounds().pad(0.12));
 	}
-
-	// Legend
-	const steps = 5;
-	let legendHtml =
-		'<div class="hm-legend-label">Avg ₼/m²</div><div class="hm-legend-scale">';
-	for (let i = 0; i <= steps; i++) {
-		const v = minP + (i / steps) * (maxP - minP);
-		const c = priceColor(v, minP, maxP);
-		legendHtml += `<div class="hm-legend-step"><div class="hm-legend-dot" style="background:${c}"></div><span>${fmt(v, 0)}</span></div>`;
-	}
-	legendHtml += "</div>";
-	ge("heatmap-legend").innerHTML = legendHtml;
 }
 
 ge("heatmap-btn").addEventListener("click", () => {
@@ -834,7 +828,23 @@ ge("heatmap-btn").addEventListener("click", () => {
 				"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
 				{ subdomains: "abcd", maxZoom: 19 },
 			).addTo(hmap);
-			hmap.setView([40.38, 49.87], 11);
+
+			const saved = JSON.parse(localStorage.getItem("hmap-view") || "null");
+			if (saved) {
+				hmap.setView(saved.center, saved.zoom);
+			} else {
+				hmap.setView([40.38, 49.87], 11);
+			}
+
+			hmap.on("moveend", () => {
+				localStorage.setItem(
+					"hmap-view",
+					JSON.stringify({
+						center: hmap.getCenter(),
+						zoom: hmap.getZoom(),
+					}),
+				);
+			});
 		} else {
 			hmap.invalidateSize();
 		}
