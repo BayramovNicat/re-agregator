@@ -4,6 +4,7 @@ let currentTotal = 0;
 let currentOffset = 0;
 let currentView = "grid";
 let showingSaved = false;
+let scrollObserver = null;
 const renderedSet = new Set();
 const bookmarks = new Set(JSON.parse(localStorage.getItem("re-bm") || "[]"));
 const hidden = new Set(JSON.parse(localStorage.getItem("re-hidden") || "[]"));
@@ -168,7 +169,9 @@ function buildCard(p) {
                                                                                                                                     </div>`;
 
 	el.querySelector(".bmark-btn").addEventListener("click", () => toggleBM(p));
-	el.querySelector(".hide-btn").addEventListener("click", () => hideItem(p.source_url));
+	el.querySelector(".hide-btn").addEventListener("click", () =>
+		hideItem(p.source_url),
+	);
 	if (p.description)
 		el.querySelector(".desc-btn").addEventListener("click", () =>
 			openDesc(p.description),
@@ -207,7 +210,9 @@ function buildRow(p) {
                                                                                                                                     <a class="card-link" href="${p.source_url}" target="_blank" rel="noopener" style="white-space:nowrap">View ↗</a>`;
 
 	el.querySelector(".bmark-btn").addEventListener("click", () => toggleBM(p));
-	el.querySelector(".hide-btn").addEventListener("click", () => hideItem(p.source_url));
+	el.querySelector(".hide-btn").addEventListener("click", () =>
+		hideItem(p.source_url),
+	);
 	if (p.latitude != null)
 		el.querySelector(".map-btn").addEventListener("click", () =>
 			openMap(p.latitude, p.longitude, p.location_name ?? p.district ?? ""),
@@ -269,13 +274,18 @@ function render() {
 		? `<strong>${showing}</strong> saved deal${showing !== 1 ? "s" : ""}`
 		: `<strong>${showing}</strong> result${showing !== 1 ? "s" : ""}${currentTotal > allResults.length ? ` <span style="color:var(--muted)">· ${fmt(currentTotal)} total</span>` : ""}`;
 
-	// load more
+	// infinite scroll sentinel
 	if (!showingSaved && allResults.length < currentTotal) {
 		show("load-more");
 		ge("load-info").textContent =
 			`Showing ${allResults.length} of ${fmt(currentTotal)}`;
+		setupScrollObserver();
 	} else {
 		hide("load-more");
+		if (scrollObserver) {
+			scrollObserver.disconnect();
+			scrollObserver = null;
+		}
 	}
 
 	// saved button
@@ -374,8 +384,6 @@ async function doSearch(more = false) {
 		show("s-loading");
 	}
 	ge("search-btn").disabled = true;
-	const lmBtn = ge("load-more-btn");
-	if (lmBtn) lmBtn.disabled = true;
 
 	function v(id) {
 		return ge(id).value.trim();
@@ -447,7 +455,6 @@ async function doSearch(more = false) {
 		toast(e.message, true);
 	} finally {
 		ge("search-btn").disabled = false;
-		if (lmBtn) lmBtn.disabled = false;
 	}
 }
 
@@ -630,7 +637,25 @@ ge("desc-modal").addEventListener("click", (e) => {
 
 // ── Events ────────────────────────────────────────────────────────────────
 ge("search-btn").addEventListener("click", () => doSearch(false));
-ge("load-more-btn").addEventListener("click", () => doSearch(true));
+
+// ── Infinite scroll ───────────────────────────────────────────────────────
+function setupScrollObserver() {
+	if (scrollObserver) scrollObserver.disconnect();
+	const sentinel = ge("scroll-sentinel");
+	if (!sentinel) return;
+	scrollObserver = new IntersectionObserver(
+		(entries) => {
+			if (
+				entries[0].isIntersecting &&
+				ge("load-more").style.display !== "none"
+			) {
+				doSearch(true);
+			}
+		},
+		{ rootMargin: "200px" },
+	);
+	scrollObserver.observe(sentinel);
+}
 function updateThreshBg() {
 	const t = ge("thresh");
 	const p = ((t.value - t.min) / (t.max - t.min)) * 100;
@@ -688,9 +713,11 @@ document.addEventListener("keydown", (e) => {
 });
 
 // Live chip updates
-["hasRepair", "hasDocument", "hasMortgage", "isUrgent", "notLastFloor"].forEach((id) => {
-	ge(id).addEventListener("change", updateChips);
-});
+["hasRepair", "hasDocument", "hasMortgage", "isUrgent", "notLastFloor"].forEach(
+	(id) => {
+		ge(id).addEventListener("change", updateChips);
+	},
+);
 [
 	"minPrice",
 	"maxPrice",
@@ -803,7 +830,9 @@ function priceColor(val, min, max) {
 
 function renderHeatmap(data) {
 	hmap.invalidateSize();
-	hmLayers.forEach((l) => {hmap.removeLayer(l)});
+	hmLayers.forEach((l) => {
+		hmap.removeLayer(l);
+	});
 	hmLayers.length = 0;
 
 	const prices = data.map((d) => d.avg_price_per_sqm);

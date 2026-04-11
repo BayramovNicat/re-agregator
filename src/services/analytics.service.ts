@@ -154,7 +154,9 @@ export class AnalyticsService {
 		if (isUrgent !== undefined)
 			conditions.push(Prisma.sql`p.is_urgent = ${isUrgent}`);
 		if (notLastFloor)
-			conditions.push(Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`);
+			conditions.push(
+				Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`,
+			);
 		if (category !== undefined)
 			conditions.push(Prisma.sql`p.category = ${category}`);
 
@@ -299,7 +301,9 @@ export class AnalyticsService {
 		if (isUrgent !== undefined)
 			conditions.push(Prisma.sql`p.is_urgent = ${isUrgent}`);
 		if (notLastFloor)
-			conditions.push(Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`);
+			conditions.push(
+				Prisma.sql`(p.floor IS NULL OR p.total_floors IS NULL OR p.floor < p.total_floors)`,
+			);
 		if (category !== undefined)
 			conditions.push(Prisma.sql`p.category = ${category}`);
 

@@ -204,7 +204,11 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	try {
 		const { total, data } = isAll
 			? await analytics.getUndervaluedAll(thresholdPct, filterArgs)
-			: await analytics.getUndervaluedByLocation(location, thresholdPct, filterArgs);
+			: await analytics.getUndervaluedByLocation(
+					location,
+					thresholdPct,
+					filterArgs,
+				);
 		return Response.json(
 			{
 				location,

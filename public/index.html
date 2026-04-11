@@ -420,23 +420,9 @@
       <!-- Cards -->
       <div id="cards"></div>
 
-      <!-- Load more -->
-      <div class="load-more" id="load-more" style="display: none">
-        <button type="button" class="btn-sec" id="load-more-btn">
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            aria-hidden="true"
-          >
-            <path d="M12 5v14M5 12l7 7 7-7" />
-          </svg>
-          Load more
-        </button>
+      <!-- Infinite scroll sentinel -->
+      <div id="load-more" style="display: none">
+        <div id="scroll-sentinel"></div>
         <p class="load-info" id="load-info"></p>
       </div>
     </div>

@@ -904,28 +904,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
 	text-align: center;
 	margin-top: 28px;
 }
-.btn-sec {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	background: var(--surface-2);
-	border: 1px solid var(--border);
-	border-radius: var(--r);
-	padding: 9px 20px;
-	color: var(--text-2);
-	font-size: 13px;
-	font-weight: 500;
-	transition: all 0.15s;
-}
-.btn-sec:hover {
-	border-color: var(--border-h);
-	color: var(--text);
-	background: var(--surface-3);
-}
-.btn-sec:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
 .load-info {
 	font-size: 11px;
 	color: var(--muted);
