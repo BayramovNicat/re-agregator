@@ -176,6 +176,7 @@ export class BinaScraper extends BaseScraper {
 
 				const detail = details[node.id];
 				const urgencyText = `${detail?.title ?? ""} ${detail?.description ?? ""}`;
+				const mortgageText = detail?.description ?? "";
 
 				const normalizedDistrict = slugToDistrict(node.location.slug);
 				// Fall back to the exact location name from the API when district can't be resolved
@@ -201,6 +202,7 @@ export class BinaScraper extends BaseScraper {
 					has_repair: node.hasRepair ?? undefined,
 					description: detail?.description,
 					is_urgent: this.isUrgent(urgencyText),
+					has_active_mortgage: this.isActiveMortgage(mortgageText),
 					posted_date: detail?.updatedAt
 						? new Date(detail.updatedAt)
 						: undefined,

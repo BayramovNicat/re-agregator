@@ -117,6 +117,10 @@ function buildCard(p) {
 		tags.push(
 			`<span class="tag" style="color:var(--text-2);border-color:var(--border)">Mortgage</span>`,
 		);
+	if (p.has_active_mortgage)
+		tags.push(
+			`<span class="tag" style="color:var(--yellow);border-color:var(--yellow-b);background:var(--yellow-dim)">⚠ Active mortgage</span>`,
+		);
 	const ago = timeAgo(p.posted_date);
 	if (ago)
 		tags.push(
@@ -320,6 +324,8 @@ function updateChips() {
 		["hasMortgage", "Mortgage"],
 		["isUrgent", "Urgent only"],
 		["notLastFloor", "Not last floor"],
+		["noActiveMortgage", "No active mortgage"],
+		["hasActiveMortgage", "Active mortgage only"],
 	];
 	checks.forEach(([id, lbl]) => {
 		if (ge(id).checked)
@@ -419,6 +425,8 @@ async function doSearch(more = false) {
 		if (cb("hasMortgage")) p.set("hasMortgage", "true");
 		if (cb("isUrgent")) p.set("isUrgent", "true");
 		if (cb("notLastFloor")) p.set("notLastFloor", "true");
+		if (cb("noActiveMortgage")) p.set("hasActiveMortgage", "false");
+		else if (cb("hasActiveMortgage")) p.set("hasActiveMortgage", "true");
 
 		const res = await fetch(`/api/deals/undervalued?${p}`);
 		const d = await res.json();
@@ -710,6 +718,16 @@ document.addEventListener("keydown", (e) => {
 		ge("map-modal").close();
 		ge("desc-modal").close();
 	}
+});
+
+// Mutual exclusion: noActiveMortgage ↔ hasActiveMortgage
+ge("noActiveMortgage").addEventListener("change", () => {
+	if (ge("noActiveMortgage").checked) ge("hasActiveMortgage").checked = false;
+	updateChips();
+});
+ge("hasActiveMortgage").addEventListener("change", () => {
+	if (ge("hasActiveMortgage").checked) ge("noActiveMortgage").checked = false;
+	updateChips();
 });
 
 // Live chip updates

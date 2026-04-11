@@ -196,6 +196,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 		hasRepair: optBool(q.get("hasRepair")),
 		isUrgent: optBool(q.get("isUrgent")),
 		notLastFloor: optBool(q.get("notLastFloor")),
+		hasActiveMortgage: optBool(q.get("hasActiveMortgage")),
 		category: q.get("category") ?? undefined,
 		limit,
 		offset,

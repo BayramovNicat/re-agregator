@@ -25,14 +25,16 @@ model Property {
   has_mortgage    Boolean?
   has_repair      Boolean?
   description     String?
-  is_urgent       Boolean   @default(false)
-  posted_date     DateTime?
+  is_urgent             Boolean   @default(false)
+  has_active_mortgage   Boolean   @default(false)
+  posted_date           DateTime?
   created_at      DateTime  @default(now())
   updated_at      DateTime  @updatedAt
 
   @@index([district])
   @@index([location_name])
   @@index([is_urgent])
+  @@index([has_active_mortgage])
   @@index([price_per_sqm])
   @@index([location_name, price_per_sqm])
   @@index([location_name, is_urgent, posted_date])

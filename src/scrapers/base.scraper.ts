@@ -21,6 +21,7 @@ export interface ScrapedListing {
 	has_repair?: boolean;
 	description?: string;
 	is_urgent: boolean;
+	has_active_mortgage: boolean;
 	posted_date?: Date;
 }
 
@@ -73,11 +74,30 @@ export abstract class BaseScraper implements IScraper {
 		/t[əe]c[iİ]l[iİ]|[əea]l[iİ]m\s+yand[ıiIİ]|срочно/i;
 
 	/**
+	 * Detects listings where the property already carries an active mortgage or debt.
+	 * Matches Azerbaijani phrases used by sellers to indicate the property is
+	 * encumbered: "hazır/hazir ipoteka" (existing mortgage), "borc" (debt), etc.
+	 *
+	 * Tolerates ASCII fallbacks for Azerbaijani characters
+	 * (ı→i, ə→e, ğ→g, ş→s, ö→o, ü→u) that users commonly type on non-AZ keyboards.
+	 */
+	private static readonly ACTIVE_MORTGAGE_RE =
+		/haz[ıi]r\s+ipoteka|ipoteka\s+borcu|bank\s+borcu|kredit\s+borcu|borclu|\bborc\b|girov/i;
+
+	/**
 	 * Returns true if the listing text contains the Azerbaijani word for "urgent".
 	 * Listings marked "təcili" are typically priced to sell quickly.
 	 */
 	protected isUrgent(text: string): boolean {
 		return BaseScraper.URGENCY_RE.test(text);
+	}
+
+	/**
+	 * Returns true if the listing text indicates the property has an active
+	 * mortgage or outstanding debt (seller is paying off a loan / bank claim).
+	 */
+	protected isActiveMortgage(text: string): boolean {
+		return BaseScraper.ACTIVE_MORTGAGE_RE.test(text);
 	}
 
 	/**

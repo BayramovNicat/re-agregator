@@ -117,6 +117,7 @@ export class ScrapingService {
 			has_repair: l.has_repair ?? null,
 			description: l.description ?? null,
 			is_urgent: l.is_urgent,
+			has_active_mortgage: l.has_active_mortgage,
 			posted_date: l.posted_date ?? null,
 		}));
 
@@ -133,7 +134,7 @@ export class ScrapingService {
             ${r.district}, ${r.location_name}, ${r.latitude}, ${r.longitude},
             ${r.rooms}, ${r.floor}, ${r.total_floors}, ${r.category},
             ${r.has_document}, ${r.has_mortgage}, ${r.has_repair},
-            ${r.description}, ${r.is_urgent}, ${r.posted_date},
+            ${r.description}, ${r.is_urgent}, ${r.has_active_mortgage}, ${r.posted_date},
             ${now}, ${now}
           )`,
 				);
@@ -144,29 +145,30 @@ export class ScrapingService {
             district, location_name, latitude, longitude,
             rooms, floor, total_floors, category,
             has_document, has_mortgage, has_repair,
-            description, is_urgent, posted_date,
+            description, is_urgent, has_active_mortgage, posted_date,
             created_at, updated_at
           )
           VALUES ${Prisma.join(valueFragments)}
           ON CONFLICT (source_url) DO UPDATE SET
-            price         = EXCLUDED.price,
-            area_sqm      = EXCLUDED.area_sqm,
-            price_per_sqm = EXCLUDED.price_per_sqm,
-            district      = EXCLUDED.district,
-            location_name = EXCLUDED.location_name,
-            latitude      = EXCLUDED.latitude,
-            longitude     = EXCLUDED.longitude,
-            rooms         = EXCLUDED.rooms,
-            floor         = EXCLUDED.floor,
-            total_floors  = EXCLUDED.total_floors,
-            category      = EXCLUDED.category,
-            has_document  = EXCLUDED.has_document,
-            has_mortgage  = EXCLUDED.has_mortgage,
-            has_repair    = EXCLUDED.has_repair,
-            description   = EXCLUDED.description,
-            is_urgent     = EXCLUDED.is_urgent,
-            posted_date   = EXCLUDED.posted_date,
-            updated_at    = now()
+            price               = EXCLUDED.price,
+            area_sqm            = EXCLUDED.area_sqm,
+            price_per_sqm       = EXCLUDED.price_per_sqm,
+            district            = EXCLUDED.district,
+            location_name       = EXCLUDED.location_name,
+            latitude            = EXCLUDED.latitude,
+            longitude           = EXCLUDED.longitude,
+            rooms               = EXCLUDED.rooms,
+            floor               = EXCLUDED.floor,
+            total_floors        = EXCLUDED.total_floors,
+            category            = EXCLUDED.category,
+            has_document        = EXCLUDED.has_document,
+            has_mortgage        = EXCLUDED.has_mortgage,
+            has_repair          = EXCLUDED.has_repair,
+            description         = EXCLUDED.description,
+            is_urgent           = EXCLUDED.is_urgent,
+            has_active_mortgage = EXCLUDED.has_active_mortgage,
+            posted_date         = EXCLUDED.posted_date,
+            updated_at          = now()
         `;
 
 				persisted += affected;
@@ -197,6 +199,7 @@ export class ScrapingService {
 								has_repair: r.has_repair,
 								description: r.description,
 								is_urgent: r.is_urgent,
+								has_active_mortgage: r.has_active_mortgage,
 								posted_date: r.posted_date,
 							},
 							create: {
@@ -217,6 +220,7 @@ export class ScrapingService {
 								has_repair: r.has_repair,
 								description: r.description,
 								is_urgent: r.is_urgent,
+								has_active_mortgage: r.has_active_mortgage,
 								posted_date: r.posted_date,
 							},
 						});
