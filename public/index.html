@@ -68,6 +68,9 @@
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
       }
+      body:has(dialog[open]) {
+        overflow: hidden;
+      }
       ::-webkit-scrollbar {
         width: 5px;
       }
@@ -982,40 +985,6 @@
         display: flex;
         flex-direction: column;
       }
-      .modal-hdr {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--border);
-        gap: 12px;
-      }
-      .modal-title {
-        font-size: 14px;
-        font-weight: 600;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .modal-x {
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: none;
-        border: 1px solid var(--border);
-        border-radius: var(--r-sm);
-        color: var(--muted);
-        flex-shrink: 0;
-        transition: all 0.15s;
-      }
-      .modal-x:hover {
-        color: var(--text);
-        border-color: var(--border-h);
-        background: var(--surface-2);
-      }
 
       /* ── Leaflet ── */
       .leaflet-container {
@@ -1455,22 +1424,7 @@
     <!-- Map modal -->
     <dialog id="map-modal">
       <div class="modal-box" style="width: min(640px, calc(100vw - 2rem))">
-        <div class="modal-hdr">
-          <span class="modal-title" id="map-title">Property Location</span>
-          <button class="modal-x" id="map-close" aria-label="Close">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+
         <div id="map-ct" style="width: 100%; height: 380px"></div>
       </div>
     </dialog>
@@ -1478,22 +1432,7 @@
     <!-- Desc modal -->
     <dialog id="desc-modal">
       <div class="modal-box" style="width: min(560px, calc(100vw - 2rem))">
-        <div class="modal-hdr">
-          <span class="modal-title" id="desc-title">Description</span>
-          <button class="modal-x" id="desc-close" aria-label="Close">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+
         <div style="padding: 20px; overflow-y: auto; max-height: 60vh">
           <p
             id="desc-body"
@@ -1954,7 +1893,6 @@
         lmark = L.marker([0, 0], { icon }).addTo(lmap);
       }
       function openMap(lat, lng, lbl) {
-        ge("map-title").textContent = lbl || "Property Location";
         ge("map-modal").showModal();
         requestAnimationFrame(() => {
           initMap();
@@ -1963,20 +1901,15 @@
           lmap.setView([lat, lng], 15, { animate: false });
         });
       }
-      ge("map-close").addEventListener("click", () => ge("map-modal").close());
       ge("map-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) e.currentTarget.close();
       });
 
       // ── Desc ──────────────────────────────────────────────────────────────────
       function openDesc(text, lbl) {
-        ge("desc-title").textContent = lbl || "Description";
         ge("desc-body").textContent = text;
         ge("desc-modal").showModal();
       }
-      ge("desc-close").addEventListener("click", () =>
-        ge("desc-modal").close(),
-      );
       ge("desc-modal").addEventListener("click", (e) => {
         if (e.target === e.currentTarget) e.currentTarget.close();
       });
