@@ -785,6 +785,11 @@ checkIfPresent("hasMortgage", "hasMortgage");
 checkIfPresent("isUrgent", "isUrgent");
 checkIfPresent("notLastFloor", "notLastFloor");
 
+if (initParams.has("hasActiveMortgage")) {
+	if (initParams.get("hasActiveMortgage") === "false") ge("noActiveMortgage").checked = true;
+	else if (initParams.get("hasActiveMortgage") === "true") ge("hasActiveMortgage").checked = true;
+}
+
 updateChips();
 
 // ── Init ──────────────────────────────────────────────────────────────────
