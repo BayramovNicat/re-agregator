@@ -18,6 +18,28 @@ import { queryRaw } from "./utils/prisma.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
 
+// Compute content hash at startup for cache busting
+async function computeAssetHash(): Promise<string> {
+	const publicDir = `${import.meta.dir}/../public`;
+	const [js, css] = await Promise.all([
+		Bun.file(`${publicDir}/app.js`).arrayBuffer(),
+		Bun.file(`${publicDir}/styles.css`).arrayBuffer(),
+	]);
+	const hasher = new Bun.CryptoHasher("md5");
+	hasher.update(js);
+	hasher.update(css);
+	return hasher.digest("hex").slice(0, 8);
+}
+
+const ASSET_VERSION = await computeAssetHash();
+const publicDir = `${import.meta.dir}/../public`;
+const rawHtml = await Bun.file(`${publicDir}/index.html`).text();
+const versionedHtml = rawHtml
+	.replace('href="/styles.css"', `href="/styles.css?v=${ASSET_VERSION}"`)
+	.replace('src="/app.js"', `src="/app.js?v=${ASSET_VERSION}"`);
+
+console.log(`Asset version: ${ASSET_VERSION}`);
+
 Bun.serve({
 	port: PORT,
 	routes: {
@@ -46,11 +68,16 @@ Bun.serve({
 	},
 	async fetch(req) {
 		const url = new URL(req.url);
-		const filePath = `${import.meta.dir}/../public${url.pathname}`;
+		const filePath = `${publicDir}${url.pathname}`;
 		const file = Bun.file(filePath);
 		if (await file.exists()) return new Response(file);
-		// SPA fallback
-		return new Response(Bun.file(`${import.meta.dir}/../public/index.html`));
+		// SPA fallback — serve versioned HTML
+		return new Response(versionedHtml, {
+			headers: {
+				"Content-Type": "text/html; charset=utf-8",
+				"Cache-Control": "no-store",
+			},
+		});
 	},
 });
 
