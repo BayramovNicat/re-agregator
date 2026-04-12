@@ -1,6 +1,5 @@
 import type { CardCallbacks, Property } from "../core/types";
-import { fmt, fmtFloor, timeAgo } from "../core/utils";
-import { html } from "../util/html";
+import { fmt, fmtFloor, html, timeAgo } from "../core/utils";
 import { Icons } from "./icons";
 import { ts } from "./tier";
 
@@ -276,7 +275,7 @@ function createButtons(bookmarked: boolean) {
   </button>`;
 
 	const descBtn = html`<button
-    class="inline-flex items-center gap-1 bg-transparent border-none p-0 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text) desc-btn"
+    class="inline-flex items-center gap-1 bg-transparent border-none p-0 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
     data-action="desc"
     title="Description"
   >

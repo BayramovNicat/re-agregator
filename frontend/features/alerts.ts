@@ -1,5 +1,5 @@
 import type { Alert, AlertFilters } from "../core/types";
-import { ge, toast } from "../core/utils";
+import { ge, html, toast } from "../core/utils";
 
 export function getCurrentFilters(): AlertFilters {
 	function v(id: string): string {
@@ -49,11 +49,11 @@ export function buildFilterPreview(f: AlertFilters): string {
 		`📉 ≥${f.threshold}% below avg`,
 	];
 	if (f.minPrice || f.maxPrice)
-		parts.push(`₼ ${f.minPrice ?? ""}–${f.maxPrice ?? ""}`);
+		parts.push(`₼ ${f.minPrice ?? ""}-${f.maxPrice ?? ""}`);
 	if (f.minRooms || f.maxRooms)
-		parts.push(`${f.minRooms ?? ""}–${f.maxRooms ?? ""} rooms`);
+		parts.push(`${f.minRooms ?? ""}-${f.maxRooms ?? ""} rooms`);
 	if (f.minArea || f.maxArea)
-		parts.push(`${f.minArea ?? ""}–${f.maxArea ?? ""}m²`);
+		parts.push(`${f.minArea ?? ""}-${f.maxArea ?? ""}m²`);
 	if (f.hasRepair) parts.push("Repaired");
 	if (f.hasDocument) parts.push("Document");
 	if (f.isUrgent) parts.push("Urgent");
@@ -76,17 +76,41 @@ export function renderAlertList(alerts: Alert[]): void {
 			location: a.filters?.location ?? "",
 			threshold: a.filters?.threshold ?? 10,
 		});
-		const row = document.createElement("div");
-		row.style.cssText =
-			"display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px";
-		row.innerHTML = `
-			<div style="flex:1;min-width:0">
-				<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.label ?? "Unnamed"}</div>
-				<div style="font-size:11px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${preview}</div>
-			</div>
-			<button type="button" class="inline-flex items-center gap-1 bg-transparent border-none p-0 text-[11px] text-(--muted) transition-colors duration-150 hover:text-(--text)" style="color:var(--red);flex-shrink:0" title="Delete alert">
-				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
-			</button>`;
+		const row = html`<div
+      class="flex items-center gap-2 bg-(--surface-2) border border-(--border) rounded-md px-2.5 py-2"
+    >
+      <div class="flex-1 min-w-0">
+        <div
+          class="text-[12px] font-semibold text-(--text) whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          ${a.label ?? "Unnamed"}
+        </div>
+        <div
+          class="text-[11px] text-(--muted) mt-px whitespace-nowrap overflow-hidden text-ellipsis"
+        >
+          ${preview}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex items-center gap-1 bg-transparent border-none p-0 text-[11px] transition-colors duration-150 text-(--red) hover:text-(--text) shrink-0"
+        title="Delete alert"
+      >
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+        </svg>
+      </button>
+    </div>`;
 		const btn = row.querySelector("button");
 		if (btn) {
 			btn.addEventListener("click", () => deleteAlertRow(a.token, row));

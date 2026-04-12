@@ -1,4 +1,4 @@
-import { html } from "../util/html";
+import { html } from "../core/utils";
 
 export const Icons = {
 	bookmark: (filled: boolean) =>
