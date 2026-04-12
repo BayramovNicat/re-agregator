@@ -36,18 +36,27 @@ export async function createAlert(req: Request): Promise<Response> {
 
 	const chatId = String(body.chat_id ?? "").trim();
 	if (!/^\d+$/.test(chatId)) {
-		return Response.json({ error: "chat_id must be a numeric Telegram chat ID" }, { status: 400 });
+		return Response.json(
+			{ error: "chat_id must be a numeric Telegram chat ID" },
+			{ status: 400 },
+		);
 	}
 
 	const filters = body.filters;
 	if (!filters || typeof filters !== "object" || Array.isArray(filters)) {
-		return Response.json({ error: '"filters" object is required' }, { status: 400 });
+		return Response.json(
+			{ error: '"filters" object is required' },
+			{ status: 400 },
+		);
 	}
 
 	const f = filters as Record<string, unknown>;
 	const location = String(f.location ?? "").trim();
 	if (!location) {
-		return Response.json({ error: '"filters.location" is required' }, { status: 400 });
+		return Response.json(
+			{ error: '"filters.location" is required' },
+			{ status: 400 },
+		);
 	}
 
 	const label = body.label ? String(body.label).slice(0, 80) : undefined;

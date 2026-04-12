@@ -117,7 +117,11 @@ export async function runAlerts(): Promise<void> {
 			const { data } =
 				location === "__all__"
 					? await analytics.getUndervaluedAll(threshold, filterArgs)
-					: await analytics.getUndervaluedByLocation(location, threshold, filterArgs);
+					: await analytics.getUndervaluedByLocation(
+							location,
+							threshold,
+							filterArgs,
+						);
 
 			// Always update watermark so we don't re-check these listings next run
 			await prisma.alert.update({
@@ -134,7 +138,9 @@ export async function runAlerts(): Promise<void> {
 
 			await sendMessage(alert.chat_id, `${header}\n\n${body}${footer}`);
 
-			console.log(`[Alerts] Sent ${data.length} listing(s) to chat ${alert.chat_id} for alert "${label}"`);
+			console.log(
+				`[Alerts] Sent ${data.length} listing(s) to chat ${alert.chat_id} for alert "${label}"`,
+			);
 		} catch (err) {
 			console.error(`[Alerts] Failed for alert ${alert.id}:`, err);
 		}

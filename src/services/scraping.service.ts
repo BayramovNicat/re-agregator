@@ -13,7 +13,6 @@ import type {
 import { executeRaw, prisma } from "../utils/prisma.js";
 import { runAlerts } from "./alert.service.js";
 
-
 export interface ScrapeResult {
 	platform: string;
 	persisted: number;

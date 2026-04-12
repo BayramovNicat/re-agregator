@@ -51,14 +51,20 @@ export async function handleWebhook(req: Request): Promise<Response> {
 			select: { label: true, created_at: true },
 		});
 		if (alerts.length === 0) {
-			await sendMessage(chatId, "You have no active alerts.\n\nUse the website to create one.");
+			await sendMessage(
+				chatId,
+				"You have no active alerts.\n\nUse the website to create one.",
+			);
 		} else {
 			const lines = alerts.map((a, i) => {
 				const name = a.label ?? "Unnamed";
 				const since = a.created_at.toLocaleDateString("en-GB");
 				return `${i + 1}. ${name} (since ${since})`;
 			});
-			await sendMessage(chatId, `<b>Active alerts (${alerts.length}):</b>\n\n${lines.join("\n")}\n\n/stop to stop all.`);
+			await sendMessage(
+				chatId,
+				`<b>Active alerts (${alerts.length}):</b>\n\n${lines.join("\n")}\n\n/stop to stop all.`,
+			);
 		}
 	}
 

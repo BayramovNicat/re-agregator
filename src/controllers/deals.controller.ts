@@ -1,4 +1,7 @@
-import { AnalyticsService, classifyDeal } from "../services/analytics.service.js";
+import {
+	AnalyticsService,
+	classifyDeal,
+} from "../services/analytics.service.js";
 import { queryRaw } from "../utils/prisma.js";
 
 const analytics = new AnalyticsService();
@@ -143,7 +146,9 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 			{ status: 400 },
 		);
 	}
-	const safeUrls = urls.filter((u): u is string => typeof u === "string").slice(0, 500);
+	const safeUrls = urls
+		.filter((u): u is string => typeof u === "string")
+		.slice(0, 500);
 	if (safeUrls.length === 0) {
 		return Response.json({ data: [] });
 	}
@@ -195,7 +200,10 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
     `;
 
 		return Response.json({
-			data: rows.map((r) => ({ ...r, tier: classifyDeal(Number(r.discount_percent)) })),
+			data: rows.map((r) => ({
+				...r,
+				tier: classifyDeal(Number(r.discount_percent)),
+			})),
 		});
 	} catch (err) {
 		console.error("[DealsController] getDealsByUrls:", err);

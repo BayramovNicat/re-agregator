@@ -1,15 +1,15 @@
 import {
+	createAlert,
+	deleteAlert,
+	getAlerts,
+} from "./controllers/alerts.controller.js";
+import {
 	getDealsByUrls,
 	getHeatmap,
 	getLocations,
 	getTrend,
 	getUndervaluedDeals,
 } from "./controllers/deals.controller.js";
-import {
-	createAlert,
-	deleteAlert,
-	getAlerts,
-} from "./controllers/alerts.controller.js";
 import { streamScrape } from "./controllers/scrape.controller.js";
 import { BinaScraper } from "./scrapers/bina.scraper.js";
 import { ScrapingService } from "./services/scraping.service.js";

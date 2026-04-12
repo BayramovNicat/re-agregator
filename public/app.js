@@ -807,8 +807,10 @@ checkIfPresent("isUrgent", "isUrgent");
 checkIfPresent("notLastFloor", "notLastFloor");
 
 if (initParams.has("hasActiveMortgage")) {
-	if (initParams.get("hasActiveMortgage") === "false") ge("noActiveMortgage").checked = true;
-	else if (initParams.get("hasActiveMortgage") === "true") ge("hasActiveMortgage").checked = true;
+	if (initParams.get("hasActiveMortgage") === "false")
+		ge("noActiveMortgage").checked = true;
+	else if (initParams.get("hasActiveMortgage") === "true")
+		ge("hasActiveMortgage").checked = true;
 }
 
 updateChips();
@@ -972,15 +974,30 @@ ge("heatmap-modal").addEventListener("click", (e) => {
 
 // ── Alert modal ───────────────────────────────────────────────────────────
 function getCurrentFilters() {
-	function v(id) { return ge(id).value.trim(); }
-	function cb(id) { return ge(id).checked; }
+	function v(id) {
+		return ge(id).value.trim();
+	}
+	function cb(id) {
+		return ge(id).checked;
+	}
 
 	const filters = {
 		location: ge("loc").value,
 		threshold: Number(ge("thresh").value),
 	};
 
-	const nums = ["minPrice", "maxPrice", "minArea", "maxArea", "minRooms", "maxRooms", "minFloor", "maxFloor", "minTotalFloors", "maxTotalFloors"];
+	const nums = [
+		"minPrice",
+		"maxPrice",
+		"minArea",
+		"maxArea",
+		"minRooms",
+		"maxRooms",
+		"minFloor",
+		"maxFloor",
+		"minTotalFloors",
+		"maxTotalFloors",
+	];
 	for (const id of nums) {
 		const val = v(id);
 		if (val) filters[id] = Number(val);
@@ -998,10 +1015,16 @@ function getCurrentFilters() {
 }
 
 function buildFilterPreview(f) {
-	const parts = [`📍 ${f.location === "__all__" ? "All locations" : f.location}`, `📉 ≥${f.threshold}% below avg`];
-	if (f.minPrice || f.maxPrice) parts.push(`₼ ${f.minPrice ?? ""}–${f.maxPrice ?? ""}`);
-	if (f.minRooms || f.maxRooms) parts.push(`${f.minRooms ?? ""}–${f.maxRooms ?? ""} rooms`);
-	if (f.minArea || f.maxArea) parts.push(`${f.minArea ?? ""}–${f.maxArea ?? ""}m²`);
+	const parts = [
+		`📍 ${f.location === "__all__" ? "All locations" : f.location}`,
+		`📉 ≥${f.threshold}% below avg`,
+	];
+	if (f.minPrice || f.maxPrice)
+		parts.push(`₼ ${f.minPrice ?? ""}–${f.maxPrice ?? ""}`);
+	if (f.minRooms || f.maxRooms)
+		parts.push(`${f.minRooms ?? ""}–${f.maxRooms ?? ""} rooms`);
+	if (f.minArea || f.maxArea)
+		parts.push(`${f.minArea ?? ""}–${f.maxArea ?? ""}m²`);
 	if (f.hasRepair) parts.push("Repaired");
 	if (f.hasDocument) parts.push("Document");
 	if (f.isUrgent) parts.push("Urgent");
@@ -1019,9 +1042,13 @@ function renderAlertList(alerts) {
 	listEl.style.display = "block";
 	itemsEl.innerHTML = "";
 	alerts.forEach((a) => {
-		const preview = buildFilterPreview({ ...(a.filters || {}), threshold: (a.filters || {}).threshold ?? 10 });
+		const preview = buildFilterPreview({
+			...(a.filters || {}),
+			threshold: (a.filters || {}).threshold ?? 10,
+		});
 		const row = document.createElement("div");
-		row.style.cssText = "display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px";
+		row.style.cssText =
+			"display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:8px 10px";
 		row.innerHTML = `
 			<div style="flex:1;min-width:0">
 				<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.label || "Unnamed"}</div>
@@ -1030,7 +1057,9 @@ function renderAlertList(alerts) {
 			<button type="button" class="icon-btn" style="color:var(--red);flex-shrink:0" title="Delete alert">
 				<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
 			</button>`;
-		row.querySelector("button").addEventListener("click", () => deleteAlertRow(a.token, row));
+		row
+			.querySelector("button")
+			.addEventListener("click", () => deleteAlertRow(a.token, row));
 		itemsEl.appendChild(row);
 	});
 }
@@ -1041,7 +1070,9 @@ async function fetchAndRenderAlerts(chatId) {
 		return;
 	}
 	try {
-		const res = await fetch(`/api/alerts?chat_id=${encodeURIComponent(chatId)}`);
+		const res = await fetch(
+			`/api/alerts?chat_id=${encodeURIComponent(chatId)}`,
+		);
 		const d = await res.json();
 		renderAlertList(d.alerts || []);
 	} catch {
