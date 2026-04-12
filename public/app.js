@@ -694,10 +694,32 @@ ge("vlist").addEventListener("click", () => {
 	render();
 });
 
-ge("saved-btn").addEventListener("click", () => {
+ge("saved-btn").addEventListener("click", async () => {
 	showingSaved = !showingSaved;
 	ge("saved-btn").classList.toggle("on", showingSaved);
 	renderedSet.clear();
+	if (showingSaved && bookmarks.size > 0) {
+		// Fetch all bookmarked properties from server (they may not all be in allResults)
+		try {
+			const res = await fetch("/api/deals/by-urls", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ urls: [...bookmarks] }),
+			});
+			const json = await res.json();
+			if (json.data) {
+				// Merge fetched saved items into allResults so render() can find them
+				const existingUrls = new Set(allResults.map((p) => p.source_url));
+				for (const p of json.data) {
+					if (!existingUrls.has(p.source_url)) {
+						allResults.push(p);
+					}
+				}
+			}
+		} catch (e) {
+			console.error("Failed to fetch saved deals", e);
+		}
+	}
 	render();
 });
 

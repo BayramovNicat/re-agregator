@@ -1,4 +1,4 @@
-import { AnalyticsService } from "../services/analytics.service.js";
+import { AnalyticsService, classifyDeal } from "../services/analytics.service.js";
 import { queryRaw } from "../utils/prisma.js";
 
 const analytics = new AnalyticsService();
@@ -123,6 +123,84 @@ export async function getHeatmap(_req: Request): Promise<Response> {
 		console.error("[DealsController] getHeatmap:", err);
 		return Response.json(
 			{ error: "Failed to fetch heatmap data" },
+			{ status: 500 },
+		);
+	}
+}
+
+/** POST /api/deals/by-urls — fetch specific properties by source_url list */
+export async function getDealsByUrls(req: Request): Promise<Response> {
+	let body: { urls?: unknown } = {};
+	try {
+		body = (await req.json()) as { urls?: unknown };
+	} catch {
+		return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+	}
+	const urls = body?.urls;
+	if (!Array.isArray(urls) || urls.length === 0) {
+		return Response.json(
+			{ error: '"urls" must be a non-empty array' },
+			{ status: 400 },
+		);
+	}
+	const safeUrls = urls.filter((u): u is string => typeof u === "string").slice(0, 500);
+	if (safeUrls.length === 0) {
+		return Response.json({ data: [] });
+	}
+	try {
+		const rows = await queryRaw<
+			{
+				id: number;
+				source_url: string;
+				price: number;
+				area_sqm: number;
+				price_per_sqm: number;
+				district: string;
+				location_name: string | null;
+				latitude: number | null;
+				longitude: number | null;
+				rooms: number | null;
+				floor: number | null;
+				total_floors: number | null;
+				category: string | null;
+				has_document: boolean | null;
+				has_mortgage: boolean | null;
+				has_repair: boolean | null;
+				description: string | null;
+				is_urgent: boolean;
+				has_active_mortgage: boolean;
+				posted_date: Date | null;
+				created_at: Date;
+				updated_at: Date;
+				location_avg_price_per_sqm: number;
+				discount_percent: number;
+			}[]
+		>`
+      WITH avgs AS (
+        SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
+        FROM "Property"
+        WHERE price_per_sqm > 0
+        GROUP BY location_name
+      )
+      SELECT
+        p.*,
+        COALESCE(ROUND(a.avg_ppsm::numeric, 2), 0) AS location_avg_price_per_sqm,
+        CASE
+          WHEN a.avg_ppsm > 0 THEN ROUND(((a.avg_ppsm - p.price_per_sqm) / a.avg_ppsm * 100)::numeric, 2)
+          ELSE 0
+        END AS discount_percent
+      FROM "Property" p
+      LEFT JOIN avgs a ON a.location_name = p.location_name
+      WHERE p.source_url = ANY(${safeUrls})
+    `;
+
+		return Response.json({
+			data: rows.map((r) => ({ ...r, tier: classifyDeal(Number(r.discount_percent)) })),
+		});
+	} catch (err) {
+		console.error("[DealsController] getDealsByUrls:", err);
+		return Response.json(
+			{ error: "Failed to fetch properties" },
 			{ status: 500 },
 		);
 	}

@@ -1,4 +1,5 @@
 import {
+	getDealsByUrls,
 	getHeatmap,
 	getLocations,
 	getTrend,
@@ -30,6 +31,7 @@ Bun.serve({
 		"/api/deals/locations": { GET: getLocations },
 		"/api/deals/trend": { GET: getTrend },
 		"/api/deals/undervalued": { GET: getUndervaluedDeals },
+		"/api/deals/by-urls": { POST: getDealsByUrls },
 		"/api/heatmap": { GET: getHeatmap },
 		"/api/scrape/stream": { GET: streamScrape },
 	},

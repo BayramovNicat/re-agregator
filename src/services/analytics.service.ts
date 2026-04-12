@@ -25,7 +25,7 @@ type DealTier = "High Value Deal" | "Good Deal" | "Fair Price" | "Overpriced";
  * Maps a discount percentage to a human-readable deal tier.
  * This is the single place to adjust scoring thresholds.
  */
-function classifyDeal(discountPercent: number): DealTier {
+export function classifyDeal(discountPercent: number): DealTier {
 	if (discountPercent >= 20) return "High Value Deal";
 	if (discountPercent >= 10) return "Good Deal";
 	if (discountPercent >= 0) return "Fair Price";
