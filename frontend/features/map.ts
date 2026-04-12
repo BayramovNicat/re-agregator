@@ -1,25 +1,25 @@
-import L from "leaflet";
+import { circle, divIcon, featureGroup, map, marker, tileLayer } from "leaflet";
 import type { HeatmapPoint } from "../core/types";
 import { fmt, ge, toast } from "../core/utils";
 
 // ── Property map ─────────────────────────────────────────────────────────────
-let lmap: ReturnType<typeof L.map> | null = null;
-let lmark: ReturnType<typeof L.marker> | null = null;
+let lmap: ReturnType<typeof map> | null = null;
+let lmark: ReturnType<typeof marker> | null = null;
 
 function initMap(): void {
 	if (lmap) return;
-	lmap = L.map("map-ct", { zoomControl: true, attributionControl: false });
-	L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+	lmap = map("map-ct", { zoomControl: true, attributionControl: false });
+	tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
 		subdomains: "abcd",
 		maxZoom: 19,
 	}).addTo(lmap);
-	const icon = L.divIcon({
+	const icon = divIcon({
 		className: "",
 		html: '<div class="map-dot"></div>',
 		iconSize: [12, 12],
 		iconAnchor: [6, 6],
 	});
-	lmark = L.marker([0, 0], { icon }).addTo(lmap);
+	lmark = marker([0, 0], { icon }).addTo(lmap);
 }
 
 export function openMap(lat: number, lng: number): void {
@@ -40,8 +40,8 @@ export function openDesc(text: string): void {
 }
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
-let hmap: ReturnType<typeof L.map> | null = null;
-const hmLayers: ReturnType<typeof L.circle>[] = [];
+let hmap: ReturnType<typeof map> | null = null;
+const hmLayers: ReturnType<typeof circle>[] = [];
 
 function priceColor(val: number, min: number, max: number): string {
 	const t = Math.max(0, Math.min(1, (val - min) / (max - min || 1)));
@@ -76,7 +76,7 @@ export function renderHeatmap(
 	for (const d of data) {
 		const color = priceColor(d.avg_price_per_sqm, minP, maxP);
 		const radius = 200 + (d.count / maxCount) * 400;
-		const circle = L.circle([d.lat, d.lng], {
+		const mycircle = circle([d.lat, d.lng], {
 			radius,
 			color,
 			fillColor: color,
@@ -84,24 +84,29 @@ export function renderHeatmap(
 			weight: 1.5,
 			opacity: 0.8,
 		}).addTo(hmap);
-		circle.bindTooltip(
-			`<div class="hm-tip">
-				<div class="hm-tip-name">${d.location_name}</div>
-				<div class="hm-tip-price">₼ ${fmt(d.avg_price_per_sqm, 0)}<span>/m²</span></div>
-				<div class="hm-tip-count">${d.count.toLocaleString()} listings</div>
-			</div>`,
-			{ sticky: true, opacity: 1, className: "hm-tooltip" },
+		mycircle.bindTooltip(
+			/*html*/ `<div class="min-w-32.5 px-3.25 py-2.5">
+			<div class="mb-1 text-xs font-semibold text-(--text)">${d.location_name}</div>
+			<div class="text-[17px] font-bold leading-none text-(--text)">₼ ${fmt(d.avg_price_per_sqm, 0)}<span class="text-[11px] font-normal text-(--muted)">/m²</span></div>
+			<div class="mt-0.75 text-[11px] text-(--muted)">${d.count.toLocaleString()} listings</div>
+		</div>`,
+			{
+				sticky: true,
+				opacity: 1,
+				className:
+					"!bg-(--surface-3) !border-(--border-h) !rounded-(--r-sm) !shadow-[0_8px_24px_rgba(0,0,0,0.5)] !p-0 [&::before]:!hidden",
+			},
 		);
-		circle.on("click", () => {
+		mycircle.on("click", () => {
 			(ge("heatmap-modal") as HTMLDialogElement).close();
 			onLocClick(d.location_name);
 		});
-		hmLayers.push(circle);
+		hmLayers.push(mycircle);
 	}
 
 	const saved = localStorage.getItem("hmap-view");
 	if (hmLayers.length && !saved) {
-		const group = L.featureGroup(hmLayers);
+		const group = featureGroup(hmLayers);
 		hmap.fitBounds(group.getBounds().pad(0.12));
 	}
 }
@@ -110,11 +115,11 @@ export function openHeatmap(onLocClick: (name: string) => void): void {
 	(ge("heatmap-modal") as HTMLDialogElement).showModal();
 	requestAnimationFrame(() => {
 		if (!hmap) {
-			hmap = L.map("heatmap-ct", {
+			hmap = map("heatmap-ct", {
 				zoomControl: true,
 				attributionControl: false,
 			});
-			L.tileLayer(
+			tileLayer(
 				"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
 				{
 					subdomains: "abcd",
