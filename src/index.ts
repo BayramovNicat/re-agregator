@@ -5,11 +5,14 @@ import {
 	getTrend,
 	getUndervaluedDeals,
 } from "./controllers/deals.controller.js";
-import { createAlert, deleteAlert, getAlerts } from "./controllers/alerts.controller.js";
+import {
+	createAlert,
+	deleteAlert,
+	getAlerts,
+} from "./controllers/alerts.controller.js";
 import { streamScrape } from "./controllers/scrape.controller.js";
 import { BinaScraper } from "./scrapers/bina.scraper.js";
 import { ScrapingService } from "./services/scraping.service.js";
-import { runAlerts } from "./services/alert.service.js";
 import { handleWebhook } from "./services/telegram.service.js";
 import { queryRaw } from "./utils/prisma.js";
 
@@ -74,7 +77,6 @@ async function runCronScrape() {
 		const results = await cronService.runAll({ maxPages: 40, delayMs: 800 });
 		const total = results.reduce((sum, r) => sum + r.persisted, 0);
 		console.log(`[Cron] Hourly scrape done — persisted=${total}`);
-		await runAlerts();
 	} catch (err) {
 		console.error("[Cron] Hourly scrape failed:", err);
 	} finally {

@@ -11,6 +11,8 @@ import type {
 	ScraperOptions,
 } from "../scrapers/base.scraper.js";
 import { executeRaw, prisma } from "../utils/prisma.js";
+import { runAlerts } from "./alert.service.js";
+
 
 export interface ScrapeResult {
 	platform: string;
@@ -85,6 +87,10 @@ export class ScrapingService {
 
 		const total_persisted = results.reduce((sum, r) => sum + r.persisted, 0);
 		options?.onProgress?.({ type: "complete", total_persisted });
+
+		// Trigger alerts after scraping is done
+		await runAlerts();
+
 		return results;
 	}
 
