@@ -1,5 +1,6 @@
 // ── State ──────────────────────────────────────────────────────────────────
 let allResults = [];
+let savedOnlyResults = [];
 let currentTotal = 0;
 let currentOffset = 0;
 let currentView = "grid";
@@ -243,7 +244,7 @@ function render() {
 	ct.innerHTML = "";
 
 	let list = showingSaved
-		? allResults.filter((p) => bookmarks.has(p.source_url))
+		? savedOnlyResults.filter((p) => bookmarks.has(p.source_url))
 		: allResults.filter((p) => !hidden.has(p.source_url));
 	list = sorted(list);
 
@@ -376,6 +377,7 @@ async function doSearch(more = false) {
 	const thresh = ge("thresh").value;
 	if (!more) {
 		allResults = [];
+		savedOnlyResults = [];
 		currentOffset = 0;
 		currentTotal = 0;
 		showingSaved = false;
@@ -699,7 +701,7 @@ ge("saved-btn").addEventListener("click", async () => {
 	ge("saved-btn").classList.toggle("on", showingSaved);
 	renderedSet.clear();
 	if (showingSaved && bookmarks.size > 0) {
-		// Fetch all bookmarked properties from server (they may not all be in allResults)
+		// Fetch bookmarked properties into separate array — never pollute allResults
 		try {
 			const res = await fetch("/api/deals/by-urls", {
 				method: "POST",
@@ -708,17 +710,13 @@ ge("saved-btn").addEventListener("click", async () => {
 			});
 			const json = await res.json();
 			if (json.data) {
-				// Merge fetched saved items into allResults so render() can find them
-				const existingUrls = new Set(allResults.map((p) => p.source_url));
-				for (const p of json.data) {
-					if (!existingUrls.has(p.source_url)) {
-						allResults.push(p);
-					}
-				}
+				savedOnlyResults = json.data;
 			}
 		} catch (e) {
 			console.error("Failed to fetch saved deals", e);
 		}
+	} else {
+		savedOnlyResults = [];
 	}
 	render();
 });
