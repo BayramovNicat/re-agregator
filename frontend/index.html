@@ -49,7 +49,7 @@
         <div class="flex items-center gap-2">
           <button
             type="button"
-            class="flex items-center gap-1.5 bg-(--surface-2) border border-(--border) text-(--text-2) px-3 py-1.5 rounded-(--r-sm) text-[12px] font-medium transition-colors duration-150 hover:bg-(--surface-3) hover:border-(--border-h) hover:text-(--text)"
+            class="flex items-center gap-1.5 bg-(--surface-2) border border-(--border) text-(--text-2) px-3 py-1.5 rounded-(--r-sm) text-xs font-medium transition-colors duration-150 hover:bg-(--surface-3) hover:border-(--border-h) hover:text-(--text)"
             id="heatmap-btn"
             title="Price heatmap by district"
           >
@@ -72,7 +72,7 @@
             Price Map
           </button>
           <div
-            class="inline-flex items-center gap-1.5 bg-(--surface) border border-(--border) rounded-full py-1.25 pr-3 pl-2 text-[12px] text-(--text-2)"
+            class="inline-flex items-center gap-1.5 bg-(--surface) border border-(--border) rounded-full py-1.25 pr-3 pl-2 text-xs text-(--text-2)"
             id="health-chip"
           >
             <div
@@ -98,7 +98,7 @@
             </span>
             <select
               id="loc"
-              class="w-full px-3 py-2.25 bg-(--surface-2) border border-(--border) rounded-(--r) text-(--text) font-inherit text-[14px] appearance-none cursor-pointer transition-[border-color,box-shadow] duration-150 hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+              class="w-full px-3 py-2.25 bg-(--surface-2) border border-(--border) rounded-(--r) text-(--text) font-inherit text-sm appearance-none cursor-pointer transition-[border-color,box-shadow] duration-150 hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
             >
               <option value="" disabled selected>Loading locations…</option>
             </select>
@@ -137,7 +137,7 @@
             >
             <button
               type="button"
-              class="inline-flex items-center justify-center gap-1.5 bg-(--text) text-(--bg) border-none rounded-(--r) px-4 py-2.25 font-semibold text-[14px] h-10 whitespace-nowrap transition-[background,transform] duration-150 hover:bg-[#d0d0e0] active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none"
+              class="inline-flex items-center justify-center gap-1.5 bg-(--text) text-(--bg) border-none rounded-(--r) px-4 py-2.25 font-semibold text-sm h-10 whitespace-nowrap transition-[background,transform] duration-150 hover:bg-[#d0d0e0] active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none"
               id="search-btn"
             >
               <svg
@@ -161,7 +161,7 @@
 
         <button
           type="button"
-          class="group inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-3 py-1.5 text-(--text-2) text-[12px] font-medium mt-3.5 transition-all duration-150 hover:border-(--border-h) hover:text-(--text) hover:bg-(--surface-2) aria-expanded:text-(--accent) aria-expanded:border-[rgba(99,102,241,0.4)] aria-expanded:bg-(--accent-dim)"
+          class="group inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-3 py-1.5 text-(--text-2) text-xs font-medium mt-3.5 transition-all duration-150 hover:border-(--border-h) hover:text-(--text) hover:bg-(--surface-2) aria-expanded:text-(--accent) aria-expanded:border-[rgba(99,102,241,0.4)] aria-expanded:bg-(--accent-dim)"
           id="adv-toggle"
           aria-expanded="false"
         >
@@ -180,7 +180,7 @@
           </svg>
           Advanced filters
           <span
-            class="bg-(--accent) text-white rounded-full px-1.5 py-px text-[10px] font-semibold"
+            class="bg-(--accent) text-white rounded-full px-1.5 py-px text-xs font-semibold"
             style="display: none"
             id="adv-cnt"
           ></span>
@@ -201,7 +201,7 @@
               <input
                 type="number"
                 id="minPrice"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="30 000"
               />
             </div>
@@ -213,7 +213,7 @@
               <input
                 type="number"
                 id="maxPrice"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="150 000"
               />
             </div>
@@ -225,7 +225,7 @@
               <input
                 type="number"
                 id="minArea"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="40"
               />
             </div>
@@ -237,7 +237,7 @@
               <input
                 type="number"
                 id="maxArea"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="120"
               />
             </div>
@@ -249,7 +249,7 @@
               <input
                 type="number"
                 id="minRooms"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="2"
               />
             </div>
@@ -261,7 +261,7 @@
               <input
                 type="number"
                 id="maxRooms"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="4"
               />
             </div>
@@ -273,7 +273,7 @@
               <input
                 type="number"
                 id="minFloor"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="2"
               />
             </div>
@@ -285,7 +285,7 @@
               <input
                 type="number"
                 id="maxFloor"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="15"
               />
             </div>
@@ -297,7 +297,7 @@
               <input
                 type="number"
                 id="minTotalFloors"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="2"
               />
             </div>
@@ -309,7 +309,7 @@
               <input
                 type="number"
                 id="maxTotalFloors"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
                 placeholder="5"
               />
             </div>
@@ -320,7 +320,7 @@
               >
               <select
                 id="category"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] appearance-none cursor-pointer transition-[border-color] duration-150 focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm appearance-none cursor-pointer transition-[border-color] duration-150 focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
               >
                 <option value="">Any</option>
                 <option value="Yeni tikili">New build</option>
@@ -336,7 +336,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Repaired
               </span>
@@ -348,7 +348,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Has document
               </span>
@@ -360,7 +360,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Mortgage eligible
               </span>
@@ -372,7 +372,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Urgent only
               </span>
@@ -384,7 +384,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Not last floor
               </span>
@@ -396,7 +396,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 No active mortgage
               </span>
@@ -408,7 +408,7 @@
                 class="peer absolute opacity-0 w-0 h-0"
               />
               <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-[12px] font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
               >
                 Active mortgage only
               </span>
@@ -431,7 +431,7 @@
         >
           <div class="flex items-start justify-between mb-3.5 gap-3">
             <div>
-              <div class="text-[11px] text-(--muted) mb-1.25 tracking-[0.02em]">
+              <div class="text-xs text-(--muted) mb-1.25 tracking-[0.02em]">
                 Avg ₼/m² trend &middot; <span id="trend-loc"></span>
               </div>
               <div class="flex items-baseline gap-2 flex-wrap">
@@ -440,26 +440,26 @@
                   id="trend-cur"
                 ></span>
                 <span
-                  class="text-[11px] font-semibold px-2 py-0.5 rounded-full border"
+                  class="text-xs font-semibold px-2 py-0.5 rounded-full border"
                   id="trend-chg"
                 ></span>
               </div>
             </div>
             <div
-              class="text-[11px] text-(--muted) text-right pt-0.5 whitespace-nowrap"
+              class="text-xs text-(--muted) text-right pt-0.5 whitespace-nowrap"
               id="trend-weeks"
             ></div>
           </div>
 
           <div class="relative -mx-0.5" id="trend-chart">
             <div
-              class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-[12px] pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
+              class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
               id="trend-tip"
             ></div>
           </div>
 
           <div
-            class="flex justify-between text-[10px] text-(--muted) mt-1.25 px-0.5"
+            class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5"
             id="trend-dates"
           ></div>
         </div>
@@ -472,13 +472,13 @@
         style="display: none"
       >
         <div
-          class="text-[13px] text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
+          class="text-sm text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
           id="results-meta"
         ></div>
         <div class="flex items-center gap-1.75">
           <button
             type="button"
-            class="inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-2.5 py-1.25 text-(--text-2) text-[12px] font-medium transition-all duration-150 hover:border-(--yellow-b) hover:text-(--yellow) hover:bg-(--yellow-dim) [&.on]:border-(--yellow-b) [&.on]:text-(--yellow) [&.on]:bg-(--yellow-dim)"
+            class="inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-2.5 py-1.25 text-(--text-2) text-xs font-medium transition-all duration-150 hover:border-(--yellow-b) hover:text-(--yellow) hover:bg-(--yellow-dim) [&.on]:border-(--yellow-b) [&.on]:text-(--yellow) [&.on]:bg-(--yellow-dim)"
             id="alert-btn"
             title="Get Telegram alerts for new matches"
           >
@@ -499,7 +499,7 @@
           </button>
           <button
             type="button"
-            class="inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-2.5 py-1.25 text-(--text-2) text-[12px] font-medium transition-all duration-150 hover:border-(--yellow-b) hover:text-(--yellow) hover:bg-(--yellow-dim) [&.on]:border-(--yellow-b) [&.on]:text-(--yellow) [&.on]:bg-(--yellow-dim)"
+            class="inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-2.5 py-1.25 text-(--text-2) text-xs font-medium transition-all duration-150 hover:border-(--yellow-b) hover:text-(--yellow) hover:bg-(--yellow-dim) [&.on]:border-(--yellow-b) [&.on]:text-(--yellow) [&.on]:bg-(--yellow-dim)"
             style="display: none"
             id="saved-btn"
           >
@@ -520,7 +520,7 @@
             Saved <span id="saved-badge"></span>
           </button>
           <select
-            class="bg-(--surface-2) border border-(--border) rounded-(--r-sm) px-2.5 py-1.5 text-(--text-2) font-inherit text-[12px] cursor-pointer appearance-none transition-[border-color] duration-150 hover:border-(--border-h)"
+            class="bg-(--surface-2) border border-(--border) rounded-(--r-sm) px-2.5 py-1.5 text-(--text-2) font-inherit text-xs cursor-pointer appearance-none transition-[border-color] duration-150 hover:border-(--border-h)"
             id="sort-sel"
           >
             <option value="disc">Most discounted</option>
@@ -596,7 +596,7 @@
           >
             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
           </svg>
-          <p class="text-[15px] font-medium text-(--text-2)">
+          <p class="text-base font-medium text-(--text-2)">
             Searching for deals…
           </p>
         </div>
@@ -621,10 +621,8 @@
             <path d="m21 21-4.35-4.35" />
             <path d="M11 8v3M11 15h.01" stroke-width="2" />
           </svg>
-          <p class="text-[15px] font-medium text-(--text-2)">
-            No results found
-          </p>
-          <p class="text-[13px] text-(--muted) max-w-75 leading-[1.6]">
+          <p class="text-base font-medium text-(--text-2)">No results found</p>
+          <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
             Try lowering the discount threshold or removing some filters.
           </p>
         </div>
@@ -648,10 +646,10 @@
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
-          <p class="text-[15px] font-medium text-(--text-2)">
+          <p class="text-base font-medium text-(--text-2)">
             Discover undervalued properties
           </p>
-          <p class="text-[13px] text-(--muted) max-w-75 leading-[1.6]">
+          <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
             Pick a location and discount threshold to find listings priced below
             the local market average.
           </p>
@@ -692,7 +690,7 @@
         <div class="p-5 overflow-y-auto max-h-[60vh]">
           <p
             id="desc-body"
-            class="text-[13px] text-(--text-2) leading-[1.75] whitespace-pre-wrap"
+            class="text-sm text-(--text-2) leading-[1.75] whitespace-pre-wrap"
           ></p>
         </div>
       </div>
@@ -756,7 +754,7 @@
             <input
               type="text"
               id="alert-chat-id"
-              class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)] box-border"
+              class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)] box-border"
               placeholder="e.g. 123456789"
               inputmode="numeric"
             />
@@ -769,7 +767,7 @@
             <input
               type="text"
               id="alert-label"
-              class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-[13px] transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)] box-border"
+              class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)] box-border"
               placeholder="e.g. 2BR Nərimanov"
               maxlength="80"
             />
@@ -781,14 +779,14 @@
           <div class="flex gap-2 justify-end mt-1">
             <button
               type="button"
-              class="inline-flex items-center justify-center gap-1.5 bg-(--surface-2) text-(--text-2) border border-(--border) rounded-(--r) px-4 py-2.25 font-medium text-[14px] h-10 transition-all duration-150 whitespace-nowrap hover:border-(--border-h) hover:text-(--text)"
+              class="inline-flex items-center justify-center gap-1.5 bg-(--surface-2) text-(--text-2) border border-(--border) rounded-(--r) px-4 py-2.25 font-medium text-sm h-10 transition-all duration-150 whitespace-nowrap hover:border-(--border-h) hover:text-(--text)"
               id="alert-cancel"
             >
               Cancel
             </button>
             <button
               type="button"
-              class="inline-flex items-center justify-center gap-1.5 bg-(--text) text-(--bg) border-none rounded-(--r) px-4 py-2.25 font-semibold text-[14px] h-10 whitespace-nowrap transition-[background,transform] duration-150 hover:bg-[#d0d0e0] active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none"
+              class="inline-flex items-center justify-center gap-1.5 bg-(--text) text-(--bg) border-none rounded-(--r) px-4 py-2.25 font-semibold text-sm h-10 whitespace-nowrap transition-[background,transform] duration-150 hover:bg-[#d0d0e0] active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none"
               id="alert-save"
             >
               Save alert
