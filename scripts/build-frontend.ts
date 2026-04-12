@@ -1,36 +1,52 @@
-import { mkdirSync, readFileSync, watch, writeFileSync } from "node:fs";
-import { transform } from "lightningcss";
-import { rolldown } from "rolldown";
+import tailwindcss from "@tailwindcss/postcss";
+import { mkdirSync, watch } from "node:fs";
+import postcss from "postcss";
 
 const watchMode = process.argv.includes("--watch");
 
 mkdirSync("./public", { recursive: true });
 
 async function build() {
-	const bundle = await rolldown({
-		input: "./frontend/main.ts",
-		platform: "browser",
+	// Bundle + minify TS → app.js
+	const jsResult = await Bun.build({
+		entrypoints: ["./frontend/main.ts"],
+		outdir: "./public",
+		naming: "app.js",
+		minify: true,
+		target: "browser",
+	});
+	if (!jsResult.success) {
+		for (const log of jsResult.logs) console.error(log);
+		throw new Error("JS build failed");
+	}
+
+	// PostCSS runs Tailwind JIT scanner → Bun minifies → styles.css
+	const cssSource = await Bun.file("./frontend/styles.css").text();
+	const postcssResult = await postcss([tailwindcss]).process(cssSource, {
+		from: "./frontend/styles.css",
 	});
 
-	await bundle.write({
-		dir: "./public",
-		entryFileNames: "app.js",
-		format: "iife",
+	const tmpPath = "./public/.styles-tmp.css";
+	await Bun.write(tmpPath, postcssResult.css);
+
+	const cssResult = await Bun.build({
+		entrypoints: [tmpPath],
+		outdir: "./public",
+		naming: "styles.css",
 		minify: true,
 	});
+	if (!cssResult.success) {
+		for (const log of cssResult.logs) console.error(log);
+		throw new Error("CSS build failed");
+	}
 
-	const cssInput = readFileSync("./frontend/styles.css");
-	const { code: cssOutput } = transform({
-		filename: "styles.css",
-		code: cssInput,
-		minify: true,
-	});
-	writeFileSync("./public/styles.css", cssOutput);
+	await Bun.file(tmpPath).delete?.();
 
+	// Copy HTML
 	await Bun.write("./public/index.html", Bun.file("./frontend/index.html"));
 
-	const jsSizeKB = (readFileSync("./public/app.js").length / 1024).toFixed(1);
-	const cssSizeKB = (cssOutput.length / 1024).toFixed(1);
+	const jsSizeKB = (Bun.file("./public/app.js").size / 1024).toFixed(1);
+	const cssSizeKB = (Bun.file("./public/styles.css").size / 1024).toFixed(1);
 	console.log(
 		`Built public/  app.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  index.html ✓`,
 	);

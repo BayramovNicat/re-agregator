@@ -31,12 +31,15 @@ async function computeAssetHash(): Promise<string> {
 	return hasher.digest("hex").slice(0, 8);
 }
 
-const ASSET_VERSION = await computeAssetHash();
+let ASSET_VERSION = await computeAssetHash();
 const publicDir = `${import.meta.dir}/../public`;
-const rawHtml = await Bun.file(`${publicDir}/index.html`).text();
-const versionedHtml = rawHtml
-	.replace('href="/styles.css"', `href="/styles.css?v=${ASSET_VERSION}"`)
-	.replace('src="/app.js"', `src="/app.js?v=${ASSET_VERSION}"`);
+
+async function getVersionedHtml(): Promise<string> {
+	const raw = await Bun.file(`${publicDir}/index.html`).text();
+	return raw
+		.replace('href="/styles.css"', `href="/styles.css?v=${ASSET_VERSION}"`)
+		.replace('src="/app.js"', `src="/app.js?v=${ASSET_VERSION}"`);
+}
 
 console.log(`Asset version: ${ASSET_VERSION}`);
 
@@ -71,8 +74,8 @@ Bun.serve({
 		const filePath = `${publicDir}${url.pathname}`;
 		const file = Bun.file(filePath);
 		if (await file.exists()) return new Response(file);
-		// SPA fallback — serve versioned HTML
-		return new Response(versionedHtml, {
+		// SPA fallback — read fresh so frontend rebuilds are reflected immediately
+		return new Response(await getVersionedHtml(), {
 			headers: {
 				"Content-Type": "text/html; charset=utf-8",
 				"Cache-Control": "no-store",
