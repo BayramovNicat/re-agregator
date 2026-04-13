@@ -65,15 +65,14 @@ export class AnalyticsService {
 	}
 
 	/**
-	 * Returns properties in a location priced at least `thresholdPercent`% below
-	 * the location average price_per_sqm, with deal-score metadata attached.
-	 * Uses a single CTE query to compute the avg and fetch matching rows together.
+	 * Returns properties in one or more locations priced at least `thresholdPercent`% below
+	 * their respective location average price_per_sqm, with deal-score metadata attached.
 	 *
-	 * @param location - Exact location_name value (e.g. "Memar Əcəmi m.")
+	 * @param locations - One or more location_name values.
 	 * @param thresholdPercent - Minimum discount to qualify (default: 10%)
 	 */
 	async getUndervaluedByLocation(
-		location: string,
+		locations: string | string[],
 		thresholdPercent = 10,
 		filters: {
 			minPrice?: number;
@@ -126,11 +125,14 @@ export class AnalyticsService {
 		} = filters;
 
 		const factor = (100 - thresholdPercent) / 100.0;
+		const locationList = Array.isArray(locations)
+			? locations
+			: locations.split(",").filter(Boolean);
 
 		const conditions: Prisma.Sql[] = [
-			Prisma.sql`p.location_name = ${location}`,
+			Prisma.sql`p.location_name IN (${Prisma.join(locationList)})`,
 			Prisma.sql`p.price_per_sqm > 0`,
-			Prisma.sql`p.price_per_sqm <= avg_cte.avg_ppsm * ${factor}`,
+			Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`,
 		];
 
 		if (minPrice !== undefined)
@@ -205,17 +207,19 @@ export class AnalyticsService {
 		};
 
 		const rows = await queryRaw<Row[]>`
-      WITH avg_cte AS (
-        SELECT AVG(price_per_sqm) AS avg_ppsm
+      WITH loc_avg AS (
+        SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
-        WHERE location_name = ${location} AND price_per_sqm > 0
+        WHERE location_name IN (${Prisma.join(locationList)}) AND price_per_sqm > 0
+        GROUP BY location_name
       )
       SELECT
         p.*,
-        ROUND(avg_cte.avg_ppsm::numeric, 2)                                          AS location_avg_price_per_sqm,
-        ROUND(((avg_cte.avg_ppsm - p.price_per_sqm) / avg_cte.avg_ppsm * 100)::numeric, 2) AS discount_percent,
+        ROUND(loc_avg.avg_ppsm::numeric, 2)                                          AS location_avg_price_per_sqm,
+        ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent,
         COUNT(*) OVER ()                                                               AS total_count
-      FROM "Property" p, avg_cte
+      FROM "Property" p
+      JOIN loc_avg ON p.location_name = loc_avg.location_name
       WHERE ${Prisma.join(conditions, " AND ")}
       ORDER BY p.price_per_sqm ASC
       LIMIT ${limit} OFFSET ${offset}

@@ -1,4 +1,10 @@
-import { circle, featureGroup, type map } from "leaflet";
+import {
+	circle,
+	DomEvent,
+	featureGroup,
+	type LeafletMouseEvent,
+	type map,
+} from "leaflet";
 import type { HeatmapPoint } from "../core/types";
 import { fmt, ge, toast } from "../core/utils";
 import { initLeaflet, MapDialog } from "../ui/map-base";
@@ -31,7 +37,8 @@ function priceColor(val: number, min: number, max: number): string {
 
 export function renderHeatmap(
 	data: HeatmapPoint[],
-	onLocClick: (name: string) => void,
+	activeLocations: string[],
+	onAction: (name: string, isToggle: boolean) => void,
 ): void {
 	if (!hmap) return;
 	hmap.invalidateSize();
@@ -44,15 +51,17 @@ export function renderHeatmap(
 	const maxCount = Math.max(...data.map((d) => d.count));
 
 	for (const d of data) {
+		const isActive = activeLocations.includes(d.location_name);
 		const color = priceColor(d.avg_price_per_sqm, minP, maxP);
 		const radius = 200 + (d.count / maxCount) * 400;
 		const mycircle = circle([d.lat, d.lng], {
 			radius,
-			color,
+			color: isActive ? "white" : color,
 			fillColor: color,
 			fillOpacity: 0.55,
-			weight: 1.5,
-			opacity: 0.8,
+			weight: isActive ? 4 : 1.5,
+			opacity: isActive ? 1 : 0.8,
+			dashArray: isActive ? "" : undefined,
 		}).addTo(hmap);
 		mycircle.bindTooltip(
 			/*html*/ `<div class="min-w-32.5 px-3.25 py-2.5">
@@ -69,7 +78,25 @@ export function renderHeatmap(
 		);
 		mycircle.on("click", () => {
 			(ge("heatmap-modal") as HTMLDialogElement).close();
-			onLocClick(d.location_name);
+			onAction(d.location_name, false);
+		});
+		mycircle.on("contextmenu", (e) => {
+			const ev = e as LeafletMouseEvent;
+			DomEvent.preventDefault(ev.originalEvent);
+			DomEvent.stopPropagation(ev.originalEvent);
+
+			const idx = activeLocations.indexOf(d.location_name);
+			if (idx > -1) activeLocations.splice(idx, 1);
+			else activeLocations.push(d.location_name);
+
+			const isActive = activeLocations.includes(d.location_name);
+			mycircle.setStyle({
+				color: isActive ? "white" : color,
+				weight: isActive ? 4 : 1.5,
+				opacity: isActive ? 1 : 0.8,
+			});
+
+			onAction(d.location_name, true);
 		});
 		hmLayers.push(mycircle);
 	}
@@ -81,7 +108,10 @@ export function renderHeatmap(
 	}
 }
 
-export function openHeatmap(onLocClick: (name: string) => void): void {
+export function openHeatmap(
+	activeLocations: string[],
+	onAction: (name: string, isToggle: boolean) => void,
+): void {
 	(ge("heatmap-modal") as HTMLDialogElement).showModal();
 	requestAnimationFrame(() => {
 		if (!hmap) {
@@ -119,7 +149,7 @@ export function openHeatmap(onLocClick: (name: string) => void): void {
 					return;
 				}
 				if (d.data) {
-					renderHeatmap(d.data, onLocClick);
+					renderHeatmap(d.data, activeLocations, onAction);
 				}
 			})
 			.catch((e: Error) => toast(e.message, true));

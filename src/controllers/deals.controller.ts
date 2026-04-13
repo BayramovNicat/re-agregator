@@ -219,14 +219,25 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const url = new URL(req.url);
 	const q = url.searchParams;
 
-	const location = q.get("location");
-	if (!location) {
+	const locationParam = q.get("location");
+	if (!locationParam) {
 		return Response.json(
 			{ error: 'Query parameter "location" is required' },
 			{ status: 400 },
 		);
 	}
-	const isAll = location === "__all__";
+
+	const isAll = locationParam === "__all__";
+	const locations = isAll
+		? "__all__"
+		: locationParam.split(",").filter(Boolean);
+
+	if (!isAll && locations.length === 0) {
+		return Response.json(
+			{ error: 'Query parameter "location" cannot be empty' },
+			{ status: 400 },
+		);
+	}
 
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
@@ -294,13 +305,13 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 		const { total, data } = isAll
 			? await analytics.getUndervaluedAll(thresholdPct, filterArgs)
 			: await analytics.getUndervaluedByLocation(
-					location,
+					locations,
 					thresholdPct,
 					filterArgs,
 				);
 		return Response.json(
 			{
-				location,
+				location: locationParam,
 				threshold_pct: thresholdPct,
 				limit,
 				offset,

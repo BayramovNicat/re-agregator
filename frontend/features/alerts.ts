@@ -6,6 +6,7 @@ import { Dialog } from "../ui/dialog";
 import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
 import { Input } from "../ui/input";
+import type { MultiSelectElement } from "../ui/multi-select";
 
 export function initAlerts(root: HTMLElement): () => void {
 	// 1. Create UI Elements
@@ -236,7 +237,8 @@ function getCurrentFilters(): AlertFilters {
 	const cb = (id: string) => (ge(id) as HTMLInputElement)?.checked ?? false;
 
 	const filters: AlertFilters = {
-		location: (ge("loc") as HTMLSelectElement)?.value ?? "__all__",
+		location:
+			(ge("loc") as MultiSelectElement)?.getValue().join(",") || "__all__",
 		threshold: Number((ge("thresh") as HTMLInputElement)?.value ?? 10),
 	};
 

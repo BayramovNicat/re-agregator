@@ -4,6 +4,7 @@ import { openHeatmap } from "../dialogs/heatmap";
 import { Button } from "../ui/button";
 import { HealthStatus } from "../ui/health-status";
 import { Icons } from "../ui/icons";
+import type { MultiSelectElement } from "../ui/multi-select";
 
 export function initHeader(container: HTMLElement): () => void {
 	const logo = html`
@@ -39,15 +40,24 @@ export function initHeader(container: HTMLElement): () => void {
     </header>
   `;
 
-	// Event Handlers
 	const onMapClick = () => {
-		openHeatmap((locName) => {
-			const locSelect = ge("loc") as HTMLSelectElement;
-			if (locSelect) {
-				locSelect.value = locName;
-				// Trigger search via the bus instead of importing doSearch
-				bus.emit(EVENTS.SEARCH_STARTED, { more: false });
+		const el = ge("loc") as MultiSelectElement;
+		const active = el ? el.getValue() : [];
+
+		openHeatmap(active, (locName, isToggle) => {
+			if (!el) return;
+
+			if (isToggle) {
+				const current = el.getValue();
+				const idx = current.indexOf(locName);
+				if (idx > -1) el.setValue(current.filter((v) => v !== locName));
+				else el.setValue([...current, locName]);
+			} else {
+				el.setValue([locName]);
 			}
+
+			// Trigger search via the bus instead of importing doSearch
+			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
 		});
 	};
 	mapBtn.addEventListener("click", onMapClick);

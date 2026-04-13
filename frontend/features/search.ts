@@ -7,6 +7,7 @@ import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { MultiSelect, type MultiSelectElement } from "../ui/multi-select";
 import { Range, setRangeProgress } from "../ui/range";
 import { Select } from "../ui/select";
 
@@ -156,6 +157,24 @@ export function initSearch(container: HTMLElement): () => void {
 			);
 		}
 
+		const locs = (ge("loc") as MultiSelectElement).getValue() as string[];
+		if (locs.length > 0 && !locs.includes("__all__")) {
+			for (const l of locs) {
+				chips.push(
+					CloseableChip({
+						label: l,
+						onClose: () => {
+							const el = ge("loc") as MultiSelectElement;
+							const current = el.getValue();
+							el.setValue(current.filter((v: string) => v !== l));
+							updateChips();
+							void doSearch(false);
+						},
+					}),
+				);
+			}
+		}
+
 		row.innerHTML = "";
 		row.append(...chips);
 		row.style.display = chips.length ? "flex" : "none";
@@ -169,9 +188,9 @@ export function initSearch(container: HTMLElement): () => void {
 	}
 
 	async function doSearch(more = false): Promise<void> {
-		const loc = (ge("loc") as HTMLSelectElement).value;
-		if (!loc) {
-			ge("loc").focus();
+		const locs = (ge("loc") as MultiSelectElement).getValue();
+		if (locs.length === 0) {
+			(ge("loc-trigger") as HTMLButtonElement).focus();
 			return;
 		}
 		const thresh = (ge("thresh") as HTMLInputElement).value;
@@ -196,7 +215,7 @@ export function initSearch(container: HTMLElement): () => void {
 
 		try {
 			const p = new URLSearchParams({
-				location: loc,
+				location: locs.join(","),
 				threshold: thresh,
 				limit: String(state.PAGE),
 				offset: String(state.currentOffset),
@@ -245,8 +264,8 @@ export function initSearch(container: HTMLElement): () => void {
 				`${window.location.pathname}?${urlParams.toString()}`,
 			);
 
-			if (!more && loc !== "__all__") {
-				bus.emit(EVENTS.LOCATION_CHANGED, loc);
+			if (!more && locs.length === 1 && locs[0] !== "__all__") {
+				bus.emit(EVENTS.LOCATION_CHANGED, locs[0]);
 			}
 
 			if (!state.allResults.length) {
@@ -270,10 +289,15 @@ export function initSearch(container: HTMLElement): () => void {
 				${Field({
 					htmlFor: "loc",
 					label: "Location",
-					input: Select({
+					input: MultiSelect({
 						id: "loc",
-						options: [{ value: "", label: "Loading locations..." }],
+						options: [],
+						placeholder: "Choose locations...",
 						className: "w-full",
+						onChange: () => {
+							updateChips();
+							void doSearch(false);
+						},
 					}),
 				})}
 				<div class="flex flex-col gap-1.5">
@@ -417,24 +441,24 @@ export function initSearch(container: HTMLElement): () => void {
 
 	// 5. Load Locations
 	(async () => {
-		const sel = ge("loc") as HTMLSelectElement;
+		const el = ge("loc") as MultiSelectElement;
 		try {
 			const r = await fetch("/api/deals/locations");
 			const d = (await r.json()) as { data: string[] };
-			sel.innerHTML = '<option value="__all__">All locations</option>';
-			for (const loc of d.data) {
-				const o = document.createElement("option");
-				o.value = o.textContent = loc;
-				sel.appendChild(o);
-			}
-			const loc = params.get("location");
-			if (loc) {
-				sel.value = loc;
+			const options = [
+				{ value: "__all__", label: "All locations" },
+				...d.data.map((l) => ({ value: l, label: l })),
+			];
+			el.setOptions(options);
+
+			const locParam = params.get("location");
+			if (locParam) {
+				const vals = locParam.split(",").filter(Boolean);
+				el.setValue(vals);
 				void doSearch(false);
 			}
 		} catch {
-			sel.innerHTML =
-				'<option value="" disabled selected>Failed to load</option>';
+			el.setOptions([{ value: "", label: "Failed to load locations" }]);
 		}
 	})();
 
