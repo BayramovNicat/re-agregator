@@ -3,9 +3,9 @@ import type { Alert, AlertFilters } from "../core/types";
 import { ge, html, toast } from "../core/utils";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
+import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
 import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
 export function initAlerts(root: HTMLElement): () => void {
 	// 1. Create UI Elements
@@ -58,14 +58,8 @@ export function initAlerts(root: HTMLElement): () => void {
           and send <code class="bg-(--surface-3) px-1 py-0.5 rounded-sm">/start</code> to get your Chat ID.
         </div>
         <div class="flex flex-col gap-3">
-          <div class="flex flex-col gap-1.5">
-            ${Label({ htmlFor: "alert-chat-id", text: "Telegram Chat ID" })}
-            ${chatIdInput}
-          </div>
-          <div class="flex flex-col gap-1.5">
-            ${Label({ htmlFor: "alert-label", text: "Label (optional)" })}
-            ${labelInput}
-          </div>
+          ${Field({ htmlFor: "alert-chat-id", label: "Telegram Chat ID", input: chatIdInput })}
+          ${Field({ htmlFor: "alert-label", label: "Label (optional)", input: labelInput })}
           ${previewEl}
           <div class="flex gap-2 justify-end mt-1">
             ${cancelBtn}

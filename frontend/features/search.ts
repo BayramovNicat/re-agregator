@@ -3,6 +3,7 @@ import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { ge, hide, html, show, toast } from "../core/utils";
 import { Chip, CloseableChip } from "../ui/chip";
+import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -109,9 +110,6 @@ export function initSearch(container: HTMLElement): () => void {
 						label: f.label,
 						onClose: () => {
 							(ge(f.id) as HTMLInputElement).checked = false;
-							if (f.id === "noActiveMortgage" || f.id === "hasActiveMortgage") {
-								// Reset the paired filter if needed, though they already have change listeners
-							}
 							updateChips();
 						},
 					}),
@@ -257,10 +255,15 @@ export function initSearch(container: HTMLElement): () => void {
 	const root = html`
 		<div class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-5 mb-3.5">
 			<div class="grid grid-cols-[1fr_260px_120px] gap-3 items-end max-[680px]:grid-cols-1">
-				<div class="flex flex-col gap-1.5">
-					${Label({ htmlFor: "loc", text: "Location" })}
-					${Select({ id: "loc", options: [{ value: "", label: "Loading locations..." }], className: "w-full" })}
-				</div>
+				${Field({
+					htmlFor: "loc",
+					label: "Location",
+					input: Select({
+						id: "loc",
+						options: [{ value: "", label: "Loading locations..." }],
+						className: "w-full",
+					}),
+				})}
 				<div class="flex flex-col gap-1.5">
 					<div class="flex items-center justify-between">
 						${Label({ htmlFor: "thresh", text: "Discount threshold" })}
@@ -284,17 +287,22 @@ export function initSearch(container: HTMLElement): () => void {
 
 			<div id="adv-panel" class="overflow-hidden max-h-0 opacity-0 transition-all ease-in-out duration-300 [&.open]:max-h-150 [&.open]:opacity-100">
 				<div class="grid grid-cols-4 gap-2.5 pt-4 border-t border-(--border) mt-3.5 max-[680px]:grid-cols-2">
-					${NUM_FILTERS.map(
-						(f) => html`
-						<div class="flex flex-col gap-1.5">
-							${Label({ htmlFor: f.id, text: f.label })}
-							${Input({ id: f.id, type: "number", placeholder: f.placeholder, className: "w-full" })}
-						</div>
-					`,
+					${NUM_FILTERS.map((f) =>
+						Field({
+							htmlFor: f.id,
+							label: f.label,
+							input: Input({
+								id: f.id,
+								type: "number",
+								placeholder: f.placeholder,
+								className: "w-full",
+							}),
+						}),
 					)}
-					<div class="flex flex-col gap-1.5">
-						${Label({ htmlFor: "category", text: "Category" })}
-						${Select({
+					${Field({
+						htmlFor: "category",
+						label: "Category",
+						input: Select({
 							id: "category",
 							className: "w-full",
 							options: [
@@ -302,8 +310,8 @@ export function initSearch(container: HTMLElement): () => void {
 								{ value: "Yeni tikili", label: "New build" },
 								{ value: "Köhnə tikili", label: "Secondary" },
 							],
-						})}
-					</div>
+						}),
+					})}
 				</div>
 				<div class="flex flex-wrap gap-1.75 pt-3.5">
 					${CHECK_FILTERS.map((f) => Chip({ id: f.id, label: f.label }))}

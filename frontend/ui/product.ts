@@ -3,6 +3,7 @@ import { fmt, fmtFloor, frag, html, timeAgo } from "../core/utils";
 import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
+import { StatBox } from "./stat-box";
 import { ts } from "./tier";
 
 interface ProductProps {
@@ -123,24 +124,10 @@ export function Product({
         </div>
       </div>
       <div class="grid grid-cols-4 gap-1.5">
-        <div class="bg-(--surface-2) rounded-(--r-sm) py-2 px-1.5 text-center">
-          <div class="text-xs text-(--muted) mb-0.75">Area</div>
-          <div class="text-xs font-semibold">${fmt(property.area_sqm, 1)} m²</div>
-        </div>
-        <div class="bg-(--surface-2) rounded-(--r-sm) py-2 px-1.5 text-center">
-          <div class="text-xs text-(--muted) mb-0.75">₼/m²</div>
-          <div class="text-xs font-semibold">
-            ${fmt(property.price_per_sqm, 0)}
-          </div>
-        </div>
-        <div class="bg-(--surface-2) rounded-(--r-sm) py-2 px-1.5 text-center">
-          <div class="text-xs text-(--muted) mb-0.75">Rooms</div>
-          <div class="text-xs font-semibold">${property.rooms ?? "—"}</div>
-        </div>
-        <div class="bg-(--surface-2) rounded-(--r-sm) py-2 px-1.5 text-center">
-          <div class="text-xs text-(--muted) mb-0.75">Floor</div>
-          <div class="text-xs font-semibold">${floorStr}</div>
-        </div>
+        ${StatBox({ label: "Area", value: `${fmt(property.area_sqm, 1)} m²` })}
+        ${StatBox({ label: "₼/m²", value: fmt(property.price_per_sqm, 0) })}
+        ${StatBox({ label: "Rooms", value: property.rooms ?? "—" })}
+        ${StatBox({ label: "Floor", value: floorStr })}
       </div>
       ${
 				tags.length

@@ -5,6 +5,7 @@ import { fmt, frag, ge, hide, html, show, toast } from "../core/utils";
 import { openDesc } from "../dialogs/description";
 import { openMap } from "../dialogs/map";
 import { Button } from "../ui/button";
+import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
 import { Product } from "../ui/product";
 import { Select } from "../ui/select";
@@ -68,85 +69,28 @@ export function initProducts(container: HTMLElement): () => void {
       </div>
     </div>
   `;
-	const loading = html`
-    <div id="s-loading" class="hidden">
-      <div
-        class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center"
-      >
-        <svg
-          class="animate-spin text-(--muted) opacity-40 mb-1"
-          width="26"
-          height="26"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          aria-hidden="true"
-        >
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-        <p class="text-base font-medium text-(--text-2)">
-          Searching for deals…
-        </p>
-      </div>
-    </div>
-  `;
-	const empty = html`
-    <div id="s-empty" class="hidden">
-      <div
-        class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center"
-      >
-        <svg
-          class="text-(--muted) opacity-40 mb-1"
-          width="42"
-          height="42"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.4"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-          <path d="M11 8v3M11 15h.01" stroke-width="2" />
-        </svg>
-        <p class="text-base font-medium text-(--text-2)">No results found</p>
-        <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
-          Try lowering the discount threshold or removing some filters.
-        </p>
-      </div>
-    </div>
-  `;
-	const welcome = html`
-    <div id="s-welcome">
-      <div
-        class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center pt-25"
-      >
-        <svg
-          class="text-(--muted) opacity-40 mb-1"
-          width="52"
-          height="52"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.1"
-          aria-hidden="true"
-        >
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-        <p class="text-base font-medium text-(--text-2)">
-          Discover undervalued properties
-        </p>
-        <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
-          Pick a location and discount threshold to find listings priced below
-          the local market average.
-        </p>
-      </div>
-    </div>
-  `;
-	const cards = html`
+	const loading = EmptyState({
+		id: "s-loading",
+		icon: Icons.spinnerLg(),
+		title: "Searching for deals…",
+	});
+	const empty = EmptyState({
+		id: "s-empty",
+		icon: Icons.noResults(),
+		title: "No results found",
+		subtitle: "Try lowering the discount threshold or removing some filters.",
+	});
+	const welcome = EmptyState({
+		id: "s-welcome",
+		icon: Icons.homeLg(),
+		title: "Discover undervalued properties",
+		subtitle:
+			"Pick a location and discount threshold to find listings priced below the local market average.",
+		hidden: false,
+		padTop: true,
+	});
+	// frag used (not html) so all 3 siblings reach the DOM
+	const cards = frag`
     <div id="cards"></div>
     <div id="scroll-sentinel"></div>
     <div id="load-more" class="hidden">
