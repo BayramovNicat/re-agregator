@@ -1,6 +1,7 @@
 import { state } from "./core/state";
 import { ge } from "./core/utils";
 import { initAlertModal } from "./features/alerts";
+import { CHECK_FILTERS, NUM_FILTERS, renderFilters } from "./features/filters";
 import { openDesc, openHeatmap, openMap } from "./features/map";
 import { doSearch, updateChips } from "./features/search";
 import {
@@ -10,6 +11,9 @@ import {
 	setLoadMoreFn,
 	toggleBM,
 } from "./ui/render";
+
+// Render advanced filter inputs from config (keeps HTML clean)
+renderFilters(ge("adv-panel"));
 
 // Expose updateChips globally so chip close buttons can call it from inline onclick
 (window as unknown as Record<string, unknown>).__updateChips = updateChips;
@@ -134,32 +138,15 @@ ge("hasActiveMortgage").addEventListener("change", () => {
 	updateChips();
 });
 
-for (const id of [
-	"hasRepair",
-	"hasDocument",
-	"hasMortgage",
-	"isUrgent",
-	"notLastFloor",
-]) {
-	ge(id).addEventListener("change", updateChips);
+for (const f of CHECK_FILTERS.filter(
+	(f) => f.id !== "noActiveMortgage" && f.id !== "hasActiveMortgage",
+)) {
+	ge(f.id).addEventListener("change", updateChips);
 }
-for (const id of [
-	"minPrice",
-	"maxPrice",
-	"minPriceSqm",
-	"maxPriceSqm",
-	"minArea",
-	"maxArea",
-	"minRooms",
-	"maxRooms",
-	"minFloor",
-	"maxFloor",
-	"minTotalFloors",
-	"maxTotalFloors",
-	"category",
-]) {
-	ge(id).addEventListener("input", updateChips);
+for (const f of NUM_FILTERS) {
+	ge(f.id).addEventListener("input", updateChips);
 }
+ge("category").addEventListener("input", updateChips);
 
 // ── Alert modal ───────────────────────────────────────────────────────────────
 initAlertModal();
@@ -174,35 +161,18 @@ if (threshold) {
 	updateThreshBg();
 }
 
-const strFields: [string, string][] = [
-	["minPrice", "minPrice"],
-	["maxPrice", "maxPrice"],
-	["minPriceSqm", "minPriceSqm"],
-	["maxPriceSqm", "maxPriceSqm"],
-	["minArea", "minArea"],
-	["maxArea", "maxArea"],
-	["minRooms", "minRooms"],
-	["maxRooms", "maxRooms"],
-	["minFloor", "minFloor"],
-	["maxFloor", "maxFloor"],
-	["minTotalFloors", "minTotalFloors"],
-	["maxTotalFloors", "maxTotalFloors"],
-	["category", "category"],
-];
-for (const [k, id] of strFields) {
-	const val = initParams.get(k);
-	if (val) (ge(id) as HTMLInputElement).value = val;
+for (const f of NUM_FILTERS) {
+	const val = initParams.get(f.id);
+	if (val) (ge(f.id) as HTMLInputElement).value = val;
 }
+const catParam = initParams.get("category");
+if (catParam) (ge("category") as HTMLSelectElement).value = catParam;
 
-for (const [k, id] of [
-	["hasRepair", "hasRepair"],
-	["hasDocument", "hasDocument"],
-	["hasMortgage", "hasMortgage"],
-	["isUrgent", "isUrgent"],
-	["notLastFloor", "notLastFloor"],
-] as [string, string][]) {
-	if (initParams.has(k) && initParams.get(k) === "true")
-		(ge(id) as HTMLInputElement).checked = true;
+for (const f of CHECK_FILTERS.filter(
+	(f) => f.id !== "noActiveMortgage" && f.id !== "hasActiveMortgage",
+)) {
+	if (initParams.get(f.id) === "true")
+		(ge(f.id) as HTMLInputElement).checked = true;
 }
 
 if (initParams.has("hasActiveMortgage")) {

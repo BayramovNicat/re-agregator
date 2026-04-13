@@ -2,6 +2,7 @@ import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { ge, hide, html, show, toast } from "../core/utils";
 import { render } from "../ui/render";
+import { CHECK_FILTERS, NUM_FILTERS } from "./filters";
 import { fetchTrend } from "./trend";
 
 function createChip(label: string, onClick: string): HTMLElement {
@@ -33,47 +34,24 @@ export function updateChips(): void {
 	const row = ge("chips-row");
 	const chips: HTMLElement[] = [];
 
-	const checks: [string, string][] = [
-		["hasRepair", "Repaired"],
-		["hasDocument", "Has document"],
-		["hasMortgage", "Mortgage"],
-		["isUrgent", "Urgent only"],
-		["notLastFloor", "Not last floor"],
-		["noActiveMortgage", "No active mortgage"],
-		["hasActiveMortgage", "Active mortgage only"],
-	];
-	for (const [id, lbl] of checks) {
-		if ((ge(id) as HTMLInputElement).checked) {
+	for (const f of CHECK_FILTERS) {
+		if ((ge(f.id) as HTMLInputElement).checked) {
 			chips.push(
 				createChip(
-					lbl,
-					`document.getElementById('${id}').checked=false;window.__updateChips()`,
+					f.label,
+					`document.getElementById('${f.id}').checked=false;window.__updateChips()`,
 				),
 			);
 		}
 	}
 
-	const nums: [string, string][] = [
-		["minPrice", "Min ₼"],
-		["maxPrice", "Max ₼"],
-		["minPriceSqm", "Min ₼/m²"],
-		["maxPriceSqm", "Max ₼/m²"],
-		["minArea", "Min m²"],
-		["maxArea", "Max m²"],
-		["minRooms", "Min rooms"],
-		["maxRooms", "Max rooms"],
-		["minFloor", "Min flr"],
-		["maxFloor", "Max flr"],
-		["minTotalFloors", "Min bldg flr"],
-		["maxTotalFloors", "Max bldg flr"],
-	];
-	for (const [id, lbl] of nums) {
-		const v = (ge(id) as HTMLInputElement).value;
-		if (v) {
+	for (const f of NUM_FILTERS) {
+		const val = (ge(f.id) as HTMLInputElement).value;
+		if (val) {
 			chips.push(
 				createChip(
-					`${lbl}: ${v}`,
-					`document.getElementById('${id}').value='';window.__updateChips()`,
+					`${f.chipLabel}: ${val}`,
+					`document.getElementById('${f.id}').value='';window.__updateChips()`,
 				),
 			);
 		}
@@ -141,23 +119,12 @@ export async function doSearch(more = false): Promise<void> {
 			offset: String(state.currentOffset),
 		});
 
-		const setParam = (k: string, id: string) => {
-			const val = v(id);
-			if (val) p.set(k, val);
-		};
-		setParam("minPrice", "minPrice");
-		setParam("maxPrice", "maxPrice");
-		setParam("minPriceSqm", "minPriceSqm");
-		setParam("maxPriceSqm", "maxPriceSqm");
-		setParam("minArea", "minArea");
-		setParam("maxArea", "maxArea");
-		setParam("minRooms", "minRooms");
-		setParam("maxRooms", "maxRooms");
-		setParam("minFloor", "minFloor");
-		setParam("maxFloor", "maxFloor");
-		setParam("minTotalFloors", "minTotalFloors");
-		setParam("maxTotalFloors", "maxTotalFloors");
-		setParam("category", "category");
+		for (const f of NUM_FILTERS) {
+			const val = v(f.id);
+			if (val) p.set(f.id, val);
+		}
+		const cat = v("category");
+		if (cat) p.set("category", cat);
 		if (cb("hasRepair")) p.set("hasRepair", "true");
 		if (cb("hasDocument")) p.set("hasDocument", "true");
 		if (cb("hasMortgage")) p.set("hasMortgage", "true");

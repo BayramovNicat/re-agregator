@@ -91,11 +91,12 @@
           class="grid grid-cols-[1fr_260px_120px] gap-3 items-end max-[680px]:grid-cols-1"
         >
           <div class="flex flex-col gap-1.5">
-            <span
+            <label
+              for="loc"
               class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
             >
               Location
-            </span>
+            </label>
             <select
               id="loc"
               class="w-full px-3 py-2.25 bg-(--surface-2) border border-(--border) rounded-(--r) text-(--text) font-inherit text-sm appearance-none cursor-pointer transition-[border-color,box-shadow] duration-150 hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
@@ -105,11 +106,12 @@
           </div>
           <div class="flex flex-col gap-1.5">
             <div class="flex items-center justify-between">
-              <span
+              <label
+                for="thresh"
                 class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
               >
                 Discount threshold
-              </span>
+              </label>
               <span
                 id="tval"
                 class="text-xs font-bold text-(--accent) bg-(--accent-dim) px-2 py-0.5 rounded-full tracking-[0.02em]"
@@ -133,6 +135,7 @@
           <div class="flex flex-col gap-1.5">
             <span
               class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible"
+              aria-hidden="true"
               >Go</span
             >
             <button
@@ -189,256 +192,7 @@
         <div
           class="overflow-hidden max-h-0 opacity-0 transition-[max-height,opacity] ease-in-out duration-300 [&.open]:max-h-150 [&.open]:opacity-100"
           id="adv-panel"
-        >
-          <div
-            class="grid grid-cols-4 gap-2.5 pt-4 border-t border-(--border) mt-3.5 max-[680px]:grid-cols-2"
-          >
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min price (₼)</span
-              >
-              <input
-                type="number"
-                id="minPrice"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="30 000"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max price (₼)</span
-              >
-              <input
-                type="number"
-                id="maxPrice"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="150 000"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min ₼/m²</span
-              >
-              <input
-                type="number"
-                id="minPriceSqm"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="500"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max ₼/m²</span
-              >
-              <input
-                type="number"
-                id="maxPriceSqm"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="2000"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min area (m²)</span
-              >
-              <input
-                type="number"
-                id="minArea"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="40"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max area (m²)</span
-              >
-              <input
-                type="number"
-                id="maxArea"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="120"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min rooms</span
-              >
-              <input
-                type="number"
-                id="minRooms"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="2"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max rooms</span
-              >
-              <input
-                type="number"
-                id="maxRooms"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="4"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min floor</span
-              >
-              <input
-                type="number"
-                id="minFloor"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="2"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max floor</span
-              >
-              <input
-                type="number"
-                id="maxFloor"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="15"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Min building floors</span
-              >
-              <input
-                type="number"
-                id="minTotalFloors"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="2"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Max building floors</span
-              >
-              <input
-                type="number"
-                id="maxTotalFloors"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm transition-[border-color,box-shadow] duration-150 placeholder:text-(--muted) hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-                placeholder="5"
-              />
-            </div>
-            <div class="flex flex-col gap-1.5">
-              <span
-                class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase"
-                >Category</span
-              >
-              <select
-                id="category"
-                class="w-full px-2.5 py-1.75 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-(--text) font-inherit text-sm appearance-none cursor-pointer transition-[border-color] duration-150 focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-              >
-                <option value="">Any</option>
-                <option value="Yeni tikili">New build</option>
-                <option value="Köhnə tikili">Secondary</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-1.75 pt-3.5">
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="hasRepair"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Repaired
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="hasDocument"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Has document
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="hasMortgage"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Mortgage eligible
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="isUrgent"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Urgent only
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="notLastFloor"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Not last floor
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="noActiveMortgage"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                No active mortgage
-              </span>
-            </label>
-            <label class="group inline-flex cursor-pointer select-none">
-              <input
-                type="checkbox"
-                id="hasActiveMortgage"
-                class="peer absolute opacity-0 w-0 h-0"
-              />
-              <span
-                class="inline-flex items-center gap-1.5 px-3 py-1.25 rounded-full border border-(--border) text-(--text-2) text-xs font-medium transition-all duration-150 group-hover:border-(--border-h) group-hover:text-(--text) peer-checked:border-[rgba(99,102,241,0.5)] peer-checked:text-(--accent) peer-checked:bg-(--accent-dim) before:content-[''] before:w-1.25 before:h-1.25 before:rounded-full before:bg-(--muted) before:transition-[background] before:duration-150 peer-checked:before:bg-(--accent)"
-              >
-                Active mortgage only
-              </span>
-            </label>
-          </div>
-        </div>
+        ></div>
       </div>
 
       <!-- Active filter chips -->

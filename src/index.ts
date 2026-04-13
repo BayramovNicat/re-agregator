@@ -122,7 +122,7 @@ Bun.serve({
 					"Content-Type": asset.contentType,
 					"Content-Encoding": "br",
 					"Cache-Control": "public, max-age=31536000, immutable",
-					"Vary": "Accept-Encoding",
+					Vary: "Accept-Encoding",
 				},
 			});
 		}
