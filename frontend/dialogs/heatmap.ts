@@ -1,42 +1,10 @@
-import { circle, divIcon, featureGroup, map, marker, tileLayer } from "leaflet";
+import { circle, featureGroup, type map } from "leaflet";
 import type { HeatmapPoint } from "../core/types";
 import { fmt, ge, toast } from "../core/utils";
+import { initLeaflet, MapDialog } from "../ui/map-base";
 
-// ── Property map ─────────────────────────────────────────────────────────────
-let lmap: ReturnType<typeof map> | null = null;
-let lmark: ReturnType<typeof marker> | null = null;
-
-function initMap(): void {
-	if (lmap) return;
-	lmap = map("map-ct", { zoomControl: true, attributionControl: false });
-	tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-		subdomains: "abcd",
-		maxZoom: 19,
-	}).addTo(lmap);
-	const icon = divIcon({
-		className: "",
-		html: `<div class="w-3 h-3 rounded-full bg-(--green) border-2 border-(--bg) animate-[mpulse_2s_ease-out_infinite]"></div>`,
-		iconSize: [12, 12],
-		iconAnchor: [6, 6],
-	});
-	lmark = marker([0, 0], { icon }).addTo(lmap);
-}
-
-export function openMap(lat: number, lng: number): void {
-	(ge("map-modal") as HTMLDialogElement).showModal();
-	requestAnimationFrame(() => {
-		initMap();
-		if (lmap && lmark) {
-			lmap.invalidateSize();
-			lmark.setLatLng([lat, lng]);
-			lmap.setView([lat, lng], 15, { animate: false });
-		}
-	});
-}
-
-export function openDesc(text: string): void {
-	ge("desc-body").textContent = text;
-	(ge("desc-modal") as HTMLDialogElement).showModal();
+export function renderHeatmapModal(root: HTMLElement): void {
+	root.appendChild(MapDialog({ id: "heatmap-modal", containerId: "heatmap-ct" }));
 }
 
 // ── Heatmap ───────────────────────────────────────────────────────────────────
@@ -115,17 +83,7 @@ export function openHeatmap(onLocClick: (name: string) => void): void {
 	(ge("heatmap-modal") as HTMLDialogElement).showModal();
 	requestAnimationFrame(() => {
 		if (!hmap) {
-			hmap = map("heatmap-ct", {
-				zoomControl: true,
-				attributionControl: false,
-			});
-			tileLayer(
-				"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-				{
-					subdomains: "abcd",
-					maxZoom: 19,
-				},
-			).addTo(hmap);
+			hmap = initLeaflet("heatmap-ct");
 
 			const saved = JSON.parse(localStorage.getItem("hmap-view") || "null") as {
 				center: L.LatLngExpression;

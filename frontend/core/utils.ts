@@ -1,3 +1,11 @@
+export function renderToastsContainer(root: HTMLElement): void {
+	const el = document.createElement("div");
+	el.id = "toasts";
+	el.className =
+		"fixed bottom-5 right-5 z-999 flex flex-col gap-2 pointer-events-none";
+	root.appendChild(el);
+}
+
 export function ge(id: string): HTMLElement {
 	return document.getElementById(id) as HTMLElement;
 }

@@ -1,11 +1,13 @@
 import { state } from "./core/state";
 import { ge } from "./core/utils";
-import { initAlertModal } from "./features/alerts";
+import { openDesc } from "./dialogs/description";
+import { openHeatmap } from "./dialogs/heatmap";
+import { openMap } from "./dialogs/map";
 import { CHECK_FILTERS, NUM_FILTERS, renderFilters } from "./features/filters";
-import { openDesc, openHeatmap, openMap } from "./features/map";
 import { renderResultsBar } from "./features/results-bar";
 import { doSearch, updateChips } from "./features/search";
 import { renderTrendPanel } from "./features/trend";
+import { renderLayout } from "./layout/layout";
 import {
 	hideItem,
 	render,
@@ -13,6 +15,9 @@ import {
 	setLoadMoreFn,
 	toggleBM,
 } from "./ui/render";
+import { setRangeProgress } from "./ui/range";
+
+renderLayout(document.getElementById("app") as HTMLElement);
 
 // Render advanced filter inputs from config (keeps HTML clean)
 renderFilters(ge("adv-panel"));
@@ -36,17 +41,9 @@ setCardCallbacks({
 // ── Events ────────────────────────────────────────────────────────────────────
 ge("search-btn").addEventListener("click", () => void doSearch(false));
 
-function updateThreshBg(): void {
-	const t = ge("thresh") as HTMLInputElement;
-	const p =
-		((Number(t.value) - Number(t.min)) / (Number(t.max) - Number(t.min))) * 100;
-	t.style.setProperty("--p", `${p}%`);
-}
 ge("thresh").addEventListener("input", (e) => {
 	ge("tval").textContent = `${(e.target as HTMLInputElement).value}%`;
-	updateThreshBg();
 });
-updateThreshBg();
 
 ge("sort-sel").addEventListener("change", () => {
 	state.renderedSet.clear();
@@ -152,9 +149,6 @@ for (const f of NUM_FILTERS) {
 }
 ge("category").addEventListener("input", updateChips);
 
-// ── Alert modal ───────────────────────────────────────────────────────────────
-initAlertModal();
-
 // ── Restore filters from URL ──────────────────────────────────────────────────
 const initParams = new URLSearchParams(window.location.search);
 
@@ -162,7 +156,7 @@ const threshold = initParams.get("threshold");
 if (threshold) {
 	(ge("thresh") as HTMLInputElement).value = threshold;
 	ge("tval").textContent = `${threshold}%`;
-	updateThreshBg();
+	setRangeProgress(ge("thresh") as HTMLInputElement);
 }
 
 for (const f of NUM_FILTERS) {

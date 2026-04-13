@@ -1,7 +1,53 @@
 import { state } from "../core/state";
 import type { CardCallbacks, Property } from "../core/types";
-import { fmt, ge, hide, html, show, toast } from "../core/utils";
-import { buildCard, buildRow } from "./cards";
+import { fmt, frag, ge, hide, html, show, toast } from "../core/utils";
+import { Product } from "../features/product";
+
+export function renderStateArea(container: HTMLElement): void {
+	const nodes = frag`
+    <div id="trend-container"></div>
+    <div id="results-bar-container"></div>
+
+    <div id="s-loading" class="hidden">
+      <div class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center">
+        <svg class="animate-spin text-(--muted) opacity-40 mb-1" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+        <p class="text-base font-medium text-(--text-2)">Searching for deals…</p>
+      </div>
+    </div>
+
+    <div id="s-empty" class="hidden">
+      <div class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center">
+        <svg class="text-(--muted) opacity-40 mb-1" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+          <path d="M11 8v3M11 15h.01" stroke-width="2"/>
+        </svg>
+        <p class="text-base font-medium text-(--text-2)">No results found</p>
+        <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">Try lowering the discount threshold or removing some filters.</p>
+      </div>
+    </div>
+
+    <div id="s-welcome">
+      <div class="flex flex-col items-center justify-center py-20 px-5 gap-2.5 text-center pt-25">
+        <svg class="text-(--muted) opacity-40 mb-1" width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <p class="text-base font-medium text-(--text-2)">Discover undervalued properties</p>
+        <p class="text-sm text-(--muted) max-w-75 leading-[1.6]">Pick a location and discount threshold to find listings priced below the local market average.</p>
+      </div>
+    </div>
+
+    <div id="cards"></div>
+    <div id="scroll-sentinel"></div>
+    <div id="load-more" class="hidden">
+      <p class="text-xs text-(--muted) mt-2" id="load-info"></p>
+    </div>
+  `;
+	container.appendChild(nodes);
+}
 
 // Injected by main.ts to avoid circular dep (render -> search -> render)
 let _loadMoreFn: (() => void) | null = null;
@@ -108,10 +154,12 @@ export function render(): void {
 	let newCount = 0;
 	for (const property of list) {
 		const bookmarked = state.bookmarks.has(property.source_url);
-		const el =
-			state.currentView === "grid"
-				? buildCard({ property, bookmarked, callbacks })
-				: buildRow({ property, bookmarked, callbacks });
+		const el = Product({
+			property,
+			bookmarked,
+			view: state.currentView as "grid" | "row",
+			callbacks,
+		});
 		if (state.renderedSet.has(property.source_url)) {
 			el.style.animation = "none";
 		} else {

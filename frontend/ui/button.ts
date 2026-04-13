@@ -1,14 +1,19 @@
 import { html } from "../core/utils";
 
-const SHARED = "transition-all duration-150 rounded-(--r-sm) font-medium";
+const SHARED = "transition-all duration-150 rounded-(--r) font-medium active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none select-none";
 
 const VARIANTS = {
-	padded: "inline-flex items-center gap-1.25 px-2.5 py-1.25 text-xs border",
+	base: "inline-flex items-center justify-center gap-1.5 px-4 py-2.25 text-sm h-10 whitespace-nowrap",
+	padded: "inline-flex items-center gap-1.25 px-2.5 py-1.25 text-xs border whitespace-nowrap",
 	square: "size-7.5 flex items-center justify-center border",
 	ghost: "inline-flex items-center gap-1.25 border-none p-0 text-xs",
 };
 
 const COLORS = {
+	solid: `
+    bg-(--text) text-(--bg) border-none font-semibold
+    hover:bg-[#d0d0e0]
+  `,
 	yellow: `
     text-(--muted) border-(--border) bg-transparent
     hover:text-(--yellow) hover:border-(--yellow-b) hover:bg-(--yellow-dim)
