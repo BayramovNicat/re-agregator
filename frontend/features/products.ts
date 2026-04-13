@@ -3,6 +3,7 @@ import { state } from "../core/state";
 import type { CardCallbacks, Property } from "../core/types";
 import { fmt, frag, ge, hide, html, show, toast } from "../core/utils";
 import { openDesc } from "../dialogs/description";
+import { openGallery } from "../dialogs/gallery";
 import { openMap } from "../dialogs/map";
 import { Button } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
@@ -106,6 +107,7 @@ export function initProducts(container: HTMLElement): () => void {
 		onBM: toggleBM,
 		onHide: hideItem,
 		onDesc: openDesc,
+		onGallery: openGallery,
 		onMap: openMap,
 	};
 

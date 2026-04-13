@@ -123,7 +123,6 @@ input[type="number"] {
 	}
 }
 
-/* ── Card (grid) ── */
 @keyframes fadeUp {
 	from {
 		opacity: 0;
@@ -133,4 +132,11 @@ input[type="number"] {
 		opacity: 1;
 		transform: translateY(0);
 	}
+}
+
+.no-scrollbar {
+	scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
 }

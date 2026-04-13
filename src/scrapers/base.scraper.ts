@@ -20,6 +20,7 @@ export interface ScrapedListing {
 	has_mortgage?: boolean;
 	has_repair?: boolean;
 	description?: string;
+	image_urls?: string[];
 	is_urgent: boolean;
 	has_active_mortgage: boolean;
 	posted_date?: Date;

@@ -116,6 +116,7 @@ interface ItemDetail {
 	category: { name: string } | null;
 	latitude: number | null;
 	longitude: number | null;
+	photos: Array<{ full: string }> | null;
 }
 
 // ── Scraper ───────────────────────────────────────────────────────────────────
@@ -203,6 +204,7 @@ export class BinaScraper extends BaseScraper {
 					has_mortgage: node.hasMortgage ?? undefined,
 					has_repair: node.hasRepair ?? undefined,
 					description: detail?.description,
+					image_urls: detail?.photos?.map((p) => p.full) ?? [],
 					is_urgent: this.isUrgent(urgencyText),
 					has_active_mortgage: this.isActiveMortgage(mortgageText),
 					posted_date: detail?.updatedAt
@@ -323,7 +325,7 @@ export class BinaScraper extends BaseScraper {
 		const fields = ids
 			.map(
 				(id) =>
-					`i${id}: item(id: "${id}") { title description updatedAt category { name } latitude longitude }`,
+					`i${id}: item(id: "${id}") { title description updatedAt category { name } latitude longitude photos { full } }`,
 			)
 			.join("\n");
 
@@ -336,6 +338,21 @@ export class BinaScraper extends BaseScraper {
 		for (const id of ids) {
 			const detail = raw[`i${id}`];
 			if (detail) result[id] = detail;
+		}
+		return result;
+	}
+
+	/**
+	 * Public method used by the backfill script.
+	 * Returns a map of itemId → image URL array for the given IDs.
+	 */
+	async fetchImageUrls(ids: string[]): Promise<Record<string, string[]>> {
+		const details = await this.batchFetchDetails(ids);
+		const result: Record<string, string[]> = {};
+		for (const [id, detail] of Object.entries(details)) {
+			if (detail.photos?.length) {
+				result[id] = detail.photos.map((p) => p.full);
+			}
 		}
 		return result;
 	}

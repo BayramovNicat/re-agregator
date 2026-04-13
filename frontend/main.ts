@@ -1,5 +1,6 @@
 import { ge, html, renderToastsContainer } from "./core/utils";
 import { renderDescModal } from "./dialogs/description";
+import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { renderMapModal } from "./dialogs/map";
 import { initAlerts } from "./features/alerts";
@@ -34,6 +35,7 @@ const cleanups: (() => void)[] = [
 	initSearch(ge("search-area")),
 	initHeader(ge("header-area")),
 	initAlerts(root),
+	initGallery(root),
 ];
 
 // 3. Global Static Modals & Utilities

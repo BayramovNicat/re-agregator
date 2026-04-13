@@ -25,6 +25,7 @@ model Property {
   has_mortgage    Boolean?
   has_repair      Boolean?
   description     String?
+  image_urls      String[]
   is_urgent             Boolean   @default(false)
   has_active_mortgage   Boolean   @default(false)
   posted_date           DateTime?

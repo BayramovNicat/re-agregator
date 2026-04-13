@@ -138,6 +138,28 @@ export const Icons = {
       <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
     </svg>`,
 
+	close: (size = 14) =>
+		html`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>`,
+
+	gallery: () =>
+		html`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>`,
+
+	chevronLeft: (size = 20) =>
+		html`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>`,
+
+	chevronRight: (size = 20) =>
+		html`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M9 18l6-6-6-6" />
+    </svg>`,
+
 	// State-screen icons (large, muted)
 	spinnerLg: () =>
 		html`<svg class="animate-spin text-(--muted) opacity-40 mb-1" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">

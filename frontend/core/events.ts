@@ -2,12 +2,14 @@ export const EVENTS = {
 	DEALS_UPDATED: "deals_updated",
 	SEARCH_STARTED: "search_started",
 	LOCATION_CHANGED: "location_changed",
+	GALLERY_OPEN: "gallery_open",
 } as const;
 
 export type EventPayloads = {
 	[EVENTS.DEALS_UPDATED]: undefined;
 	[EVENTS.SEARCH_STARTED]: { more: boolean };
 	[EVENTS.LOCATION_CHANGED]: string;
+	[EVENTS.GALLERY_OPEN]: string[];
 };
 
 type Callback<T> = (data: T) => void;

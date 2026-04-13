@@ -18,6 +18,7 @@ export interface Property {
 	has_active_mortgage?: boolean;
 	posted_date?: string;
 	description?: string;
+	image_urls?: string[];
 	latitude?: number;
 	longitude?: number;
 }
@@ -71,6 +72,7 @@ export interface CardCallbacks {
 	onHide: (url: string) => void;
 	onDesc: (text: string) => void;
 	onMap: (lat: number, lng: number, label?: string) => void;
+	onGallery: (urls: string[]) => void;
 }
 
 declare global {

@@ -26,7 +26,11 @@ export function Product({
 	const t = ts(property.tier);
 	const floorStr = fmtFloor(property.floor, property.total_floors);
 
-	const { bmarkBtn, hideBtn, descBtn, mapBtn } = createButtons(bookmarked);
+	const hasImages = (property.image_urls?.length ?? 0) > 0;
+	const { bmarkBtn, hideBtn, descBtn, mapBtn, galleryBtn } = createButtons(
+		bookmarked,
+		hasImages,
+	);
 
 	let element: HTMLElement;
 
@@ -142,7 +146,7 @@ export function Product({
           rel="noopener"
           >View listing ${Icons.external()}</a
         >
-        <div class="flex items-center gap-2.5">${descBtn}${mapBtn}</div>
+        <div class="flex items-center gap-2.5">${galleryBtn}${descBtn}${mapBtn}</div>
       </div>
     </article>`;
 	} else {
@@ -182,7 +186,7 @@ export function Product({
 					}
         </div>
       </div>
-      <div class="flex items-center gap-2">${bmarkBtn}${hideBtn}${mapBtn}</div>
+      <div class="flex items-center gap-2">${bmarkBtn}${hideBtn}${galleryBtn}${mapBtn}</div>
       <a
         class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
         href="${property.source_url}"
@@ -226,6 +230,9 @@ function attachActionListeners({
 			case "desc":
 				callbacks.onDesc(property.description || "");
 				break;
+			case "gallery":
+				callbacks.onGallery(property.image_urls ?? []);
+				break;
 			case "map":
 				callbacks.onMap(
 					property.latitude || 0,
@@ -237,7 +244,7 @@ function attachActionListeners({
 	});
 }
 
-function createButtons(bookmarked: boolean) {
+function createButtons(bookmarked: boolean, hasImages: boolean) {
 	const bmarkBtn = Button({
 		variant: "square",
 		color: "yellow",
@@ -271,5 +278,15 @@ function createButtons(bookmarked: boolean) {
 		content: frag`${Icons.map()}`,
 	});
 
-	return { bmarkBtn, hideBtn, descBtn, mapBtn };
+	const galleryBtn = hasImages
+		? Button({
+				variant: "ghost",
+				color: "muted",
+				title: "Photos",
+				attrs: { "data-action": "gallery" },
+				content: frag`${Icons.gallery()}`,
+			})
+		: html`<span></span>`;
+
+	return { bmarkBtn, hideBtn, descBtn, mapBtn, galleryBtn };
 }

@@ -121,6 +121,7 @@ export class ScrapingService {
 			has_mortgage: l.has_mortgage ?? null,
 			has_repair: l.has_repair ?? null,
 			description: l.description ?? null,
+			image_urls: l.image_urls ?? [],
 			is_urgent: l.is_urgent,
 			has_active_mortgage: l.has_active_mortgage,
 			posted_date: l.posted_date ?? null,
@@ -139,7 +140,7 @@ export class ScrapingService {
             ${r.district}, ${r.location_name}, ${r.latitude}, ${r.longitude},
             ${r.rooms}, ${r.floor}, ${r.total_floors}, ${r.category},
             ${r.has_document}, ${r.has_mortgage}, ${r.has_repair},
-            ${r.description}, ${r.is_urgent}, ${r.has_active_mortgage}, ${r.posted_date},
+            ${r.description}, ${r.image_urls}, ${r.is_urgent}, ${r.has_active_mortgage}, ${r.posted_date},
             ${now}, ${now}
           )`,
 				);
@@ -150,7 +151,7 @@ export class ScrapingService {
             district, location_name, latitude, longitude,
             rooms, floor, total_floors, category,
             has_document, has_mortgage, has_repair,
-            description, is_urgent, has_active_mortgage, posted_date,
+            description, image_urls, is_urgent, has_active_mortgage, posted_date,
             created_at, updated_at
           )
           VALUES ${Prisma.join(valueFragments)}
@@ -170,6 +171,7 @@ export class ScrapingService {
             has_mortgage        = EXCLUDED.has_mortgage,
             has_repair          = EXCLUDED.has_repair,
             description         = EXCLUDED.description,
+            image_urls          = EXCLUDED.image_urls,
             is_urgent           = EXCLUDED.is_urgent,
             has_active_mortgage = EXCLUDED.has_active_mortgage,
             posted_date         = EXCLUDED.posted_date,
@@ -203,6 +205,7 @@ export class ScrapingService {
 								has_mortgage: r.has_mortgage,
 								has_repair: r.has_repair,
 								description: r.description,
+								image_urls: r.image_urls,
 								is_urgent: r.is_urgent,
 								has_active_mortgage: r.has_active_mortgage,
 								posted_date: r.posted_date,
@@ -224,6 +227,7 @@ export class ScrapingService {
 								has_mortgage: r.has_mortgage,
 								has_repair: r.has_repair,
 								description: r.description,
+								image_urls: r.image_urls,
 								is_urgent: r.is_urgent,
 								has_active_mortgage: r.has_active_mortgage,
 								posted_date: r.posted_date,
