@@ -91,8 +91,6 @@ const CHECK_FILTERS = [
 	{ id: "hasMortgage", label: "Mortgage eligible" },
 	{ id: "isUrgent", label: "Urgent only" },
 	{ id: "notLastFloor", label: "Not last floor" },
-	{ id: "noActiveMortgage", label: "No active mortgage" },
-	{ id: "hasActiveMortgage", label: "Active mortgage only" },
 ];
 
 export function initSearch(container: HTMLElement): () => void {
@@ -139,6 +137,19 @@ export function initSearch(container: HTMLElement): () => void {
 					label: `Category: ${cat}`,
 					onClose: () => {
 						(ge("category") as HTMLSelectElement).value = "";
+						updateChips();
+					},
+				}),
+			);
+		}
+
+		const am = (ge("hasActiveMortgage") as HTMLSelectElement).value;
+		if (am) {
+			chips.push(
+				CloseableChip({
+					label: `Active mortgage: ${am === "true" ? "Yes" : "No"}`,
+					onClose: () => {
+						(ge("hasActiveMortgage") as HTMLSelectElement).value = "";
 						updateChips();
 					},
 				}),
@@ -202,8 +213,9 @@ export function initSearch(container: HTMLElement): () => void {
 			if (cb("hasMortgage")) p.set("hasMortgage", "true");
 			if (cb("isUrgent")) p.set("isUrgent", "true");
 			if (cb("notLastFloor")) p.set("notLastFloor", "true");
-			if (cb("noActiveMortgage")) p.set("hasActiveMortgage", "false");
-			else if (cb("hasActiveMortgage")) p.set("hasActiveMortgage", "true");
+
+			const am = (ge("hasActiveMortgage") as HTMLSelectElement).value;
+			if (am) p.set("hasActiveMortgage", am);
 
 			const res = await fetch(`/api/deals/undervalued?${p}`);
 			const d = (await res.json()) as {
@@ -312,6 +324,19 @@ export function initSearch(container: HTMLElement): () => void {
 							],
 						}),
 					})}
+					${Field({
+						htmlFor: "hasActiveMortgage",
+						label: "Active mortgage",
+						input: Select({
+							id: "hasActiveMortgage",
+							className: "w-full",
+							options: [
+								{ value: "", label: "Any" },
+								{ value: "false", label: "No" },
+								{ value: "true", label: "Yes" },
+							],
+						}),
+					})}
 				</div>
 				<div class="flex flex-wrap gap-1.75 pt-3.5">
 					${CHECK_FILTERS.map((f) => Chip({ id: f.id, label: f.label }))}
@@ -336,17 +361,10 @@ export function initSearch(container: HTMLElement): () => void {
 	}
 	const catVal = params.get("category");
 	if (catVal) (ge("category") as HTMLSelectElement).value = catVal;
+	const amVal = params.get("hasActiveMortgage");
+	if (amVal) (ge("hasActiveMortgage") as HTMLSelectElement).value = amVal;
 	for (const f of CHECK_FILTERS) {
-		if (
-			params.get(f.id) === "true" ||
-			(f.id === "noActiveMortgage" &&
-				params.get("hasActiveMortgage") === "false")
-		) {
-			(ge(f.id) as HTMLInputElement).checked = true;
-		} else if (
-			f.id === "hasActiveMortgage" &&
-			params.get("hasActiveMortgage") === "true"
-		) {
+		if (params.get(f.id) === "true") {
 			(ge(f.id) as HTMLInputElement).checked = true;
 		}
 	}
@@ -379,19 +397,9 @@ export function initSearch(container: HTMLElement): () => void {
 	});
 
 	// Filter change listeners
-	add(ge("noActiveMortgage"), "change", () => {
-		if ((ge("noActiveMortgage") as HTMLInputElement).checked)
-			(ge("hasActiveMortgage") as HTMLInputElement).checked = false;
-		updateChips();
-	});
-	add(ge("hasActiveMortgage"), "change", () => {
-		if ((ge("hasActiveMortgage") as HTMLInputElement).checked)
-			(ge("noActiveMortgage") as HTMLInputElement).checked = false;
-		updateChips();
-	});
+	add(ge("hasActiveMortgage"), "change", updateChips);
 	for (const f of CHECK_FILTERS) {
-		if (f.id !== "noActiveMortgage" && f.id !== "hasActiveMortgage")
-			add(ge(f.id), "change", updateChips);
+		add(ge(f.id), "change", updateChips);
 	}
 	for (const f of NUM_FILTERS) add(ge(f.id), "input", updateChips);
 	add(ge("category"), "input", updateChips);

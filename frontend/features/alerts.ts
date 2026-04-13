@@ -265,8 +265,9 @@ function getCurrentFilters(): AlertFilters {
 	if (cb("isUrgent")) filters.isUrgent = true;
 	if (cb("notLastFloor")) filters.notLastFloor = true;
 
-	if (cb("noActiveMortgage")) filters.hasActiveMortgage = false;
-	else if (cb("hasActiveMortgage")) filters.hasActiveMortgage = true;
+	const am = (ge("hasActiveMortgage") as HTMLSelectElement)?.value;
+	if (am === "true") filters.hasActiveMortgage = true;
+	else if (am === "false") filters.hasActiveMortgage = false;
 
 	return filters;
 }
