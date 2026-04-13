@@ -88,10 +88,8 @@ export function Product({
       gap-3.5 
       transition-[border-color,box-shadow,transform] 
       duration-200 
-      animate-[fadeUp_0.3s_ease_both]
       hover:border-(--border-h) 
-      hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)] 
-      hover:-translate-y-0.5"
+      hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]"
     >
       <div class="flex justify-between gap-2">
         <div class="min-w-0">
@@ -159,7 +157,6 @@ export function Product({
       grid-cols-[68px_1fr_auto_auto] 
       gap-3.5 
       transition-colors duration-150 
-      animate-[fadeUp_0.25s_ease_both] 
       hover:border-(--border-h) 
       hover:bg-(--surface-2)"
     >
@@ -263,16 +260,16 @@ function createButtons(bookmarked: boolean, hasImages: boolean) {
 	});
 
 	const descBtn = Button({
-		variant: "ghost",
-		color: "muted",
+		variant: "square",
+		color: "green",
 		title: "Description",
 		attrs: { "data-action": "desc" },
 		content: frag`${Icons.desc()}`,
 	});
 
 	const mapBtn = Button({
-		variant: "ghost",
-		color: "muted",
+		variant: "square",
+		color: "indigo",
 		title: "Map",
 		attrs: { "data-action": "map" },
 		content: frag`${Icons.map()}`,
@@ -280,8 +277,8 @@ function createButtons(bookmarked: boolean, hasImages: boolean) {
 
 	const galleryBtn = hasImages
 		? Button({
-				variant: "ghost",
-				color: "muted",
+				variant: "square",
+				color: "blue",
 				title: "Photos",
 				attrs: { "data-action": "gallery" },
 				content: frag`${Icons.gallery()}`,

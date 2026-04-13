@@ -31,6 +31,14 @@ const COLORS = {
     hover:text-(--text) hover:border-(--border-h)
     [&.on]:text-(--accent) [&.on]:border-[rgba(99,102,241,0.4)] [&.on]:bg-(--accent-dim)
   `,
+	green: `
+    text-(--muted) border-(--border) bg-transparent
+    hover:text-(--green) hover:border-(--green-b) hover:bg-(--green-dim)
+  `,
+	blue: `
+    text-(--muted) border-(--border) bg-transparent
+    hover:text-(--blue) hover:border-(--blue-b) hover:bg-(--blue-dim)
+  `,
 	muted: `
     text-(--muted) border-none bg-transparent
     hover:text-(--text)
