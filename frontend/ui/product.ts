@@ -26,10 +26,9 @@ export function Product({
 	const t = ts(property.tier);
 	const floorStr = fmtFloor(property.floor, property.total_floors);
 
-	const hasImages = (property.image_urls?.length ?? 0) > 0;
 	const { bmarkBtn, hideBtn, descBtn, mapBtn, galleryBtn } = createButtons(
+		property,
 		bookmarked,
-		hasImages,
 	);
 
 	let element: HTMLElement;
@@ -144,7 +143,7 @@ export function Product({
           rel="noopener"
           >View listing ${Icons.external()}</a
         >
-        <div class="flex items-center gap-2.5">${galleryBtn}${descBtn}${mapBtn}</div>
+        <div class="flex items-center gap-1">${galleryBtn}${descBtn}${mapBtn}</div>
       </div>
     </article>`;
 	} else {
@@ -183,7 +182,7 @@ export function Product({
 					}
         </div>
       </div>
-      <div class="flex items-center gap-2">${bmarkBtn}${hideBtn}${galleryBtn}${mapBtn}</div>
+      <div class="flex items-center gap-1">${bmarkBtn}${hideBtn}${galleryBtn}${mapBtn}${descBtn}</div>
       <a
         class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
         href="${property.source_url}"
@@ -241,7 +240,7 @@ function attachActionListeners({
 	});
 }
 
-function createButtons(bookmarked: boolean, hasImages: boolean) {
+function createButtons(property: Property, bookmarked: boolean) {
 	const bmarkBtn = Button({
 		variant: "square",
 		color: "yellow",
@@ -259,31 +258,37 @@ function createButtons(bookmarked: boolean, hasImages: boolean) {
 		content: Icons.hide(),
 	});
 
-	const descBtn = Button({
-		variant: "square",
-		color: "green",
-		title: "Description",
-		attrs: { "data-action": "desc" },
-		content: frag`${Icons.desc()}`,
-	});
-
-	const mapBtn = Button({
-		variant: "square",
-		color: "indigo",
-		title: "Map",
-		attrs: { "data-action": "map" },
-		content: frag`${Icons.map()}`,
-	});
-
-	const galleryBtn = hasImages
+	const descBtn = property.description
 		? Button({
 				variant: "square",
-				color: "blue",
-				title: "Photos",
-				attrs: { "data-action": "gallery" },
-				content: frag`${Icons.gallery()}`,
+				color: "green",
+				title: "Description",
+				attrs: { "data-action": "desc" },
+				content: frag`${Icons.desc()}`,
 			})
-		: html`<span></span>`;
+		: "";
+
+	const mapBtn =
+		property.latitude && property.longitude
+			? Button({
+					variant: "square",
+					color: "indigo",
+					title: "Map",
+					attrs: { "data-action": "map" },
+					content: frag`${Icons.map()}`,
+				})
+			: "";
+
+	const galleryBtn =
+		(property.image_urls?.length ?? 0) > 0
+			? Button({
+					variant: "square",
+					color: "blue",
+					title: "Photos",
+					attrs: { "data-action": "gallery" },
+					content: frag`${Icons.gallery()}`,
+				})
+			: "";
 
 	return { bmarkBtn, hideBtn, descBtn, mapBtn, galleryBtn };
 }

@@ -10,7 +10,6 @@ import { initSearch } from "./features/search";
 import { initTrend } from "./features/trend";
 import { initTooltip } from "./ui/tooltip";
 
-
 /**
  * Main application entry point.
  * Initializes the layout and all feature modules.
@@ -40,7 +39,6 @@ const cleanups: (() => void)[] = [
 	initGallery(root),
 	initTooltip(root),
 ];
-
 
 // 3. Global Static Modals & Utilities
 renderMapModal(root);

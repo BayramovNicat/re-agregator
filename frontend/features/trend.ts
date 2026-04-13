@@ -39,8 +39,8 @@ export function initTrend(container: HTMLElement): () => void {
 	async function fetchTrend(location: string): Promise<void> {
 		const hit = cache[location];
 		if (hit && Date.now() - hit.at < 30 * 60_000) {
-			renderTrend(hit.data, location);
 			show("trend-panel");
+			renderTrend(hit.data, location);
 			return;
 		}
 		try {
@@ -53,8 +53,8 @@ export function initTrend(container: HTMLElement): () => void {
 				return;
 			}
 			cache[location] = { data: d.data, at: Date.now() };
-			renderTrend(d.data, location);
 			show("trend-panel");
+			renderTrend(d.data, location);
 		} catch {
 			hide("trend-panel");
 		}
@@ -100,7 +100,7 @@ export function initTrend(container: HTMLElement): () => void {
 		const old = ct.querySelector("svg");
 		if (old) old.remove();
 
-		const W = 600,
+		const W = ct.clientWidth || 600,
 			H = 68,
 			PAD = 6;
 		const min = Math.min(...vals);
@@ -136,7 +136,6 @@ export function initTrend(container: HTMLElement): () => void {
 		const ns = "http://www.w3.org/2000/svg";
 		const svg = document.createElementNS(ns, "svg");
 		svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-		svg.setAttribute("preserveAspectRatio", "none");
 		svg.style.cssText = `width:100%;height:${H}px;display:block;cursor:crosshair`;
 		svg.innerHTML = `
 			<defs>
@@ -145,8 +144,8 @@ export function initTrend(container: HTMLElement): () => void {
 					<stop offset="100%" stop-color="${color}" stop-opacity="0"/>
 				</linearGradient>
 			</defs>
-			<path d="${areaD}" fill="url(#spark-g)"/>
-			<path d="${lineD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+			<path d="${areaD}" fill="url(#spark-g)" vector-effect="non-scaling-stroke"/>
+			<path d="${lineD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2"/>
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}"/>`;
 		ct.insertBefore(svg, tip);
