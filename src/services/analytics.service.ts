@@ -47,14 +47,14 @@ export class AnalyticsService {
 		type Row = { week: Date; avg_ppsm: number; listing_count: bigint };
 		const rows = await queryRaw<Row[]>`
       SELECT
-        DATE_TRUNC('week', created_at)            AS week,
-        ROUND(AVG(price_per_sqm)::numeric, 0)     AS avg_ppsm,
-        COUNT(*)                                   AS listing_count
+        DATE_TRUNC('week', COALESCE(posted_date, created_at)) AS week,
+        ROUND(AVG(price_per_sqm)::numeric, 0)                 AS avg_ppsm,
+        COUNT(*)                                               AS listing_count
       FROM "Property"
       WHERE location_name = ${location}
         AND price_per_sqm > 0
-        AND created_at >= NOW() - INTERVAL '16 weeks'
-      GROUP BY DATE_TRUNC('week', created_at)
+        AND COALESCE(posted_date, created_at) >= NOW() - INTERVAL '16 weeks'
+      GROUP BY DATE_TRUNC('week', COALESCE(posted_date, created_at))
       ORDER BY week ASC
     `;
 		return rows.map((r) => ({

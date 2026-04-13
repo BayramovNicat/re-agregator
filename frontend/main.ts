@@ -4,6 +4,7 @@ import { initAlertModal } from "./features/alerts";
 import { CHECK_FILTERS, NUM_FILTERS, renderFilters } from "./features/filters";
 import { openDesc, openHeatmap, openMap } from "./features/map";
 import { doSearch, updateChips } from "./features/search";
+import { renderTrendPanel } from "./features/trend";
 import {
 	hideItem,
 	render,
@@ -14,6 +15,7 @@ import {
 
 // Render advanced filter inputs from config (keeps HTML clean)
 renderFilters(ge("adv-panel"));
+renderTrendPanel(ge("trend-container"));
 
 // Expose updateChips globally so chip close buttons can call it from inline onclick
 (window as unknown as Record<string, unknown>).__updateChips = updateChips;

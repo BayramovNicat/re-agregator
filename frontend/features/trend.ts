@@ -1,5 +1,35 @@
 import type { TrendPoint } from "../core/types";
-import { fmt, ge, hide, show } from "../core/utils";
+import { fmt, ge, hide, html, show } from "../core/utils";
+
+export function renderTrendPanel(container: HTMLElement): void {
+	container.appendChild(
+		html`<div id="trend-panel" class="hidden">
+      <div
+        class="bg-(--surface) border border-(--border) rounded-(--r) pt-4 px-5 pb-3 mb-4 animate-[fadeUp_0.2s_ease_both]"
+      >
+        <div class="flex items-start justify-between mb-3.5 gap-3">
+          <div>
+            <div class="text-xs text-(--muted) mb-1.25 tracking-[0.02em]">
+              Avg ₼/m² trend · <span id="trend-loc"></span>
+            </div>
+            <div class="flex items-baseline gap-2 flex-wrap">
+              <span class="text-[20px] font-bold tracking-[-0.5px]" id="trend-cur"></span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full border" id="trend-chg"></span>
+            </div>
+          </div>
+          <div class="text-xs text-(--muted) text-right pt-0.5 whitespace-nowrap" id="trend-weeks"></div>
+        </div>
+        <div class="relative -mx-0.5" id="trend-chart">
+          <div
+            class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
+            id="trend-tip"
+          ></div>
+        </div>
+        <div class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5" id="trend-dates"></div>
+      </div>
+    </div>`,
+	);
+}
 
 const cache: Record<string, { data: TrendPoint[]; at: number }> = {};
 
