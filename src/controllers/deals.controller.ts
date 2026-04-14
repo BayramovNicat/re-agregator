@@ -109,6 +109,8 @@ export async function getHeatmap(_req: Request): Promise<Response> {
       FROM "Property"
       WHERE location_name IS NOT NULL
         AND price_per_sqm > 0
+        AND NOT (floor = 1 AND total_floors IS NOT NULL)
+        AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         AND latitude IS NOT NULL
         AND longitude IS NOT NULL
       GROUP BY location_name
@@ -206,6 +208,8 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
         WHERE price_per_sqm > 0
+          AND NOT (floor = 1 AND total_floors IS NOT NULL)
+          AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         GROUP BY location_name
       )
       SELECT
@@ -373,6 +377,8 @@ export async function getMapPins(req: Request): Promise<Response> {
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
         WHERE ${avgLocCondition} AND price_per_sqm > 0
+          AND NOT (floor = 1 AND total_floors IS NOT NULL)
+          AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         GROUP BY location_name
       )
       SELECT

@@ -5,6 +5,10 @@
  * ─────────────────────────────────────────────────────────────
  *   discount_percent = ((location_avg - property_price_per_sqm) / location_avg) × 100
  *
+ *   location_avg excludes 1st-floor and last-floor listings — those are
+ *   structurally cheaper (noise, dampness, heat) and would drag the baseline
+ *   down, making floor-penalised properties look like false "deals".
+ *
  *   A positive value means the property is cheaper than the location average.
  *   A negative value means it is more expensive.
  *
@@ -53,6 +57,8 @@ export class AnalyticsService {
       FROM "Property"
       WHERE location_name = ${location}
         AND price_per_sqm > 0
+        AND NOT (floor = 1 AND total_floors IS NOT NULL)
+        AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         AND COALESCE(posted_date, created_at) >= NOW() - INTERVAL '16 weeks'
       GROUP BY DATE_TRUNC('week', COALESCE(posted_date, created_at))
       ORDER BY week ASC
@@ -210,7 +216,10 @@ export class AnalyticsService {
       WITH loc_avg AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
-        WHERE location_name IN (${Prisma.join(locationList)}) AND price_per_sqm > 0
+        WHERE location_name IN (${Prisma.join(locationList)})
+          AND price_per_sqm > 0
+          AND NOT (floor = 1 AND total_floors IS NOT NULL)
+          AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         GROUP BY location_name
       )
       SELECT
@@ -376,7 +385,10 @@ export class AnalyticsService {
       WITH loc_avg AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
-        WHERE location_name IS NOT NULL AND price_per_sqm > 0
+        WHERE location_name IS NOT NULL
+          AND price_per_sqm > 0
+          AND NOT (floor = 1 AND total_floors IS NOT NULL)
+          AND NOT (floor = total_floors AND total_floors IS NOT NULL)
         GROUP BY location_name
       )
       SELECT
