@@ -80,7 +80,7 @@ export async function getTrend(req: Request): Promise<Response> {
 	}
 }
 
-/** GET /api/heatmap — avg price_per_sqm + listing count per location_name */
+/** GET /api/heatmap — avg price_per_sqm + listing count + trend per location_name */
 export async function getHeatmap(_req: Request): Promise<Response> {
 	try {
 		const rows = await queryRaw<
@@ -90,6 +90,8 @@ export async function getHeatmap(_req: Request): Promise<Response> {
 				count: bigint;
 				lat: number;
 				lng: number;
+				recent_avg: number | null;
+				prior_avg: number | null;
 			}[]
 		>`
       SELECT
@@ -97,7 +99,12 @@ export async function getHeatmap(_req: Request): Promise<Response> {
         ROUND(AVG(price_per_sqm))::int AS avg_ppsm,
         COUNT(*)::bigint AS count,
         AVG(latitude)::float8 AS lat,
-        AVG(longitude)::float8 AS lng
+        AVG(longitude)::float8 AS lng,
+        ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '4 weeks'
+                       THEN price_per_sqm END))::int AS recent_avg,
+        ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '8 weeks'
+                        AND COALESCE(posted_date, created_at) <  NOW() - INTERVAL '4 weeks'
+                       THEN price_per_sqm END))::int AS prior_avg
       FROM "Property"
       WHERE location_name IS NOT NULL
         AND price_per_sqm > 0
@@ -107,13 +114,26 @@ export async function getHeatmap(_req: Request): Promise<Response> {
       HAVING COUNT(*) >= 3
       ORDER BY avg_ppsm DESC
     `;
-		const data = rows.map((r) => ({
-			location_name: r.location_name,
-			avg_price_per_sqm: Number(r.avg_ppsm),
-			count: Number(r.count),
-			lat: Number(r.lat),
-			lng: Number(r.lng),
-		}));
+		const data = rows.map((r) => {
+			const recent = r.recent_avg !== null ? Number(r.recent_avg) : null;
+			const prior = r.prior_avg !== null ? Number(r.prior_avg) : null;
+			let trend: "up" | "down" | "flat" = "flat";
+			if (recent !== null && prior !== null && prior > 0) {
+				const change = (recent - prior) / prior;
+				if (change > 0.02) trend = "up";
+				else if (change < -0.02) trend = "down";
+			}
+			return {
+				location_name: r.location_name,
+				avg_price_per_sqm: Number(r.avg_ppsm),
+				count: Number(r.count),
+				lat: Number(r.lat),
+				lng: Number(r.lng),
+				recent_avg: recent,
+				prior_avg: prior,
+				trend,
+			};
+		});
 		return Response.json(
 			{ data },
 			{

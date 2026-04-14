@@ -4,6 +4,7 @@ import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { renderMapModal } from "./dialogs/map";
 import { initAlerts } from "./features/alerts";
+import { renderDistrictStatsModal } from "./features/district-stats";
 import { initHeader } from "./features/header";
 import { initProducts } from "./features/products";
 import { initSearch } from "./features/search";
@@ -43,6 +44,7 @@ const cleanups: (() => void)[] = [
 // 3. Global Static Modals & Utilities
 renderMapModal(root);
 renderHeatmapModal(root);
+renderDistrictStatsModal(root);
 renderDescModal(root);
 renderToastsContainer(root);
 

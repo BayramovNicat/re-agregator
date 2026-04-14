@@ -168,6 +168,18 @@ const translations = {
 
 		// Trend
 		avgTrend: "Avg ₼/m² trend",
+
+		// District stats
+		districtStats: "District Stats",
+		districtSubtitle: "{n} districts",
+		districtCol: "District",
+		districtAvgPpsm: "Avg ₼/m²",
+		districtListings: "Listings",
+		districtTrend: "4w Trend",
+		districtLoading: "Loading stats…",
+		districtError: "Failed to load stats",
+		districtEmpty: "No district data yet",
+		statsBtn: "Stats",
 	},
 
 	az: {
@@ -319,6 +331,18 @@ const translations = {
 		previewNoActiveMortgage: "Aktiv ipoteka yox",
 
 		avgTrend: "Ort ₼/m² trendi",
+
+		// District stats
+		districtStats: "Rayon Statistikası",
+		districtSubtitle: "{n} rayon",
+		districtCol: "Rayon",
+		districtAvgPpsm: "Ort ₼/m²",
+		districtListings: "Elanlar",
+		districtTrend: "4h Trendi",
+		districtLoading: "Yüklənir…",
+		districtError: "Statistika yüklənmədi",
+		districtEmpty: "Rayon məlumatı yoxdur",
+		statsBtn: "Statistika",
 	},
 
 	ru: {
@@ -471,6 +495,18 @@ const translations = {
 		previewNoActiveMortgage: "Без акт. ипотеки",
 
 		avgTrend: "Ср. ₼/м² динамика",
+
+		// District stats
+		districtStats: "Статистика по районам",
+		districtSubtitle: "{n} района",
+		districtCol: "Район",
+		districtAvgPpsm: "Ср. ₼/м²",
+		districtListings: "Объявл.",
+		districtTrend: "Тренд 4н",
+		districtLoading: "Загрузка…",
+		districtError: "Не удалось загрузить",
+		districtEmpty: "Нет данных по районам",
+		statsBtn: "Статистика",
 	},
 } as const;
 

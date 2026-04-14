@@ -35,6 +35,9 @@ export interface HeatmapPoint {
 	count: number;
 	lat: number;
 	lng: number;
+	recent_avg: number | null;
+	prior_avg: number | null;
+	trend: "up" | "down" | "flat";
 }
 
 export interface AlertFilters {

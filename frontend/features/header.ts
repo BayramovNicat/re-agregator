@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import { HealthStatus } from "../ui/health-status";
 import { Icons } from "../ui/icons";
 import type { MultiSelectElement } from "../ui/multi-select";
+import { openDistrictStats } from "./district-stats";
 
 const LANGS = [
 	{ code: "en" as const, label: "EN" },
@@ -52,14 +53,23 @@ export function initHeader(container: HTMLElement): () => void {
 		content: frag`${Icons.globe()} ${t("priceMap")}`,
 	});
 
+	const statsBtn = Button({
+		title: t("districtStats"),
+		color: "indigo",
+		content: frag`${Icons.barChart()} ${t("statsBtn")}`,
+	});
+
 	const header = html`
     <header
       class="flex items-center justify-between pt-6 pb-5 border-b border-(--border) mb-6"
     >
       ${logo}
-      <div class="flex items-center gap-2">${LangSwitcher()} ${mapBtn} ${HealthStatus()}</div>
+      <div class="flex items-center gap-2">${LangSwitcher()} ${statsBtn} ${mapBtn} ${HealthStatus()}</div>
     </header>
   `;
+
+	const onStatsClick = () => openDistrictStats();
+	statsBtn.addEventListener("click", onStatsClick);
 
 	const onMapClick = () => {
 		const el = ge("loc") as MultiSelectElement;
@@ -86,6 +96,7 @@ export function initHeader(container: HTMLElement): () => void {
 	container.appendChild(header);
 
 	return () => {
+		statsBtn.removeEventListener("click", onStatsClick);
 		mapBtn.removeEventListener("click", onMapClick);
 	};
 }
