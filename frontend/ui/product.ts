@@ -228,7 +228,7 @@ function attachActionListeners({
 					callbacks.onDesc(property.description || "");
 					break;
 				case "gallery":
-					callbacks.onGallery(property.image_urls ?? []);
+					callbacks.onGallery(property.image_urls ?? [], 0);
 					break;
 				case "map":
 					callbacks.onMap(

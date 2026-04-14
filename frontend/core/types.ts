@@ -75,7 +75,7 @@ export interface CardCallbacks {
 	onHide: (url: string) => void;
 	onDesc: (text: string) => void;
 	onMap: (lat: number, lng: number, label?: string) => void;
-	onGallery: (urls: string[]) => void;
+	onGallery: (urls: string[], index?: number) => void;
 	onDetail: (p: Property) => void;
 }
 

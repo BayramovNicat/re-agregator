@@ -10,7 +10,7 @@ export type EventPayloads = {
 	[EVENTS.DEALS_UPDATED]: undefined;
 	[EVENTS.SEARCH_STARTED]: { more: boolean };
 	[EVENTS.LOCATION_CHANGED]: string;
-	[EVENTS.GALLERY_OPEN]: string[];
+	[EVENTS.GALLERY_OPEN]: { urls: string[]; index?: number };
 	[EVENTS.PROPERTY_OPEN]: import("./types").Property;
 };
 
