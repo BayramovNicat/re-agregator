@@ -23,6 +23,7 @@ export function renderDistrictStatsModal(root: HTMLElement): void {
 	dialogEl = Dialog({
 		id: "district-stats-modal",
 		maxWidth: "640px",
+		className: "text-(--text)",
 		content: frag`
       <div class="flex items-center justify-between px-5 pt-4.5 pb-3.5 border-b border-(--border) shrink-0">
         <div>
