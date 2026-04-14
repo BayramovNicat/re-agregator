@@ -3,6 +3,7 @@ import { renderDescModal } from "./dialogs/description";
 import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { renderMapModal } from "./dialogs/map";
+import { initPropertyDetail } from "./dialogs/property-detail";
 import { initAlerts } from "./features/alerts";
 import { renderDistrictStatsModal } from "./features/district-stats";
 import { initHeader } from "./features/header";
@@ -39,6 +40,7 @@ const cleanups: (() => void)[] = [
 	initAlerts(root),
 	initGallery(root),
 	initTooltip(root),
+	initPropertyDetail(root),
 ];
 
 // 3. Global Static Modals & Utilities

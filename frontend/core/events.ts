@@ -3,6 +3,7 @@ export const EVENTS = {
 	SEARCH_STARTED: "search_started",
 	LOCATION_CHANGED: "location_changed",
 	GALLERY_OPEN: "gallery_open",
+	PROPERTY_OPEN: "property_open",
 } as const;
 
 export type EventPayloads = {
@@ -10,6 +11,7 @@ export type EventPayloads = {
 	[EVENTS.SEARCH_STARTED]: { more: boolean };
 	[EVENTS.LOCATION_CHANGED]: string;
 	[EVENTS.GALLERY_OPEN]: string[];
+	[EVENTS.PROPERTY_OPEN]: import("./types").Property;
 };
 
 type Callback<T> = (data: T) => void;

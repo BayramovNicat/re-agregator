@@ -6,6 +6,7 @@ import { fmt, frag, ge, hide, html, show, toast } from "../core/utils";
 import { openDesc } from "../dialogs/description";
 import { openGallery } from "../dialogs/gallery";
 import { openMap } from "../dialogs/map";
+import { openPropertyDetail } from "../dialogs/property-detail";
 import { Button } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
@@ -109,6 +110,7 @@ export function initProducts(container: HTMLElement): () => void {
 		onDesc: openDesc,
 		onGallery: openGallery,
 		onMap: openMap,
+		onDetail: openPropertyDetail,
 	};
 
 	/**
@@ -321,6 +323,18 @@ export function initProducts(container: HTMLElement): () => void {
 
 	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => render());
 
+	// Detail modal bookmark / hide events (bubble up from the dialog)
+	const onPdBmark = (e: Event) => {
+		const p = (e as CustomEvent<Property>).detail;
+		if (p) toggleBM(p);
+	};
+	const onPdHide = (e: Event) => {
+		const p = (e as CustomEvent<Property>).detail;
+		if (p) hideItem(p.source_url);
+	};
+	document.addEventListener("pd:bmark", onPdBmark);
+	document.addEventListener("pd:hide", onPdHide);
+
 	// 5. Cleanup
 	return () => {
 		handlers.forEach(([el, ev, fn]) => {
@@ -331,5 +345,7 @@ export function initProducts(container: HTMLElement): () => void {
 			state.scrollObserver = null;
 		}
 		offDeals();
+		document.removeEventListener("pd:bmark", onPdBmark);
+		document.removeEventListener("pd:hide", onPdHide);
 	};
 }

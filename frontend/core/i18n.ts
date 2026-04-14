@@ -180,6 +180,16 @@ const translations = {
 		districtError: "Failed to load stats",
 		districtEmpty: "No district data yet",
 		statsBtn: "Stats",
+
+		// Property detail modal
+		viewDetails: "Details",
+		propDetails: "Property Details",
+		propNoImages: "No photos available",
+		propNoDesc: "No description provided",
+		propNoMap: "Location not available",
+		propDiscount: "Discount",
+		propMarketAvg: "Market avg",
+		propPosted: "Posted",
 	},
 
 	az: {
@@ -343,6 +353,16 @@ const translations = {
 		districtError: "Statistika yüklənmədi",
 		districtEmpty: "Rayon məlumatı yoxdur",
 		statsBtn: "Statistika",
+
+		// Property detail modal
+		viewDetails: "Ətraflı",
+		propDetails: "Əmlak Təfərrüatları",
+		propNoImages: "Foto yoxdur",
+		propNoDesc: "Təsvir yoxdur",
+		propNoMap: "Yer məlumatı yoxdur",
+		propDiscount: "Endirim",
+		propMarketAvg: "Bazar ortalama",
+		propPosted: "Tarix",
 	},
 
 	ru: {
@@ -507,6 +527,16 @@ const translations = {
 		districtError: "Не удалось загрузить",
 		districtEmpty: "Нет данных по районам",
 		statsBtn: "Статистика",
+
+		// Property detail modal
+		viewDetails: "Детали",
+		propDetails: "Детали объявления",
+		propNoImages: "Нет фотографий",
+		propNoDesc: "Описание отсутствует",
+		propNoMap: "Местоположение недоступно",
+		propDiscount: "Скидка",
+		propMarketAvg: "Ср. по рынку",
+		propPosted: "Дата",
 	},
 } as const;
 

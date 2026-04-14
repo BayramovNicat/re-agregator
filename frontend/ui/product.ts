@@ -80,15 +80,16 @@ export function Product({
 			);
 
 		element = html`<article
-      class="bg-(--surface) 
-      border border-(--border) 
-      rounded-(--r-lg) 
-      p-4 
-      flex flex-col 
-      gap-3.5 
-      transition-[border-color,box-shadow,transform] 
-      duration-200 
-      hover:border-(--border-h) 
+      class="bg-(--surface)
+      border border-(--border)
+      rounded-(--r-lg)
+      p-4
+      flex flex-col
+      gap-3.5
+      cursor-pointer
+      transition-[border-color,box-shadow,transform]
+      duration-200
+      hover:border-(--border-h)
       hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]"
     >
       <div class="flex justify-between gap-2">
@@ -149,15 +150,16 @@ export function Product({
     </article>`;
 	} else {
 		element = html`<div
-      class="bg-(--surface) 
-      border border-(--border) 
-      rounded-(--r) 
-      px-4 py-3 
-      grid items-center 
-      grid-cols-[68px_1fr_auto_auto] 
-      gap-3.5 
-      transition-colors duration-150 
-      hover:border-(--border-h) 
+      class="bg-(--surface)
+      border border-(--border)
+      rounded-(--r)
+      px-4 py-3
+      grid items-center
+      grid-cols-[68px_1fr_auto_auto]
+      gap-3.5
+      cursor-pointer
+      transition-colors duration-150
+      hover:border-(--border-h)
       hover:bg-(--surface-2)"
     >
       <div class="text-center">
@@ -213,30 +215,35 @@ function attachActionListeners({
 		const target = e.target as HTMLElement;
 		const btn = target.closest("button[data-action]");
 
-		if (!btn) return;
+		if (btn) {
+			const action = btn.getAttribute("data-action");
+			switch (action) {
+				case "bmark":
+					callbacks.onBM(property);
+					break;
+				case "hide":
+					callbacks.onHide(property.source_url);
+					break;
+				case "desc":
+					callbacks.onDesc(property.description || "");
+					break;
+				case "gallery":
+					callbacks.onGallery(property.image_urls ?? []);
+					break;
+				case "map":
+					callbacks.onMap(
+						property.latitude || 0,
+						property.longitude || 0,
+						property.location_name ?? property.district ?? "",
+					);
+					break;
+			}
+			return;
+		}
 
-		const action = btn.getAttribute("data-action");
-
-		switch (action) {
-			case "bmark":
-				callbacks.onBM(property);
-				break;
-			case "hide":
-				callbacks.onHide(property.source_url);
-				break;
-			case "desc":
-				callbacks.onDesc(property.description || "");
-				break;
-			case "gallery":
-				callbacks.onGallery(property.image_urls ?? []);
-				break;
-			case "map":
-				callbacks.onMap(
-					property.latitude || 0,
-					property.longitude || 0,
-					property.location_name ?? property.district ?? "",
-				);
-				break;
+		// Click outside buttons/links → open detail modal
+		if (!target.closest("a")) {
+			callbacks.onDetail(property);
 		}
 	});
 }

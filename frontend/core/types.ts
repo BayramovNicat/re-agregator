@@ -76,6 +76,7 @@ export interface CardCallbacks {
 	onDesc: (text: string) => void;
 	onMap: (lat: number, lng: number, label?: string) => void;
 	onGallery: (urls: string[]) => void;
+	onDetail: (p: Property) => void;
 }
 
 declare global {
