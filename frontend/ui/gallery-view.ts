@@ -47,6 +47,7 @@ export function GalleryView(config: GalleryConfig = {}): GalleryViewInstance {
       <!-- Nav buttons -->
       <button
         id="gv-prev"
+        aria-label="${t("galleryPrev")}"
         class="absolute ${
 					fullscreen ? "left-6 w-12 h-12" : "left-3 w-9 h-9"
 				} top-1/2 -translate-y-1/2 z-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-90 hidden"
@@ -55,6 +56,7 @@ export function GalleryView(config: GalleryConfig = {}): GalleryViewInstance {
       </button>
       <button
         id="gv-next"
+        aria-label="${t("galleryNext")}"
         class="absolute ${
 					fullscreen ? "right-6 w-12 h-12" : "right-3 w-9 h-9"
 				} top-1/2 -translate-y-1/2 z-10 items-center justify-center rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-90 hidden"
@@ -74,6 +76,7 @@ export function GalleryView(config: GalleryConfig = {}): GalleryViewInstance {
 					? html`
             <button
               id="gv-expand"
+              aria-label="${t("galleryExpand")}"
               class="absolute bottom-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-95"
             >
               ${Icons.expand(14)}
@@ -158,7 +161,6 @@ export function GalleryView(config: GalleryConfig = {}): GalleryViewInstance {
 			total = urls.length;
 			index = initialIndex;
 			$slider.replaceChildren();
-
 
 			for (let i = 0; i < total; i++) {
 				const slide = document.createElement("div");

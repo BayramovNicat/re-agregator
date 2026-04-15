@@ -141,7 +141,6 @@ function renderTable(data: LocationRow[]): void {
 			.join(""),
 	) as string;
 
-
 	// Update sort indicators
 	const cols: SortKey[] = ["district", "avg_ppsm", "listing_count", "trend"];
 	for (const col of cols) {

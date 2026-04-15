@@ -308,7 +308,7 @@ export function initSearch(container: HTMLElement): () => void {
 						${Label({ htmlFor: "thresh", text: t("discountThreshold") })}
 						<span id="tval" class="text-xs font-bold text-(--accent) bg-(--accent-dim) px-2 py-0.5 rounded-full tracking-[0.02em]">10%</span>
 					</div>
-					${Range({ id: "thresh", min: 1, max: 50, value: 10 })}
+					${Range({ id: "thresh", min: 1, max: 50, value: 10, ariaLabel: t("discountThreshold") })}
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Go</span>

@@ -15,7 +15,6 @@ interface TrustedTypePolicyFactory {
 	readonly defaultPolicy?: TrustedTypePolicy;
 }
 
-
 declare global {
 	interface Window {
 		trustedTypes?: TrustedTypePolicyFactory;
@@ -34,14 +33,12 @@ if (window.trustedTypes && !window.trustedTypes.defaultPolicy) {
 	});
 }
 
-
 /**
  * Wraps a string in a TrustedHTML object if the browser supports it.
  */
 export const trust = (html: string): string | TrustedHTML => {
 	return policy ? policy.createHTML(html) : html;
 };
-
 
 export function renderToastsContainer(root: HTMLElement): void {
 	const el = document.createElement("div");
@@ -148,7 +145,6 @@ const _parse = (
 		_template.innerHTML = trimmed;
 	}
 	const content = document.importNode(_template.content, true);
-
 
 	content.querySelectorAll("template[data-ref]").forEach((placeholder) => {
 		const id = placeholder.getAttribute("data-ref");

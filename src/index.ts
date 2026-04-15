@@ -27,7 +27,6 @@ const CSP =
 
 // --- Brotli helpers ---
 
-
 type Handler = (req: Request) => Response | Promise<Response>;
 
 /** Wrap a JSON API handler with brotli compression when client supports it. */
@@ -142,7 +141,6 @@ Bun.serve({
 					Vary: "Accept-Encoding",
 					"Content-Security-Policy": CSP,
 				},
-
 			});
 		}
 
@@ -165,7 +163,6 @@ Bun.serve({
 				"Content-Security-Policy": CSP,
 			},
 		});
-
 	},
 });
 

@@ -197,7 +197,6 @@ function updateAlertList(
 	listEl.style.display = "block";
 	itemsEl.replaceChildren();
 
-
 	for (const a of alerts) {
 		const preview = buildFilterPreview({
 			...(a.filters ?? {}),

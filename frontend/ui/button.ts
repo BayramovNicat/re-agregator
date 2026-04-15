@@ -51,6 +51,7 @@ export function Button({
 	color = "yellow",
 	id,
 	title,
+	ariaLabel,
 	className = "",
 	active = false,
 	attrs = {},
@@ -60,6 +61,7 @@ export function Button({
 	color?: keyof typeof COLORS;
 	id?: string;
 	title?: string;
+	ariaLabel?: string;
 	className?: string;
 	active?: boolean;
 	attrs?: Record<string, string>;
@@ -73,6 +75,7 @@ export function Button({
       type="button"
       ${id ? `id="${id}"` : ""}
       ${title ? `title="${title}"` : ""}
+      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
       ${attrStr}
       class="${SHARED} ${VARIANTS[variant]} ${COLORS[color]} ${active ? "on" : ""} ${className}"
     >

@@ -281,6 +281,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		color: "yellow",
 		active: bookmarked,
 		title: t("btnSave"),
+		ariaLabel: t("btnSave"),
 		attrs: { "data-action": "bmark" },
 		content: Icons.bookmark(bookmarked),
 	});
@@ -289,6 +290,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		variant: "square",
 		color: "red",
 		title: t("btnHide"),
+		ariaLabel: t("btnHide"),
 		attrs: { "data-action": "hide" },
 		content: Icons.hide(),
 	});
@@ -298,6 +300,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 				variant: "square",
 				color: "green",
 				title: t("btnDescription"),
+				ariaLabel: t("btnDescription"),
 				attrs: { "data-action": "desc" },
 				content: frag`${Icons.desc()}`,
 			})
@@ -309,6 +312,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 					variant: "square",
 					color: "indigo",
 					title: t("btnMap"),
+					ariaLabel: t("btnMap"),
 					attrs: { "data-action": "map" },
 					content: frag`${Icons.map()}`,
 				})
@@ -320,6 +324,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 					variant: "square",
 					color: "blue",
 					title: t("btnPhotos"),
+					ariaLabel: t("btnPhotos"),
 					attrs: { "data-action": "gallery" },
 					content: frag`${Icons.gallery()}`,
 				})

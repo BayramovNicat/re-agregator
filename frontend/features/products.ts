@@ -148,7 +148,6 @@ export function initProducts(container: HTMLElement): () => void {
 
 		ct.replaceChildren();
 
-
 		let list = state.showingSaved
 			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
 			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
@@ -208,7 +207,6 @@ export function initProducts(container: HTMLElement): () => void {
 				? `<strong>${showing}</strong> ${showing !== 1 ? t("savedDeals") : t("savedDeal")}`
 				: `<strong>${showing}</strong> ${showing !== 1 ? t("results") : t("result")}${state.currentTotal > state.allResults.length ? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>` : ""}`,
 		) as string;
-
 
 		if (!state.showingSaved && state.allResults.length < state.currentTotal) {
 			show("load-more");

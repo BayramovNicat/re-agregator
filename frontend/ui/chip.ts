@@ -81,6 +81,7 @@ export function CloseableChip({
       ${label}
       <button
         type="button"
+        aria-label="Remove filter"
         class="bg-none border-none text-(--muted) flex items-center transition-[color] duration-100 px-0.5 hover:text-(--text) cursor-pointer"
       >
         <svg

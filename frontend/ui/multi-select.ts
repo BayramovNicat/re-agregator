@@ -37,6 +37,10 @@ export function MultiSelect({
       <button
         type="button"
         id="${id}-trigger"
+        role="combobox"
+        aria-expanded="false"
+        aria-haspopup="listbox"
+        aria-controls="${id}-dropdown"
         class="w-full flex items-center justify-between gap-2 px-3 py-2 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-sm text-(--text) text-left transition-all hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
       >
         <span id="${id}-label" class="truncate text-(--text-2)"
@@ -47,6 +51,8 @@ export function MultiSelect({
 
       <div
         id="${id}-dropdown"
+        role="listbox"
+        aria-labelledby="${id}-trigger"
         class="absolute top-full left-0 right-0 mt-1.5 bg-(--surface) border border-(--border) rounded-(--r-sm) shadow-[0_8px_24px_rgba(0,0,0,0.3)] z-50 overflow-hidden hidden animate-[fadeUp_0.2s_ease]"
       >
         <div class="p-2 border-b border-(--border)">
@@ -60,6 +66,7 @@ export function MultiSelect({
               type="text"
               id="${id}-search"
               placeholder="Search..."
+              aria-label="Search locations"
               class="w-full pl-8 pr-3 py-1.5 bg-(--surface-2) border border-(--border) rounded-(--r-xs) text-xs text-(--text) focus:outline-none focus:border-(--accent)"
             />
           </div>
@@ -112,11 +119,12 @@ export function MultiSelect({
 				`<div class="p-4 text-center text-xs text-(--muted)">No results found</div>`,
 			) as string;
 		} else {
-
 			for (const opt of filtered) {
 				const isSelected = selectedValues.includes(opt.value);
 				const item = html`
           <div
+            role="option"
+            aria-selected="${isSelected}"
             class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-(--r-xs) cursor-pointer transition-colors ${
 							isSelected
 								? "bg-(--accent-dim) text-(--accent)"
@@ -176,10 +184,12 @@ export function MultiSelect({
 		if (isOpen) {
 			dropdown.classList.remove("hidden");
 			chevron.style.transform = "rotate(180deg)";
+			trigger.setAttribute("aria-expanded", "true");
 			search.focus();
 		} else {
 			dropdown.classList.add("hidden");
 			chevron.style.transform = "";
+			trigger.setAttribute("aria-expanded", "false");
 			searchQuery = "";
 			search.value = "";
 			updateUI();

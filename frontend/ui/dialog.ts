@@ -17,16 +17,26 @@ export function Dialog({
 	id,
 	maxWidth,
 	className = "",
+	ariaLabel,
+	ariaLabelledBy,
 	content,
 }: {
 	id: string;
 	/** Maximum width of the dialog panel (e.g. "860px"). Responsive width is handled automatically. */
 	maxWidth: string;
 	className?: string;
+	ariaLabel?: string;
+	ariaLabelledBy?: string;
 	content: unknown;
 }): HTMLDialogElement {
 	const el = html<HTMLDialogElement>`
-    <dialog id="${id}" class="${BACKDROP}">
+    <dialog
+      id="${id}"
+      class="${BACKDROP}"
+      aria-modal="true"
+      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
+      ${ariaLabelledBy ? `aria-labelledby="${ariaLabelledBy}"` : ""}
+    >
       <div
         class="${INNER} ${className}"
         style="width:calc(100vw - 2rem);max-width:${maxWidth}"

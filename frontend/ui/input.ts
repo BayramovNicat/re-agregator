@@ -22,6 +22,7 @@ interface InputProps {
 	value?: string;
 	variant?: keyof typeof VARIANTS;
 	className?: string;
+	ariaLabel?: string;
 	attrs?: Record<string, string>;
 }
 
@@ -32,6 +33,7 @@ export function Input({
 	value = "",
 	variant = "sm",
 	className = "",
+	ariaLabel,
 	attrs = {},
 }: InputProps): HTMLInputElement {
 	const attrStr = Object.entries(attrs)
@@ -44,6 +46,7 @@ export function Input({
       type="${type}"
       placeholder="${placeholder}"
       value="${value}"
+      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
       class="${SHARED_CLS} ${VARIANTS[variant]} ${className}"
       ${attrStr}
     />

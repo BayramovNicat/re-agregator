@@ -44,12 +44,14 @@ export function Range({
 	max = 100,
 	value = 0,
 	className = "",
+	ariaLabel,
 }: {
 	id?: string;
 	min?: number | string;
 	max?: number | string;
 	value?: number | string;
 	className?: string;
+	ariaLabel?: string;
 }): HTMLElement {
 	const input = html<HTMLInputElement>`
     <input
@@ -58,6 +60,7 @@ export function Range({
       min="${min}"
       max="${max}"
       value="${value}"
+      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
       class="${INPUT_CLS}"
     />
   `;

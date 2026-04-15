@@ -3,7 +3,6 @@ import { t } from "../core/i18n";
 import type { TrendPoint } from "../core/types";
 import { fmt, ge, getLocale, hide, html, show, trust } from "../core/utils";
 
-
 /**
  * Trend feature manages the property price trend chart above search results.
  */
@@ -99,7 +98,6 @@ export function initTrend(container: HTMLElement): () => void {
 		ge("trend-dates").innerHTML = trust(
 			`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
 		) as string;
-
 
 		const ct = ge("trend-chart");
 		const tip = ge("trend-tip");

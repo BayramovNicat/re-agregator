@@ -195,6 +195,9 @@ const translations = {
 		propMarketAvg: "Market avg",
 		propPosted: "Posted",
 		propPhotoAlt: "Property photo {n} of {total}",
+		galleryPrev: "Previous photo",
+		galleryNext: "Next photo",
+		galleryExpand: "Expand photo",
 	},
 
 	az: {
@@ -373,6 +376,9 @@ const translations = {
 		propMarketAvg: "Bazar ortalama",
 		propPosted: "Tarix",
 		propPhotoAlt: "Əmlak fotosu {n} / {total}",
+		galleryPrev: "Əvvəlki foto",
+		galleryNext: "Növbəti foto",
+		galleryExpand: "Fotoya tam bax",
 	},
 
 	ru: {
@@ -552,6 +558,9 @@ const translations = {
 		propMarketAvg: "Ср. по рынку",
 		propPosted: "Дата",
 		propPhotoAlt: "Фото недвижимости {n} из {total}",
+		galleryPrev: "Предыдущее фото",
+		galleryNext: "Следующее фото",
+		galleryExpand: "Развернуть фото",
 	},
 } as const;
 
