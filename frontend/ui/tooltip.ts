@@ -16,8 +16,10 @@ export function initTooltip(root: HTMLElement = document.body): () => void {
 
 	el = html`
     <div
+      id="tooltip"
       class="fixed top-0 left-0 z-50 px-2.5 py-1.5 bg-(--surface-3) text-(--text) border border-(--border-h) rounded-(--r-sm) text-xs font-medium pointer-events-none shadow-xl backdrop-blur-md opacity-0 transition-opacity duration-150"
       role="tooltip"
+      aria-hidden="true"
     ></div>
   `;
 	root.appendChild(el);
@@ -74,6 +76,10 @@ function show(target: HTMLElement) {
 	if (!text) return;
 
 	el.textContent = text;
+	el.setAttribute("aria-label", text);
+	el.removeAttribute("aria-hidden");
+	target.setAttribute("aria-describedby", "tooltip");
+
 	updatePosition();
 
 	el.classList.remove("opacity-0");
@@ -84,6 +90,8 @@ function hide() {
 	if (!el) return;
 	el.classList.add("opacity-0");
 	el.classList.remove("opacity-100");
+	el.setAttribute("aria-hidden", "true");
+	activeTarget?.removeAttribute("aria-describedby");
 	activeTarget = null;
 }
 
