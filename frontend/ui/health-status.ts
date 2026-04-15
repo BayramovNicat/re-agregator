@@ -7,7 +7,7 @@ export function HealthStatus(): HTMLElement {
 
 	const container = html`
 		<div
-			class="inline-flex items-center gap-1.5 bg-(--surface) border border-(--border) rounded-full py-1.25 pr-3 pl-2 text-xs text-(--text-2) select-none"
+			class="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full py-1.25 pr-3 pl-2 text-[11px] font-medium text-(--muted) select-none transition-colors hover:border-white/20"
 			title="${t("allListings")}"
 		>
 			${dot}
