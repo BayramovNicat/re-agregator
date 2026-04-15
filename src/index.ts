@@ -22,8 +22,7 @@ import { queryRaw } from "./utils/prisma.js";
 const PORT = Number(process.env.PORT ?? 3000);
 const IS_DEV = process.env.NODE_ENV === "development";
 
-const CSP =
-	"require-trusted-types-for 'script'; trusted-types re-agregator default;";
+const CSP = "require-trusted-types-for 'script'; trusted-types redeal default;";
 
 // --- Brotli helpers ---
 

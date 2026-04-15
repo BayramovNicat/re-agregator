@@ -33,7 +33,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
 	if (text.startsWith("/start")) {
 		await sendMessage(
 			chatId,
-			`Welcome to <b>RE Finder</b>!\n\nYour Chat ID is: <code>${chatId}</code>\n\nCopy this and paste it into the <b>Alert me</b> form on the website to receive deal notifications.`,
+			`Welcome to <b>Redeal</b>!\n\nYour Chat ID is: <code>${chatId}</code>\n\nCopy this and paste it into the <b>Alert me</b> form on the website to receive deal notifications.`,
 		);
 	} else if (text.startsWith("/stop")) {
 		const count = await prisma.alert.updateMany({

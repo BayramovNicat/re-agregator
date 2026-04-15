@@ -63,7 +63,10 @@ async function build() {
 	// Copy HTML & Static Assets
 	await Bun.write("./public/index.html", Bun.file("./frontend/index.html"));
 	await Bun.write("./public/robots.txt", Bun.file("./frontend/robots.txt"));
-	await Bun.write("./public/manifest.json", Bun.file("./frontend/manifest.json"));
+	await Bun.write(
+		"./public/manifest.json",
+		Bun.file("./frontend/manifest.json"),
+	);
 
 	// Copy PWA Icons
 	cpSync("./frontend/icons", "./public/icons", {

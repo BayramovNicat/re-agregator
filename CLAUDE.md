@@ -110,7 +110,7 @@ bun --hot ./index.ts
 
 For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
 
-## Project: re-agregator
+## Project: Redeal
 
 Real estate deal aggregator for the Baku market (bina.az). Bun + TypeScript + PostgreSQL (Prisma).
 

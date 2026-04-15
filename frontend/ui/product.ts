@@ -1,6 +1,6 @@
 import { t } from "../core/i18n";
 import type { CardCallbacks, Property } from "../core/types";
-import { fmt, fmtFloor, frag, html, tTier, timeAgo } from "../core/utils";
+import { fmt, fmtFloor, frag, html, timeAgo, tTier } from "../core/utils";
 import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
@@ -27,10 +27,7 @@ export function Product({
 	const tier = ts(property.tier);
 	const floorStr = fmtFloor(property.floor, property.total_floors);
 
-	const { bmarkBtn, hideBtn, galleryBtn } = createButtons(
-		property,
-		bookmarked,
-	);
+	const { bmarkBtn, hideBtn, galleryBtn } = createButtons(property, bookmarked);
 
 	let element: HTMLElement;
 

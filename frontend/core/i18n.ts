@@ -1,11 +1,11 @@
 type Lang = "en" | "az" | "ru";
 
-const STORAGE_KEY = "re-lang";
+const STORAGE_KEY = "redeal-lang";
 
 const translations = {
 	en: {
 		// App
-		appName: "RE Finder",
+		appName: "Redeal",
 		appTagline: "Baku undervalued property scanner",
 
 		// Header
@@ -198,7 +198,7 @@ const translations = {
 		galleryPrev: "Previous photo",
 		galleryNext: "Next photo",
 		galleryExpand: "Expand photo",
- 
+
 		// Tiers
 		tierHigh: "High Value Deal",
 		tierGood: "Good Deal",
@@ -211,7 +211,7 @@ const translations = {
 	},
 
 	az: {
-		appName: "RE Tapıcı",
+		appName: "Redeal",
 		appTagline: "Bakı bazarında ucuz əmlak axtarıcısı",
 
 		priceMap: "Qiymət xəritəsi",
@@ -389,7 +389,7 @@ const translations = {
 		galleryPrev: "Əvvəlki foto",
 		galleryNext: "Növbəti foto",
 		galleryExpand: "Fotoya tam bax",
- 
+
 		// Tiers
 		tierHigh: "Yüksək dəyərli",
 		tierGood: "Yaxşı təklif",
@@ -402,7 +402,7 @@ const translations = {
 	},
 
 	ru: {
-		appName: "RE Finder",
+		appName: "Redeal",
 		appTagline: "Поиск недооцененной недвижимости в Баку",
 
 		priceMap: "Карта цен",
@@ -581,7 +581,7 @@ const translations = {
 		galleryPrev: "Предыдущее фото",
 		galleryNext: "Следующее фото",
 		galleryExpand: "Развернуть фото",
- 
+
 		// Tiers
 		tierHigh: "Выгодная сделка",
 		tierGood: "Хорошая цена",
@@ -595,6 +595,8 @@ const translations = {
 } as const;
 
 type TranslationKey = keyof (typeof translations)["en"];
+
+export type { TranslationKey };
 
 function getInitialLang(): Lang {
 	const saved = localStorage.getItem(STORAGE_KEY) as Lang | null;

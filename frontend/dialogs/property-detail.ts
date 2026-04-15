@@ -2,7 +2,7 @@ import { divIcon, type map, marker } from "leaflet";
 import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import type { Property } from "../core/types";
-import { fmt, fmtFloor, html, tTier, timeAgo } from "../core/utils";
+import { fmt, fmtFloor, html, timeAgo, tTier } from "../core/utils";
 import { Tag } from "../ui/chip";
 import { GalleryView } from "../ui/gallery-view";
 import { Icons } from "../ui/icons";

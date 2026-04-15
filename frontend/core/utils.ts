@@ -1,4 +1,4 @@
-import { getLang, t } from "./i18n";
+import { getLang, type TranslationKey, t } from "./i18n";
 
 // --- Trusted Types ---
 interface TrustedHTML {
@@ -21,7 +21,7 @@ declare global {
 	}
 }
 
-const policy = window.trustedTypes?.createPolicy("re-agregator", {
+const policy = window.trustedTypes?.createPolicy("redeal", {
 	createHTML: (s: string) => s,
 });
 
@@ -111,13 +111,13 @@ export function fmtFloor(
 }
 
 export function tTier(tier: string, short = false): string {
-	const map: Record<string, string> = {
+	const map: Record<string, TranslationKey> = {
 		"High Value Deal": short ? "tierHighShort" : "tierHigh",
 		"Good Deal": short ? "tierGoodShort" : "tierGood",
 		"Fair Price": short ? "tierFairShort" : "tierFair",
 	};
 	const key = map[tier] || (short ? "tierNormalShort" : "tierNormal");
-	return t(key as any);
+	return t(key);
 }
 
 const _template = document.createElement("template");
