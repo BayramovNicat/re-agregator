@@ -3,9 +3,17 @@
 	"short_name": "Redeal",
 	"description": "Discover undervalued real estate deals and housing market trends in Baku.",
 	"start_url": "/",
+	"id": "/",
 	"display": "standalone",
+	"display_override": ["window-controls-overlay", "standalone"],
 	"background_color": "#09090e",
 	"theme_color": "#09090e",
+	"protocol_handlers": [
+		{
+			"protocol": "web+redeal",
+			"url": "/?url=%s"
+		}
+	],
 	"icons": [
 		{
 			"src": "/icons/icon-192.png",
