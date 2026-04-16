@@ -83,7 +83,7 @@ export abstract class BaseScraper implements IScraper {
 	 * (ı→i, ə→e, ğ→g, ş→s, ö→o, ü→u) that users commonly type on non-AZ keyboards.
 	 */
 	private static readonly ACTIVE_MORTGAGE_RE =
-		/haz[ıi]r\s+ipoteka|ipoteka\s+borcu|bank\s+borcu|kredit\s+borcu|üzərində\s+borc|borclu|girov/i;
+		/haz[ıi]r\s+ipoteka|ipoteka\s+borcu|bank\s+borcu|kredit\s+borcu|üzərində\s+borc|borclu|girov|qal[ıi]q\s+m[əe]bl[əe][ğg]|daxili\s+kredit/i;
 
 	/**
 	 * Returns true if the listing text contains the Azerbaijani word for "urgent".
