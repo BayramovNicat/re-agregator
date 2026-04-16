@@ -4,11 +4,15 @@ import { getLang, type TranslationKey, t } from "./i18n";
 interface TrustedHTML {
 	__brand: "TrustedHTML";
 }
+interface TrustedScript {
+	__brand: "TrustedScript";
+}
 interface TrustedScriptURL {
 	__brand: "TrustedScriptURL";
 }
 interface TrustedTypePolicy {
 	createHTML(html: string): TrustedHTML;
+	createScript(script: string): TrustedScript;
 	createScriptURL(url: string): TrustedScriptURL;
 }
 interface TrustedTypePolicyFactory {
@@ -16,6 +20,7 @@ interface TrustedTypePolicyFactory {
 		name: string,
 		options: {
 			createHTML?: (html: string) => string;
+			createScript?: (script: string) => string;
 			createScriptURL?: (url: string) => string;
 		},
 	): TrustedTypePolicy;
@@ -30,6 +35,7 @@ declare global {
 
 const policy = window.trustedTypes?.createPolicy("redeal", {
 	createHTML: (s: string) => s,
+	createScript: (s: string) => s,
 	createScriptURL: (s: string) => s,
 });
 
@@ -38,6 +44,7 @@ const policy = window.trustedTypes?.createPolicy("redeal", {
 if (window.trustedTypes && !window.trustedTypes.defaultPolicy) {
 	window.trustedTypes.createPolicy("default", {
 		createHTML: (s: string) => s,
+		createScript: (s: string) => s,
 		createScriptURL: (s: string) => s,
 	});
 }

@@ -1,4 +1,4 @@
-import { ge, html, renderToastsContainer } from "./core/utils";
+import { ge, html, renderToastsContainer, trustScriptURL } from "./core/utils";
 import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { initPropertyDetail } from "./dialogs/property-detail";
@@ -59,7 +59,7 @@ window.addEventListener("pagehide", (e) => {
 if ("serviceWorker" in navigator) {
 	window.addEventListener("load", () => {
 		navigator.serviceWorker
-			.register("/sw.js")
+			.register(trustScriptURL("/sw.js") as string)
 			.then((registration) => {
 				console.log("SW registered:", registration);
 			})
