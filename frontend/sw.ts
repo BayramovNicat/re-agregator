@@ -39,25 +39,42 @@ sw.addEventListener("fetch", (event: FetchEvent) => {
 	// Only handle GET requests
 	if (event.request.method !== "GET") return;
 
+	const { request } = event;
+	const isNavigation = request.mode === "navigate";
+
 	// Stale-While-Revalidate for app assets
 	event.respondWith(
-		caches.match(event.request).then((cachedResponse) => {
-			const fetchPromise = fetch(event.request)
+		caches.match(request).then((cachedResponse) => {
+			const fetchPromise = fetch(request)
 				.then((networkResponse) => {
 					// Cache the new response if it's valid (status 200-299)
 					if (networkResponse?.ok) {
 						const responseClone = networkResponse.clone();
 						caches.open(CACHE_NAME).then((cache) => {
-							cache.put(event.request, responseClone);
+							cache.put(request, responseClone);
 						});
 					}
 					return networkResponse;
 				})
 				.catch(() => {
-					// If network fails and we have a cached version, return it
+					// Fallback strategy:
+					// 1. Use the specific cached response if available
 					if (cachedResponse) return cachedResponse;
 
-					// Final fallback: return a generic offline response
+					// 2. If it's a navigation (page load), return the cached app shell (SPA)
+					if (isNavigation) {
+						return caches.match("/index.html").then((shell) => {
+							return (
+								shell ||
+								new Response("Offline: App shell not found", {
+									status: 503,
+									headers: { "Content-Type": "text/plain" },
+								})
+							);
+						});
+					}
+
+					// 3. Final fallback for other assets (images, APIs, etc.)
 					return new Response("Network error occurred", {
 						status: 408, // Request Timeout
 						headers: { "Content-Type": "text/plain" },
