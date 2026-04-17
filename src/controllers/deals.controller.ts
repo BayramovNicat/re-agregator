@@ -3,6 +3,12 @@ import {
 	AnalyticsService,
 	classifyDeal,
 } from "../services/analytics.service.js";
+import {
+	type MapPinRow,
+	type PropertyRow,
+	parseQueryBool,
+	parseQueryNum,
+} from "../types.js";
 import { queryRaw } from "../utils/prisma.js";
 
 const analytics = new AnalyticsService();
@@ -17,7 +23,7 @@ const TREND_TTL_MS = 30 * 60_000; // 30 min — data changes only on scrape cycl
 /** GET /api/deals/locations — distinct location names that have at least one listing */
 export async function getLocations(_req: Request): Promise<Response> {
 	try {
-		const rows = await queryRaw<{ location_name: string }[]> /*sql*/`
+		const rows = await queryRaw<{ location_name: string }[]> /*sql*/ `
       SELECT DISTINCT location_name
       FROM "Property"
       WHERE location_name IS NOT NULL
@@ -94,7 +100,7 @@ export async function getHeatmap(_req: Request): Promise<Response> {
 				recent_avg: number | null;
 				prior_avg: number | null;
 			}[]
-		> /*sql*/`
+		> /*sql*/ `
       SELECT
         location_name,
         ROUND(AVG(price_per_sqm))::int AS avg_ppsm,
@@ -176,34 +182,7 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 		return Response.json({ data: [] });
 	}
 	try {
-		const rows = await queryRaw<
-			{
-				id: number;
-				source_url: string;
-				price: number;
-				area_sqm: number;
-				price_per_sqm: number;
-				district: string;
-				location_name: string | null;
-				latitude: number | null;
-				longitude: number | null;
-				rooms: number | null;
-				floor: number | null;
-				total_floors: number | null;
-				category: string | null;
-				has_document: boolean | null;
-				has_mortgage: boolean | null;
-				has_repair: boolean | null;
-				description: string | null;
-				is_urgent: boolean;
-				has_active_mortgage: boolean;
-				posted_date: Date | null;
-				created_at: Date;
-				updated_at: Date;
-				location_avg_price_per_sqm: number;
-				discount_percent: number;
-			}[]
-		> /*sql*/`
+		const rows = await queryRaw<PropertyRow[]> /*sql*/ `
       WITH avgs AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
@@ -270,16 +249,6 @@ export async function getMapPins(req: Request): Promise<Response> {
 		);
 	}
 
-	function optNum(val: string | null): number | undefined {
-		if (val === null || val === "") return undefined;
-		const n = Number(val);
-		return Number.isNaN(n) ? undefined : n;
-	}
-	function optBool(val: string | null): boolean | undefined {
-		if (val === null || val === "") return undefined;
-		return val === "true";
-	}
-
 	const factor = (100 - thresholdPct) / 100.0;
 
 	const locCondition = isAll
@@ -298,24 +267,24 @@ export async function getMapPins(req: Request): Promise<Response> {
 		Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`,
 	];
 
-	const minPrice = optNum(q.get("minPrice"));
-	const maxPrice = optNum(q.get("maxPrice"));
-	const minPriceSqm = optNum(q.get("minPriceSqm"));
-	const maxPriceSqm = optNum(q.get("maxPriceSqm"));
-	const minArea = optNum(q.get("minArea"));
-	const maxArea = optNum(q.get("maxArea"));
-	const minRooms = optNum(q.get("minRooms"));
-	const maxRooms = optNum(q.get("maxRooms"));
-	const minFloor = optNum(q.get("minFloor"));
-	const maxFloor = optNum(q.get("maxFloor"));
-	const minTotalFloors = optNum(q.get("minTotalFloors"));
-	const maxTotalFloors = optNum(q.get("maxTotalFloors"));
-	const hasDocument = optBool(q.get("hasDocument"));
-	const hasMortgage = optBool(q.get("hasMortgage"));
-	const hasRepair = optBool(q.get("hasRepair"));
-	const isUrgent = optBool(q.get("isUrgent"));
-	const notLastFloor = optBool(q.get("notLastFloor"));
-	const hasActiveMortgage = optBool(q.get("hasActiveMortgage"));
+	const minPrice = parseQueryNum(q.get("minPrice"));
+	const maxPrice = parseQueryNum(q.get("maxPrice"));
+	const minPriceSqm = parseQueryNum(q.get("minPriceSqm"));
+	const maxPriceSqm = parseQueryNum(q.get("maxPriceSqm"));
+	const minArea = parseQueryNum(q.get("minArea"));
+	const maxArea = parseQueryNum(q.get("maxArea"));
+	const minRooms = parseQueryNum(q.get("minRooms"));
+	const maxRooms = parseQueryNum(q.get("maxRooms"));
+	const minFloor = parseQueryNum(q.get("minFloor"));
+	const maxFloor = parseQueryNum(q.get("maxFloor"));
+	const minTotalFloors = parseQueryNum(q.get("minTotalFloors"));
+	const maxTotalFloors = parseQueryNum(q.get("maxTotalFloors"));
+	const hasDocument = parseQueryBool(q.get("hasDocument"));
+	const hasMortgage = parseQueryBool(q.get("hasMortgage"));
+	const hasRepair = parseQueryBool(q.get("hasRepair"));
+	const isUrgent = parseQueryBool(q.get("isUrgent"));
+	const notLastFloor = parseQueryBool(q.get("notLastFloor"));
+	const hasActiveMortgage = parseQueryBool(q.get("hasActiveMortgage"));
 	const category = q.get("category") ?? undefined;
 
 	if (minPrice !== undefined)
@@ -360,19 +329,7 @@ export async function getMapPins(req: Request): Promise<Response> {
 		conditions.push(Prisma.sql`p.category = ${category}`);
 
 	try {
-		const rows = await queryRaw<
-			{
-				source_url: string;
-				latitude: number;
-				longitude: number;
-				price: number;
-				price_per_sqm: number;
-				rooms: number | null;
-				location_name: string | null;
-				image_urls: string[];
-				discount_percent: number;
-			}[]
-		> /*sql*/`
+		const rows = await queryRaw<MapPinRow[]> /*sql*/ `
       WITH loc_avg AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
@@ -557,36 +514,25 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 		);
 	}
 
-	function optNum(val: string | null): number | undefined {
-		if (val === null || val === "") return undefined;
-		const n = Number(val);
-		return Number.isNaN(n) ? undefined : n;
-	}
-
-	function optBool(val: string | null): boolean | undefined {
-		if (val === null || val === "") return undefined;
-		return val === "true";
-	}
-
 	const filterArgs = {
-		minPrice: optNum(q.get("minPrice")),
-		maxPrice: optNum(q.get("maxPrice")),
-		minPriceSqm: optNum(q.get("minPriceSqm")),
-		maxPriceSqm: optNum(q.get("maxPriceSqm")),
-		minArea: optNum(q.get("minArea")),
-		maxArea: optNum(q.get("maxArea")),
-		minRooms: optNum(q.get("minRooms")),
-		maxRooms: optNum(q.get("maxRooms")),
-		minFloor: optNum(q.get("minFloor")),
-		maxFloor: optNum(q.get("maxFloor")),
-		minTotalFloors: optNum(q.get("minTotalFloors")),
-		maxTotalFloors: optNum(q.get("maxTotalFloors")),
-		hasDocument: optBool(q.get("hasDocument")),
-		hasMortgage: optBool(q.get("hasMortgage")),
-		hasRepair: optBool(q.get("hasRepair")),
-		isUrgent: optBool(q.get("isUrgent")),
-		notLastFloor: optBool(q.get("notLastFloor")),
-		hasActiveMortgage: optBool(q.get("hasActiveMortgage")),
+		minPrice: parseQueryNum(q.get("minPrice")),
+		maxPrice: parseQueryNum(q.get("maxPrice")),
+		minPriceSqm: parseQueryNum(q.get("minPriceSqm")),
+		maxPriceSqm: parseQueryNum(q.get("maxPriceSqm")),
+		minArea: parseQueryNum(q.get("minArea")),
+		maxArea: parseQueryNum(q.get("maxArea")),
+		minRooms: parseQueryNum(q.get("minRooms")),
+		maxRooms: parseQueryNum(q.get("maxRooms")),
+		minFloor: parseQueryNum(q.get("minFloor")),
+		maxFloor: parseQueryNum(q.get("maxFloor")),
+		minTotalFloors: parseQueryNum(q.get("minTotalFloors")),
+		maxTotalFloors: parseQueryNum(q.get("maxTotalFloors")),
+		hasDocument: parseQueryBool(q.get("hasDocument")),
+		hasMortgage: parseQueryBool(q.get("hasMortgage")),
+		hasRepair: parseQueryBool(q.get("hasRepair")),
+		isUrgent: parseQueryBool(q.get("isUrgent")),
+		notLastFloor: parseQueryBool(q.get("notLastFloor")),
+		hasActiveMortgage: parseQueryBool(q.get("hasActiveMortgage")),
 		category: q.get("category") ?? undefined,
 		limit,
 		offset,

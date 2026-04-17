@@ -21,6 +21,7 @@
  */
 
 import { Prisma } from "@prisma/client";
+import type { PropertyFilters, PropertyRowWithCount } from "../types.js";
 import { queryRaw } from "../utils/prisma.js";
 
 type DealTier = "High Value Deal" | "Good Deal" | "Fair Price" | "Overpriced";
@@ -80,30 +81,7 @@ export class AnalyticsService {
 	async getUndervaluedByLocation(
 		locations: string | string[],
 		thresholdPercent = 10,
-		filters: {
-			minPrice?: number;
-			maxPrice?: number;
-			minPriceSqm?: number;
-			maxPriceSqm?: number;
-			minArea?: number;
-			maxArea?: number;
-			minRooms?: number;
-			maxRooms?: number;
-			minFloor?: number;
-			maxFloor?: number;
-			minTotalFloors?: number;
-			maxTotalFloors?: number;
-			hasDocument?: boolean;
-			hasMortgage?: boolean;
-			hasRepair?: boolean;
-			isUrgent?: boolean;
-			notLastFloor?: boolean;
-			hasActiveMortgage?: boolean;
-			category?: string;
-			since?: Date;
-			limit?: number;
-			offset?: number;
-		} = {},
+		filters: PropertyFilters = {},
 	) {
 		const {
 			minPrice,
@@ -184,35 +162,7 @@ export class AnalyticsService {
 		if (since !== undefined)
 			conditions.push(Prisma.sql`p.created_at > ${since}`);
 
-		type Row = {
-			id: number;
-			source_url: string;
-			price: number;
-			area_sqm: number;
-			price_per_sqm: number;
-			district: string;
-			location_name: string | null;
-			latitude: number | null;
-			longitude: number | null;
-			rooms: number | null;
-			floor: number | null;
-			total_floors: number | null;
-			category: string | null;
-			has_document: boolean | null;
-			has_mortgage: boolean | null;
-			has_repair: boolean | null;
-			description: string | null;
-			is_urgent: boolean;
-			has_active_mortgage: boolean;
-			posted_date: Date | null;
-			created_at: Date;
-			updated_at: Date;
-			location_avg_price_per_sqm: number;
-			discount_percent: number;
-			total_count: bigint;
-		};
-
-		const rows = await queryRaw<Row[]> /*sql*/`
+		const rows = await queryRaw<PropertyRowWithCount[]> /*sql*/`
       WITH loc_avg AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"
@@ -252,30 +202,7 @@ export class AnalyticsService {
 	 */
 	async getUndervaluedAll(
 		thresholdPercent = 10,
-		filters: {
-			minPrice?: number;
-			maxPrice?: number;
-			minPriceSqm?: number;
-			maxPriceSqm?: number;
-			minArea?: number;
-			maxArea?: number;
-			minRooms?: number;
-			maxRooms?: number;
-			minFloor?: number;
-			maxFloor?: number;
-			minTotalFloors?: number;
-			maxTotalFloors?: number;
-			hasDocument?: boolean;
-			hasMortgage?: boolean;
-			hasRepair?: boolean;
-			isUrgent?: boolean;
-			notLastFloor?: boolean;
-			hasActiveMortgage?: boolean;
-			category?: string;
-			since?: Date;
-			limit?: number;
-			offset?: number;
-		} = {},
+		filters: PropertyFilters = {},
 	) {
 		const {
 			minPrice,
@@ -353,35 +280,7 @@ export class AnalyticsService {
 		if (since !== undefined)
 			conditions.push(Prisma.sql`p.created_at > ${since}`);
 
-		type Row = {
-			id: number;
-			source_url: string;
-			price: number;
-			area_sqm: number;
-			price_per_sqm: number;
-			district: string;
-			location_name: string | null;
-			latitude: number | null;
-			longitude: number | null;
-			rooms: number | null;
-			floor: number | null;
-			total_floors: number | null;
-			category: string | null;
-			has_document: boolean | null;
-			has_mortgage: boolean | null;
-			has_repair: boolean | null;
-			description: string | null;
-			is_urgent: boolean;
-			has_active_mortgage: boolean;
-			posted_date: Date | null;
-			created_at: Date;
-			updated_at: Date;
-			location_avg_price_per_sqm: number;
-			discount_percent: number;
-			total_count: bigint;
-		};
-
-		const rows = await queryRaw<Row[]> /*sql*/`
+		const rows = await queryRaw<PropertyRowWithCount[]> /*sql*/`
       WITH loc_avg AS (
         SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
         FROM "Property"

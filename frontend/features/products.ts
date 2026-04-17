@@ -293,7 +293,8 @@ export function initProducts(container: HTMLElement): () => void {
 
 		list = [...list].sort((a, b) => {
 			if (sortBy === "disc") return b.discount_percent - a.discount_percent;
-			if (sortBy === "drops") return (b.price_drop_count ?? 0) - (a.price_drop_count ?? 0);
+			if (sortBy === "drops")
+				return (b.price_drop_count ?? 0) - (a.price_drop_count ?? 0);
 			if (sortBy === "price-asc") return a.price - b.price;
 			if (sortBy === "price-desc") return b.price - a.price;
 			if (sortBy === "area") return b.area_sqm - a.area_sqm;
@@ -316,36 +317,51 @@ export function initProducts(container: HTMLElement): () => void {
 			if (p.has_repair) tags.push("Repaired");
 			if (p.has_mortgage) tags.push("Mortgage eligible");
 			if (p.has_active_mortgage) tags.push("Active mortgage");
-			if (p.price_drop_count && p.price_drop_count > 0) tags.push(`Price dropped ${p.price_drop_count}×`);
+			if (p.price_drop_count && p.price_drop_count > 0)
+				tags.push(`Price dropped ${p.price_drop_count}×`);
 
 			lines.push(`--- [${i + 1}] ---`);
-			lines.push(`Location: ${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`);
-			lines.push(`Price: ₼${fmt(p.price)} | Area: ${p.area_sqm}m² | ₼/m²: ${fmt(p.price_per_sqm)}`);
-			lines.push(`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${Number(p.discount_percent).toFixed(1)}% (${p.tier})`);
+			lines.push(
+				`Location: ${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`,
+			);
+			lines.push(
+				`Price: ₼${fmt(p.price)} | Area: ${p.area_sqm}m² | ₼/m²: ${fmt(p.price_per_sqm)}`,
+			);
+			lines.push(
+				`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${Number(p.discount_percent).toFixed(1)}% (${p.tier})`,
+			);
 			if (p.rooms !== undefined || p.floor !== undefined) {
 				const parts: string[] = [];
 				if (p.rooms !== undefined) parts.push(`${p.rooms} rooms`);
-				if (p.floor !== undefined) parts.push(`Floor ${p.floor}${p.total_floors ? `/${p.total_floors}` : ""}`);
+				if (p.floor !== undefined)
+					parts.push(
+						`Floor ${p.floor}${p.total_floors ? `/${p.total_floors}` : ""}`,
+					);
 				lines.push(`Details: ${parts.join(" | ")}`);
 			}
 			if (tags.length) lines.push(`Tags: ${tags.join(", ")}`);
-			if (p.posted_date) lines.push(`Posted: ${new Date(p.posted_date).toLocaleDateString()}`);
-			if (p.description?.trim()) lines.push(`Description: ${p.description.trim()}`);
+			if (p.posted_date)
+				lines.push(`Posted: ${new Date(p.posted_date).toLocaleDateString()}`);
+			if (p.description?.trim())
+				lines.push(`Description: ${p.description.trim()}`);
 			lines.push(`URL: ${p.source_url}`);
 			lines.push(``);
 		});
 
 		const text = lines.join("\n");
-		navigator.clipboard.writeText(text).then(() => {
-			toast(t("exportCopied"));
-		}).catch(() => {
-			// Fallback: trigger file download
-			const blob = new Blob([text], { type: "text/plain" });
-			const a = document.createElement("a");
-			a.href = URL.createObjectURL(blob);
-			a.download = `redeal-export-${Date.now()}.txt`;
-			a.click();
-		});
+		navigator.clipboard
+			.writeText(text)
+			.then(() => {
+				toast(t("exportCopied"));
+			})
+			.catch(() => {
+				// Fallback: trigger file download
+				const blob = new Blob([text], { type: "text/plain" });
+				const a = document.createElement("a");
+				a.href = URL.createObjectURL(blob);
+				a.download = `redeal-export-${Date.now()}.txt`;
+				a.click();
+			});
 	}
 
 	// 4. Event Handlers
