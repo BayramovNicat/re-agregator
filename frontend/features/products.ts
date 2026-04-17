@@ -32,6 +32,11 @@ export function initProducts(container: HTMLElement): () => void {
         ></div>
         <div class="flex items-center gap-1.75">
           ${Button({
+						id: "export-btn",
+						title: t("exportBtn"),
+						content: frag`${Icons.download()} ${t("exportBtn")}`,
+					})}
+          ${Button({
 						id: "alert-btn",
 						title: t("telegramAlerts"),
 						content: frag`${Icons.bell()} ${t("alertMe")}`,
@@ -280,6 +285,69 @@ export function initProducts(container: HTMLElement): () => void {
 		render();
 	}
 
+	function handleExport(): void {
+		const sortBy = (ge("sort-sel") as HTMLSelectElement)?.value || "disc";
+		let list = state.showingSaved
+			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
+			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
+
+		list = [...list].sort((a, b) => {
+			if (sortBy === "disc") return b.discount_percent - a.discount_percent;
+			if (sortBy === "drops") return (b.price_drop_count ?? 0) - (a.price_drop_count ?? 0);
+			if (sortBy === "price-asc") return a.price - b.price;
+			if (sortBy === "price-desc") return b.price - a.price;
+			if (sortBy === "area") return b.area_sqm - a.area_sqm;
+			if (sortBy === "ppsm") return a.price_per_sqm - b.price_per_sqm;
+			return 0;
+		});
+
+		if (!list.length) return;
+
+		const lines: string[] = [
+			`REDEAL PROPERTY EXPORT — ${list.length} listings`,
+			`Exported: ${new Date().toISOString()}`,
+			``,
+		];
+
+		list.forEach((p, i) => {
+			const tags: string[] = [];
+			if (p.is_urgent) tags.push("Urgent");
+			if (p.has_document) tags.push("Document");
+			if (p.has_repair) tags.push("Repaired");
+			if (p.has_mortgage) tags.push("Mortgage eligible");
+			if (p.has_active_mortgage) tags.push("Active mortgage");
+			if (p.price_drop_count && p.price_drop_count > 0) tags.push(`Price dropped ${p.price_drop_count}×`);
+
+			lines.push(`--- [${i + 1}] ---`);
+			lines.push(`Location: ${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`);
+			lines.push(`Price: ₼${fmt(p.price)} | Area: ${p.area_sqm}m² | ₼/m²: ${fmt(p.price_per_sqm)}`);
+			lines.push(`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${p.discount_percent.toFixed(1)}% (${p.tier})`);
+			if (p.rooms !== undefined || p.floor !== undefined) {
+				const parts: string[] = [];
+				if (p.rooms !== undefined) parts.push(`${p.rooms} rooms`);
+				if (p.floor !== undefined) parts.push(`Floor ${p.floor}${p.total_floors ? `/${p.total_floors}` : ""}`);
+				lines.push(`Details: ${parts.join(" | ")}`);
+			}
+			if (tags.length) lines.push(`Tags: ${tags.join(", ")}`);
+			if (p.posted_date) lines.push(`Posted: ${new Date(p.posted_date).toLocaleDateString()}`);
+			if (p.description?.trim()) lines.push(`Description: ${p.description.trim()}`);
+			lines.push(`URL: ${p.source_url}`);
+			lines.push(``);
+		});
+
+		const text = lines.join("\n");
+		navigator.clipboard.writeText(text).then(() => {
+			toast(t("exportCopied"));
+		}).catch(() => {
+			// Fallback: trigger file download
+			const blob = new Blob([text], { type: "text/plain" });
+			const a = document.createElement("a");
+			a.href = URL.createObjectURL(blob);
+			a.download = `redeal-export-${Date.now()}.txt`;
+			a.click();
+		});
+	}
+
 	// 4. Event Handlers
 	const handlers: [HTMLElement, string, EventListener][] = [];
 	const add = <T extends Event>(
@@ -291,6 +359,8 @@ export function initProducts(container: HTMLElement): () => void {
 		el.addEventListener(ev, listener);
 		handlers.push([el, ev, listener]);
 	};
+
+	add(ge("export-btn"), "click", () => handleExport());
 
 	add(ge("sort-sel"), "change", () => {
 		state.renderedSet.clear();

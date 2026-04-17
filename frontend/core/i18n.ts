@@ -70,6 +70,8 @@ const translations = {
 		// Products bar
 		alertMe: "Alert me",
 		saved: "Saved",
+		exportBtn: "Export",
+		exportCopied: "Copied to clipboard",
 		sortDisc: "Most discounted",
 		sortPriceAsc: "Price: low → high",
 		sortPriceDesc: "Price: high → low",
@@ -270,6 +272,8 @@ const translations = {
 
 		alertMe: "Bildiriş al",
 		saved: "Saxlanılanlar",
+		exportBtn: "İxrac",
+		exportCopied: "Buferə kopyalandı",
 		sortDisc: "Ən çox endirimli",
 		sortPriceAsc: "Qiymət: aşağıdan yuxarı",
 		sortPriceDesc: "Qiymət: yuxarıdan aşağı",
@@ -461,6 +465,8 @@ const translations = {
 
 		alertMe: "Уведомить",
 		saved: "Сохранённые",
+		exportBtn: "Экспорт",
+		exportCopied: "Скопировано в буфер",
 		sortDisc: "Наибольшая скидка",
 		sortPriceAsc: "Цена: дешевле",
 		sortPriceDesc: "Цена: дороже",
