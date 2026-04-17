@@ -321,7 +321,7 @@ export function initProducts(container: HTMLElement): () => void {
 			lines.push(`--- [${i + 1}] ---`);
 			lines.push(`Location: ${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`);
 			lines.push(`Price: ₼${fmt(p.price)} | Area: ${p.area_sqm}m² | ₼/m²: ${fmt(p.price_per_sqm)}`);
-			lines.push(`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${p.discount_percent.toFixed(1)}% (${p.tier})`);
+			lines.push(`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${Number(p.discount_percent).toFixed(1)}% (${p.tier})`);
 			if (p.rooms !== undefined || p.floor !== undefined) {
 				const parts: string[] = [];
 				if (p.rooms !== undefined) parts.push(`${p.rooms} rooms`);
