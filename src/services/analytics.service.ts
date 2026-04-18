@@ -254,10 +254,9 @@ export class AnalyticsService {
 	): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
 		const { limit = 200, offset = 0 } = filters;
 		const factor = (100 - thresholdPercent) / 100.0;
-		const locationList = locations;
 
 		const conditions = [
-			Prisma.sql`p.location_name IN (${Prisma.join(locationList)})`,
+			Prisma.sql`p.location_name IN (${Prisma.join(locations)})`,
 			Prisma.sql`p.price_per_sqm > 0`,
 			Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`,
 			...this._applyFilters(filters),
@@ -267,7 +266,7 @@ export class AnalyticsService {
 			WITH loc_avg AS (
 				SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 				FROM "Property"
-				WHERE location_name IN (${Prisma.join(locationList)})
+				WHERE location_name IN (${Prisma.join(locations)})
 				${this._getLocAvgBaseConditions()}
 				GROUP BY location_name
 			)

@@ -245,16 +245,15 @@ export class BinaScraper extends BaseScraper {
 	 * Used to skip pages cheaply when startPage > 1.
 	 */
 	private async fetchCursor(after: string | null): Promise<PageInfo> {
-		const afterArg = after ? `, after: "${after}"` : "";
 		const query = /* graphql */ `
-      {
+      query FetchCursor($after: String) {
         itemsConnection(
           filter: {
             categoryId: "${DEFAULT_FILTER.categoryId}"
             cityId: "${DEFAULT_FILTER.cityId}"
             leased: ${DEFAULT_FILTER.leased}
           }
-          ${afterArg}
+          after: $after
         ) {
           pageInfo { hasNextPage endCursor }
         }
@@ -262,6 +261,7 @@ export class BinaScraper extends BaseScraper {
     `;
 		const json = await this.gql<{ itemsConnection: { pageInfo: PageInfo } }>(
 			query,
+			{ after },
 		);
 		return json.itemsConnection.pageInfo;
 	}
@@ -273,17 +273,15 @@ export class BinaScraper extends BaseScraper {
 	private async fetchPage(
 		after: string | null,
 	): Promise<{ edges: Array<{ node: ESItemNode }>; pageInfo: PageInfo }> {
-		const afterArg = after ? `, after: "${after}"` : "";
-
 		const query = /* graphql */ `
-      {
+      query FetchPage($after: String) {
         itemsConnection(
           filter: {
             categoryId: "${DEFAULT_FILTER.categoryId}"
             cityId: "${DEFAULT_FILTER.cityId}"
             leased: ${DEFAULT_FILTER.leased}
           }
-          ${afterArg}
+          after: $after
         ) {
           pageInfo { hasNextPage endCursor }
           edges {
@@ -304,7 +302,7 @@ export class BinaScraper extends BaseScraper {
       }
     `;
 
-		const json = await this.gql<ItemsConnectionData>(query);
+		const json = await this.gql<ItemsConnectionData>(query, { after });
 		return json.itemsConnection;
 	}
 
@@ -358,11 +356,14 @@ export class BinaScraper extends BaseScraper {
 	/**
 	 * Executes a GraphQL query and returns data, throwing on hard errors.
 	 */
-	private async gql<T>(query: string): Promise<T> {
+	private async gql<T>(
+		query: string,
+		variables?: Record<string, unknown>,
+	): Promise<T> {
 		const resp = await fetch(GRAPHQL_URL, {
 			method: "POST",
 			headers: randomHeaders(),
-			body: JSON.stringify({ query }),
+			body: JSON.stringify({ query, variables }),
 		});
 
 		if (!resp.ok) {

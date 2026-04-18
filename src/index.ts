@@ -87,12 +87,17 @@ if (!IS_DEV) {
 	console.log(`Brotli pre-compressed: ${[...brAssets.keys()].join(", ")}`);
 }
 
+let cachedVersionedHtml: string | null = null;
+
 async function getVersionedHtml(): Promise<string> {
+	if (!IS_DEV && cachedVersionedHtml !== null) return cachedVersionedHtml;
 	const raw = await Bun.file(`${publicDir}/index.html`).text();
 	const version = IS_DEV ? Date.now().toString() : ASSET_VERSION;
-	return raw
+	const html = raw
 		.replace('href="/styles.css"', `href="/styles.css?v=${version}"`)
 		.replace('src="/app.js"', `src="/app.js?v=${version}"`);
+	if (!IS_DEV) cachedVersionedHtml = html;
+	return html;
 }
 
 console.log(`Asset version: ${ASSET_VERSION}`);

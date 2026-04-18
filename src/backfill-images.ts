@@ -31,7 +31,7 @@ async function main() {
 	type Row = { id: number; source_url: string };
 
 	const [{ total }] = await prisma.$queryRaw<[{ total: bigint }]>`
-		SELECT COUNT(*) AS total FROM "Property" WHERE image_urls IS NULL
+		SELECT COUNT(*) AS total FROM "Property" WHERE array_length(image_urls, 1) IS NULL
 	`;
 	const totalCount = Number(total);
 	console.log(`[backfill:images] Properties without images: ${totalCount}`);
@@ -51,7 +51,7 @@ async function main() {
 		// Always OFFSET 0 — updated rows leave the IS NULL set so the window shifts naturally
 		const rows = await prisma.$queryRaw<Row[]>`
 			SELECT id, source_url FROM "Property"
-			WHERE image_urls IS NULL
+			WHERE array_length(image_urls, 1) IS NULL
 			ORDER BY id ASC
 			LIMIT ${BATCH_SIZE}
 		`;
