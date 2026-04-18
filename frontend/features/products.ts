@@ -155,7 +155,7 @@ export function initProducts(container: HTMLElement): () => void {
 	};
 	window.addEventListener("scroll", onScroll, { passive: true });
 	backToTopBtn.addEventListener("click", () =>
-		window.scrollTo({ top: 0, behavior: "smooth" }),
+		window.scrollTo({ top: 0, behavior: "instant" }),
 	);
 
 	// Restore persisted sort

@@ -93,8 +93,11 @@ await build();
 
 if (watchMode) {
 	let timer: ReturnType<typeof setTimeout> | null = null;
+	const SKIP_EXTS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".ico", ".svg"]);
 	watch("./frontend", { recursive: true }, (_event, filename) => {
 		if (!filename) return;
+		const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
+		if (SKIP_EXTS.has(ext)) return;
 		if (timer) clearTimeout(timer);
 		timer = setTimeout(async () => {
 			process.stdout.write(`[watch] ${filename} → rebuilding...\n`);
