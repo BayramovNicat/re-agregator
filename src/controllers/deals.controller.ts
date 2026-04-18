@@ -218,7 +218,9 @@ function parseLocationParams(q: URLSearchParams) {
 	const list = isAll ? [] : param.split(",").filter(Boolean);
 
 	if (!isAll && list.length === 0) {
-		return { error: res.error('Query parameter "location" cannot be empty', 400) };
+		return {
+			error: res.error('Query parameter "location" cannot be empty', 400),
+		};
 	}
 
 	return { isAll, list, raw: param };

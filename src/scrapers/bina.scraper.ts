@@ -25,7 +25,7 @@ const ITEM_BASE_URL = "https://bina.az/items";
 /** Filter params for "apartments for sale in Baku" */
 const DEFAULT_FILTER = { categoryId: "1", cityId: "1", leased: false };
 
-const USER_AGENTS = [
+const USER_AGENTS: [string, ...string[]] = [
 	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
 	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -35,21 +35,19 @@ const USER_AGENTS = [
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
 ];
 
-const ACCEPT_LANGUAGES = [
+const ACCEPT_LANGUAGES: [string, ...string[]] = [
 	"az-AZ,az;q=0.9,en;q=0.8",
 	"az-AZ,az;q=0.9,en-US;q=0.8,en;q=0.7",
 	"az,en-US;q=0.9,en;q=0.8",
 ];
 
+function pick<T>(arr: [T, ...T[]]): T {
+	return arr[Math.floor(Math.random() * arr.length)]!;
+}
+
 function randomHeaders(): Record<string, string> {
-	const ua =
-		USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)] ??
-		USER_AGENTS[0] ??
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
-	const lang =
-		ACCEPT_LANGUAGES[Math.floor(Math.random() * ACCEPT_LANGUAGES.length)] ??
-		ACCEPT_LANGUAGES[0] ??
-		"az-AZ,az;q=0.9,en;q=0.8";
+	const ua = pick(USER_AGENTS);
+	const lang = pick(ACCEPT_LANGUAGES);
 	return {
 		"Content-Type": "application/json",
 		"User-Agent": ua,

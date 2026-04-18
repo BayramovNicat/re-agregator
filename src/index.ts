@@ -18,6 +18,7 @@ import { BinaScraper } from "./scrapers/bina.scraper.js";
 import { ScrapingService } from "./services/scraping.service.js";
 import { handleWebhook } from "./services/telegram.service.js";
 import { queryRaw } from "./utils/prisma.js";
+import { acquireLock, releaseLock } from "./utils/scrape-lock.js";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const IS_DEV = process.env.NODE_ENV === "development";
@@ -175,14 +176,11 @@ console.log("  GET  /api/scrape/stream?maxPages=20&delayMs=800");
 const cronService = new ScrapingService([new BinaScraper()]);
 const CRON_INTERVAL_MS = 60 * 60 * 1000;
 
-let scrapeRunning = false;
-
 async function runCronScrape() {
-	if (scrapeRunning) {
+	if (!acquireLock()) {
 		console.log("[Cron] Previous scrape still running, skipping this tick.");
 		return;
 	}
-	scrapeRunning = true;
 	console.log("[Cron] Hourly scrape started", new Date().toISOString());
 	try {
 		const results = await cronService.runAll({ maxPages: 40, delayMs: 800 });
@@ -191,7 +189,7 @@ async function runCronScrape() {
 	} catch (err) {
 		console.error("[Cron] Hourly scrape failed:", err);
 	} finally {
-		scrapeRunning = false;
+		releaseLock();
 	}
 }
 

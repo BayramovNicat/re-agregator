@@ -10,7 +10,7 @@ import type {
 	ScrapedListing,
 	ScraperOptions,
 } from "../scrapers/base.scraper.js";
-import { executeRaw, prisma } from "../utils/prisma.js";
+import { prisma, queryRaw } from "../utils/prisma.js";
 import { runAlerts } from "./alert.service.js";
 
 export interface ScrapeResult {
@@ -127,7 +127,7 @@ export class ScrapingService {
 			posted_date: l.posted_date ?? null,
 		}));
 
-		// 20 params per row → max safe chunk well below PG's 65 535-param limit.
+		// 23 params per row → max safe chunk well below PG's 65 535-param limit.
 		const CHUNK_SIZE = 500;
 
 		for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
@@ -151,7 +151,9 @@ export class ScrapingService {
 				//   1. Capture current prices before upsert (old_prices)
 				//   2. Upsert with price_drop_count increment when price drops
 				//   3. Insert old price into PriceHistory for each price drop detected
-				const affected = await executeRaw(Prisma.sql`
+				//   4. Return COUNT(*) from upserted — executeRaw returns the last statement's
+				//      row count which would be the PriceHistory insert, not property upserts.
+				const [{ count }] = await queryRaw<[{ count: number }]>(Prisma.sql`
 					WITH old_prices AS (
 							SELECT id, source_url, price, price_per_sqm
 							FROM "Property"
@@ -201,13 +203,16 @@ export class ScrapingService {
 							FROM upserted u
 							JOIN old_prices old ON old.source_url = u.source_url
 							WHERE old.price > u.price
+						),
+						_ph AS (
+							INSERT INTO "PriceHistory" (property_id, price, price_per_sqm, recorded_at)
+							SELECT property_id, old_price, old_ppsm, now()
+							FROM price_changed
 						)
-						INSERT INTO "PriceHistory" (property_id, price, price_per_sqm, recorded_at)
-						SELECT property_id, old_price, old_ppsm, now()
-						FROM price_changed
-					`);
+					SELECT COUNT(*)::int AS count FROM upserted
+				`);
 
-				persisted += affected;
+				persisted += count;
 			} catch (err) {
 				// Chunk failed — fall back to row-by-row to isolate the bad listing.
 				console.warn(

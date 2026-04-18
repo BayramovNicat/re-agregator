@@ -118,4 +118,3 @@ export type MapPin = {
 export type PropertyRowWithHistory = PropertyRowWithCount & {
 	price_history: PriceHistoryEntry[] | null;
 };
-

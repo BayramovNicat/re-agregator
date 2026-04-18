@@ -25,13 +25,14 @@ import type {
 	HeatmapPoint,
 	MapPin,
 	MapPinRow,
+	PriceHistoryEntry,
 	PropertyFilters,
 	PropertyRow,
 	PropertyRowWithCount,
 	PropertyRowWithHistory,
 	TrendPoint,
 } from "../types.js";
-import { type DealTier, classifyDeal } from "../utils/deals.js";
+import { classifyDeal, type DealTier } from "../utils/deals.js";
 import { queryRaw } from "../utils/prisma.js";
 
 export class AnalyticsService {
@@ -140,7 +141,9 @@ export class AnalyticsService {
 	/**
 	 * Fetches specific properties by source_url list with location avg comparison.
 	 */
-	async getPropertiesByUrls(urls: string[]): Promise<(PropertyRow & { tier: DealTier })[]> {
+	async getPropertiesByUrls(
+		urls: string[],
+	): Promise<(PropertyRow & { tier: DealTier })[]> {
 		const rows = await queryRaw<PropertyRow[]>(Prisma.sql`
 			WITH avgs AS (
 				SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
@@ -245,15 +248,13 @@ export class AnalyticsService {
 	 * @param thresholdPercent - Minimum discount to qualify (default: 10%)
 	 */
 	async getUndervaluedByLocation(
-		locations: string | string[],
+		locations: string[],
 		thresholdPercent = 10,
 		filters: PropertyFilters = {},
-	) {
+	): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
 		const { limit = 200, offset = 0 } = filters;
 		const factor = (100 - thresholdPercent) / 100.0;
-		const locationList = Array.isArray(locations)
-			? locations
-			: locations.split(",").filter(Boolean);
+		const locationList = locations;
 
 		const conditions = [
 			Prisma.sql`p.location_name IN (${Prisma.join(locationList)})`,
@@ -292,7 +293,7 @@ export class AnalyticsService {
 	async getUndervaluedAll(
 		thresholdPercent = 10,
 		filters: PropertyFilters = {},
-	) {
+	): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
 		const { limit = 200, offset = 0 } = filters;
 		const factor = (100 - thresholdPercent) / 100.0;
 
@@ -331,23 +332,23 @@ export class AnalyticsService {
 	 * Sorted by drop count descending — most desperate sellers first.
 	 */
 	async getPriceDropDeals(
-		location: string | string[],
+		location: string[] | "__all__",
 		options: {
 			minDropCount?: number;
 			limit?: number;
 			offset?: number;
 		} = {},
-	) {
+	): Promise<{
+		total: number;
+		data: (PropertyRow & {
+			price_history: PriceHistoryEntry[] | null;
+			tier: DealTier;
+		})[];
+	}> {
 		const { minDropCount = 1, limit = 200, offset = 0 } = options;
 
-		const isAll =
-			location === "__all__" ||
-			(Array.isArray(location) && location.length === 0);
-		const locationList = isAll
-			? []
-			: Array.isArray(location)
-				? location
-				: location.split(",").filter(Boolean);
+		const isAll = location === "__all__";
+		const locationList = isAll ? [] : location;
 
 		const locCondition = isAll
 			? Prisma.sql`p.location_name IS NOT NULL`

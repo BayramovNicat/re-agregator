@@ -98,7 +98,7 @@ export async function runAlerts(): Promise<void> {
 				location === "__all__"
 					? await analytics.getUndervaluedAll(threshold, filterArgs)
 					: await analytics.getUndervaluedByLocation(
-							location,
+							location.split(",").filter(Boolean),
 							threshold,
 							filterArgs,
 						);

@@ -4,7 +4,11 @@
  * @param cacheAge - max-age in seconds. If omitted, defaults to "no-store".
  * @param staleAge - stale-while-revalidate in seconds.
  */
-export function json(body: unknown, cacheAge?: number, staleAge?: number): Response {
+export function json(
+	body: unknown,
+	cacheAge?: number,
+	staleAge?: number,
+): Response {
 	const headers: Record<string, string> = {
 		"Cache-Control":
 			cacheAge === undefined

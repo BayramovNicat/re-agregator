@@ -13,7 +13,7 @@ import { prisma } from "./utils/prisma.js";
 
 /** Must match BaseScraper.ACTIVE_MORTGAGE_RE */
 const ACTIVE_MORTGAGE_RE =
-	/haz[ıi]r\s+ipoteka|ipoteka\s+borcu|bank\s+borcu|kredit\s+borcu|üzərində\s+borc|borclu|girov/i;
+	/haz[ıi]r\s+ipoteka|ipoteka\s+borcu|bank\s+borcu|kredit\s+borcu|üzərində\s+borc|borclu|girov|qal[ıi]q\s+m[əe]bl[əe][ğg]|daxili\s+kredit/i;
 
 const BATCH_SIZE = 500;
 
