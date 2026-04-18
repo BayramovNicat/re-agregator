@@ -5,6 +5,7 @@ import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
 import { LazyThumb } from "./lazy-thumb";
+import { Sparkline } from "./sparkline";
 import { StatBox } from "./stat-box";
 import { ts } from "./tier";
 
@@ -104,13 +105,27 @@ export function Product({
 			});
 
 		const thumbUrl = property.image_urls?.[0];
+		const imgCount = property.image_urls?.length ?? 0;
 		const thumb = thumbUrl
 			? LazyThumb({
 					src: thumbUrl,
 					className:
-						"rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)",
+						"relative rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)",
 				})
 			: null;
+		if (thumb && imgCount > 1) {
+			const badge = document.createElement("span");
+			badge.className =
+				"absolute bottom-1.5 right-1.5 inline-flex items-center gap-0.75 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm tabular-nums pointer-events-none";
+			badge.appendChild(Icons.gallery());
+			badge.appendChild(document.createTextNode(` ${imgCount}`));
+			thumb.appendChild(badge);
+		}
+
+		const spark =
+			property.price_history && property.price_history.length >= 2
+				? Sparkline(property.price_history, tier.hex)
+				: null;
 
 		element = html`<article
       class="bg-(--surface)
@@ -148,9 +163,12 @@ export function Product({
             >${t("marketAvg")}
             ₼${fmt(property.location_avg_price_per_sqm, 0)}/m²</span
           >
-          <span class="text-base font-bold" style="color:${tier.c}"
-            >${property.discount_percent >= 0 ? "-" : "+"}${Math.abs(property.discount_percent)}%</span
-          >
+          <div class="flex items-center gap-1.5">
+            ${spark}
+            <span class="text-base font-bold" style="color:${tier.c}"
+              >${property.discount_percent >= 0 ? "-" : "+"}${Math.abs(property.discount_percent)}%</span
+            >
+          </div>
         </div>
         <div class="h-2 bg-(--surface-3) rounded-full overflow-hidden">
           <div
@@ -187,19 +205,29 @@ export function Product({
       </div>
     </article>`;
 	} else {
+		const rowThumbUrl = property.image_urls?.[0];
+		const rowThumb = rowThumbUrl
+			? LazyThumb({
+					src: rowThumbUrl,
+					className:
+						"w-10 h-10 rounded-(--r-sm) overflow-hidden bg-(--surface-3) shrink-0",
+				})
+			: html`<div class="w-10 h-10 rounded-(--r-sm) bg-(--surface-2) shrink-0"></div>`;
+
 		element = html`<div
       class="bg-(--surface)
       border border-(--border)
       rounded-(--r)
       px-4 py-3
       grid items-center
-      grid-cols-[68px_1fr_auto_auto]
+      grid-cols-[40px_68px_1fr_auto_auto]
       gap-3.5
       cursor-pointer
       transition-colors duration-150
       hover:border-(--border-h)
       hover:bg-(--surface-2)"
     >
+      ${rowThumb}
       <div class="text-center">
         <div class="text-lg font-bold" style="color: ${tier.c}">
           ${property.discount_percent >= 0 ? "-" : "+"}${Math.abs(property.discount_percent)}%

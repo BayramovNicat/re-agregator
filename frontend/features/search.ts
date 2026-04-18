@@ -3,6 +3,7 @@ import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { frag, ge, hide, show, toast } from "../core/utils";
+import { SkeletonList } from "../ui/skeleton";
 import { Chip, CloseableChip } from "../ui/chip";
 import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
@@ -225,7 +226,13 @@ export function initSearch(container: HTMLElement): () => void {
 			hide("trend-panel");
 			ge("cards").replaceChildren();
 
-			show("s-loading");
+			if (state.currentView === "map") {
+				show("s-loading");
+			} else {
+				ge("cards").appendChild(
+					SkeletonList(6, state.currentView as "grid" | "row"),
+				);
+			}
 		}
 		(ge("search-btn") as HTMLButtonElement).disabled = true;
 
@@ -288,6 +295,7 @@ export function initSearch(container: HTMLElement): () => void {
 			}
 
 			if (!state.allResults.length) {
+				ge("cards").replaceChildren();
 				show("s-empty");
 				hide("results-bar");
 			} else {
@@ -295,6 +303,7 @@ export function initSearch(container: HTMLElement): () => void {
 			}
 		} catch (e) {
 			hide("s-loading");
+			ge("cards").replaceChildren();
 			toast((e as Error).message, true);
 		} finally {
 			(ge("search-btn") as HTMLButtonElement).disabled = false;

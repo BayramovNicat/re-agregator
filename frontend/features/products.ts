@@ -11,6 +11,7 @@ import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
 import { Product } from "../ui/product";
 import { Select } from "../ui/select";
+import { SkeletonList } from "../ui/skeleton";
 import { hideMapView, initMapView, showMapView } from "./map-view";
 
 /**
@@ -125,6 +126,10 @@ export function initProducts(container: HTMLElement): () => void {
 	container.appendChild(nodes);
 
 	const cleanupMapView = initMapView(ge("map-view-ct"));
+
+	// Restore persisted sort
+	const savedSort = localStorage.getItem("re-sort");
+	if (savedSort) (ge("sort-sel") as HTMLSelectElement).value = savedSort;
 
 	// 3. Setup Callbacks
 	const cardCallbacks: CardCallbacks = {
@@ -379,6 +384,7 @@ export function initProducts(container: HTMLElement): () => void {
 	add(ge("export-btn"), "click", () => handleExport());
 
 	add(ge("sort-sel"), "change", () => {
+		localStorage.setItem("re-sort", (ge("sort-sel") as HTMLSelectElement).value);
 		state.renderedSet.clear();
 		render();
 	});

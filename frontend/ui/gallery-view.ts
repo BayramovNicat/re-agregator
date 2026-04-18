@@ -154,6 +154,14 @@ export function GalleryView(config: GalleryConfig = {}): GalleryViewInstance {
 		});
 	}
 
+	// Touch / pointer swipe
+	let swipeStartX = 0;
+	el.addEventListener("pointerdown", (e: PointerEvent) => { swipeStartX = e.clientX; }, { passive: true });
+	el.addEventListener("pointerup", (e: PointerEvent) => {
+		const dx = e.clientX - swipeStartX;
+		if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1);
+	}, { passive: true });
+
 	return {
 		el,
 		setUrls(newUrls: string[], initialIndex = 0) {
