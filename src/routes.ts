@@ -15,16 +15,12 @@ import {
 } from "@/modules/deals/deals.controller.js";
 import { streamScrape } from "@/modules/scrape/scrape.controller.js";
 import { handleWebhook } from "@/modules/telegram/telegram.controller.js";
-import { queryRaw } from "@/utils/prisma.js";
-import { Prisma } from "@prisma/client";
+import { prisma } from "@/utils/prisma.js";
 
 export const routes = {
 	"/health": {
 		GET: br(async () => {
-			const result = await queryRaw<[{ count: bigint }]>(Prisma.sql`
-				SELECT COUNT(*)::bigint AS count FROM "Property"
-			`);
-			const count = Number(result[0]?.count ?? 0);
+			const count = await prisma.property.count();
 			return Response.json({
 				status: "ok",
 				timestamp: new Date().toISOString(),

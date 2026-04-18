@@ -9,15 +9,17 @@ import { type Prisma, PrismaClient } from "@prisma/client";
 const QUERY_TIMEOUT_MS = 30_000;
 
 function raceTimeout<T>(promise: Promise<T>): Promise<T> {
-	return Promise.race([
-		promise,
-		new Promise<never>((_, reject) =>
-			setTimeout(
-				() => reject(new Error(`Prisma query exceeded ${QUERY_TIMEOUT_MS}ms`)),
-				QUERY_TIMEOUT_MS,
-			),
-		),
-	]);
+	let timeoutId: ReturnType<typeof setTimeout>;
+	const timerPromise = new Promise<never>((_, reject) => {
+		timeoutId = setTimeout(
+			() => reject(new Error(`Prisma query exceeded ${QUERY_TIMEOUT_MS}ms`)),
+			QUERY_TIMEOUT_MS,
+		);
+	});
+
+	return Promise.race([promise, timerPromise]).finally(() => {
+		clearTimeout(timeoutId);
+	});
 }
 
 const globalForPrisma = globalThis as unknown as {

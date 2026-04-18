@@ -25,6 +25,8 @@ export function startCron(): void {
 	}
 
 	setInterval(runCronScrape, CRON_INTERVAL_MS);
+	runCronScrape();
+
 	console.log(
 		`[Cron] Hourly scrape scheduled (every ${CRON_INTERVAL_MS / 60000} min)`,
 	);

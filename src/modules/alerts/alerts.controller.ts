@@ -69,11 +69,15 @@ export async function deleteAlert(req: Request): Promise<Response> {
 		return res.error("Token is required", 400);
 	}
 	try {
-		const alert = await prisma.alert.findUnique({ where: { token } });
-		if (!alert) {
+		const { count } = await prisma.alert.updateMany({
+			where: { token, is_active: true },
+			data: { is_active: false },
+		});
+
+		if (count === 0) {
 			return res.error("Alert not found", 404);
 		}
-		await prisma.alert.update({ where: { token }, data: { is_active: false } });
+
 		return res.json({ ok: true });
 	} catch (err) {
 		console.error("[AlertsController] deleteAlert:", err);

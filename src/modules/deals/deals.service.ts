@@ -41,10 +41,7 @@ export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 			AND price_per_sqm > 0
 			AND (floor IS NULL OR floor <> 1)
 			AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
-			AND (
-				posted_date >= NOW() - INTERVAL '16 weeks'
-				OR (posted_date IS NULL AND created_at >= NOW() - INTERVAL '16 weeks')
-			)
+			AND COALESCE(posted_date, created_at) >= NOW() - INTERVAL '16 weeks'
 		GROUP BY DATE_TRUNC('week', COALESCE(posted_date, created_at))
 		ORDER BY week ASC
 	`);
@@ -126,13 +123,18 @@ export async function getPropertiesByUrls(
 	urls: string[],
 ): Promise<(PropertyRow & { tier: DealTier })[]> {
 	const rows = await queryRaw<PropertyRow[]>(Prisma.sql`
-		WITH avgs AS (
+		WITH needed AS (
+			SELECT DISTINCT location_name
+			FROM "Property"
+			WHERE source_url = ANY(${urls}) AND location_name IS NOT NULL
+		),
+		avgs AS (
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
-			WHERE price_per_sqm > 0
-				AND (floor IS NULL OR floor <> 1)
-				AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
+			WHERE location_name IN (SELECT location_name FROM needed)
+				${locAvgBaseConditions()}
 			GROUP BY location_name
+			HAVING COUNT(*) >= 3
 		)
 		SELECT
 			p.*,
@@ -182,10 +184,9 @@ export async function getMapPins(options: {
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE ${avgLocCondition}
-				AND price_per_sqm > 0
-				AND (floor IS NULL OR floor <> 1)
-				AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
+				${locAvgBaseConditions()}
 			GROUP BY location_name
+			HAVING COUNT(*) >= 3
 		)
 		SELECT
 			p.source_url,
@@ -240,6 +241,7 @@ export async function getUndervaluedByLocation(
 			WHERE location_name IN (${Prisma.join(locations)})
 			${locAvgBaseConditions()}
 			GROUP BY location_name
+			HAVING COUNT(*) >= 3
 		)
 		SELECT
 			p.*,
@@ -249,7 +251,7 @@ export async function getUndervaluedByLocation(
 		FROM "Property" p
 		JOIN loc_avg ON p.location_name = loc_avg.location_name
 		WHERE ${Prisma.join(conditions, " AND ")}
-		ORDER BY p.price_per_sqm ASC
+		ORDER BY discount_percent DESC
 		LIMIT ${limit} OFFSET ${offset}
 	`);
 
@@ -277,6 +279,7 @@ export async function getUndervaluedAll(
 			WHERE location_name IS NOT NULL
 				${locAvgBaseConditions()}
 			GROUP BY location_name
+			HAVING COUNT(*) >= 3
 		)
 		SELECT
 			p.*,
@@ -320,10 +323,9 @@ export async function getPriceDropDeals(
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE ${avgLocCondition}
-				AND price_per_sqm > 0
-				AND (floor IS NULL OR floor <> 1)
-				AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
+				${locAvgBaseConditions()}
 			GROUP BY location_name
+			HAVING COUNT(*) >= 3
 		),
 		history AS (
 			SELECT
@@ -333,6 +335,10 @@ export async function getPriceDropDeals(
 					ORDER BY recorded_at DESC
 				) AS entries
 			FROM "PriceHistory"
+			WHERE property_id IN (
+				SELECT id FROM "Property"
+				WHERE ${locCondition} AND price_drop_count >= ${minDropCount}
+			)
 			GROUP BY property_id
 		)
 		SELECT

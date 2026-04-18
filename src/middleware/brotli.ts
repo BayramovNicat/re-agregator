@@ -1,4 +1,7 @@
-import { brotliCompressSync } from "node:zlib";
+import { promisify } from "node:util";
+import { brotliCompress, constants } from "node:zlib";
+
+const compress = promisify(brotliCompress);
 
 type Handler = (req: Request) => Response | Promise<Response>;
 
@@ -7,7 +10,9 @@ export function br(handler: Handler): Handler {
 		const res = await handler(req);
 		if (!(req.headers.get("Accept-Encoding") ?? "").includes("br")) return res;
 		const body = await res.arrayBuffer();
-		const compressed = brotliCompressSync(Buffer.from(body));
+		const compressed = await compress(Buffer.from(body), {
+			params: { [constants.BROTLI_PARAM_QUALITY]: 4 },
+		});
 		const headers = new Headers(res.headers);
 		headers.set("Content-Encoding", "br");
 		headers.set("Vary", "Accept-Encoding");
