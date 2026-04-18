@@ -45,11 +45,18 @@ export type PropertyRow = {
 	description: string | null;
 	is_urgent: boolean;
 	has_active_mortgage: boolean;
+	price_drop_count: number;
+	image_urls: string[];
 	posted_date: Date | null;
 	created_at: Date;
 	updated_at: Date;
 	location_avg_price_per_sqm: number;
 	discount_percent: number;
+};
+
+export type PriceHistoryEntry = {
+	price: string;
+	recorded_at: string;
 };
 
 export type PropertyRowWithCount = PropertyRow & {
@@ -68,15 +75,9 @@ export type MapPinRow = {
 	discount_percent: number;
 };
 
-/** Parse optional numeric query parameter */
-export function parseQueryNum(val: string | null): number | undefined {
-	if (val === null || val === "") return undefined;
-	const n = Number(val);
-	return Number.isNaN(n) ? undefined : n;
-}
+export type TrendPoint = {
+	week: Date;
+	avg_ppsm: number;
+	listing_count: number;
+};
 
-/** Parse optional boolean query parameter */
-export function parseQueryBool(val: string | null): boolean | undefined {
-	if (val === null || val === "") return undefined;
-	return val === "true";
-}

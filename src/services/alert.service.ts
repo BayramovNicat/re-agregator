@@ -1,5 +1,6 @@
+import { classifyDeal } from "../utils/deals.js";
 import { prisma } from "../utils/prisma.js";
-import { AnalyticsService, classifyDeal } from "./analytics.service.js";
+import { AnalyticsService } from "./analytics.service.js";
 import { sendMessage } from "./telegram.service.js";
 
 const analytics = new AnalyticsService();

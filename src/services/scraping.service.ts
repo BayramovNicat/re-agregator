@@ -152,60 +152,60 @@ export class ScrapingService {
 				//   2. Upsert with price_drop_count increment when price drops
 				//   3. Insert old price into PriceHistory for each price drop detected
 				const affected = await executeRaw(Prisma.sql`
-          WITH old_prices AS (
-            SELECT id, source_url, price, price_per_sqm
-            FROM "Property"
-            WHERE source_url = ANY(${sourceUrls})
-          ),
-          upserted AS (
-            INSERT INTO "Property" (
-              source_url, price, area_sqm, price_per_sqm,
-              district, location_name, latitude, longitude,
-              rooms, floor, total_floors, category,
-              has_document, has_mortgage, has_repair,
-              description, image_urls, is_urgent, has_active_mortgage, posted_date,
-              price_drop_count,
-              created_at, updated_at
-            )
-            VALUES ${Prisma.join(valueFragments)}
-            ON CONFLICT (source_url) DO UPDATE SET
-              price               = EXCLUDED.price,
-              area_sqm            = EXCLUDED.area_sqm,
-              price_per_sqm       = EXCLUDED.price_per_sqm,
-              district            = EXCLUDED.district,
-              location_name       = EXCLUDED.location_name,
-              latitude            = EXCLUDED.latitude,
-              longitude           = EXCLUDED.longitude,
-              rooms               = EXCLUDED.rooms,
-              floor               = EXCLUDED.floor,
-              total_floors        = EXCLUDED.total_floors,
-              category            = EXCLUDED.category,
-              has_document        = EXCLUDED.has_document,
-              has_mortgage        = EXCLUDED.has_mortgage,
-              has_repair          = EXCLUDED.has_repair,
-              description         = EXCLUDED.description,
-              image_urls          = EXCLUDED.image_urls,
-              is_urgent           = EXCLUDED.is_urgent,
-              has_active_mortgage = EXCLUDED.has_active_mortgage,
-              posted_date         = EXCLUDED.posted_date,
-              price_drop_count    = CASE
-                WHEN EXCLUDED.price < "Property".price
-                THEN "Property".price_drop_count + 1
-                ELSE "Property".price_drop_count
-              END,
-              updated_at          = now()
-            RETURNING id, source_url, price, price_per_sqm
-          ),
-          price_changed AS (
-            SELECT u.id AS property_id, old.price AS old_price, old.price_per_sqm AS old_ppsm
-            FROM upserted u
-            JOIN old_prices old ON old.source_url = u.source_url
-            WHERE old.price > u.price
-          )
-          INSERT INTO "PriceHistory" (property_id, price, price_per_sqm, recorded_at)
-          SELECT property_id, old_price, old_ppsm, now()
-          FROM price_changed
-        `);
+					WITH old_prices AS (
+							SELECT id, source_url, price, price_per_sqm
+							FROM "Property"
+							WHERE source_url = ANY(${sourceUrls})
+						),
+						upserted AS (
+							INSERT INTO "Property" (
+								source_url, price, area_sqm, price_per_sqm,
+								district, location_name, latitude, longitude,
+								rooms, floor, total_floors, category,
+								has_document, has_mortgage, has_repair,
+								description, image_urls, is_urgent, has_active_mortgage, posted_date,
+								price_drop_count,
+								created_at, updated_at
+							)
+							VALUES ${Prisma.join(valueFragments)}
+							ON CONFLICT (source_url) DO UPDATE SET
+								price               = EXCLUDED.price,
+								area_sqm            = EXCLUDED.area_sqm,
+								price_per_sqm       = EXCLUDED.price_per_sqm,
+								district            = EXCLUDED.district,
+								location_name       = EXCLUDED.location_name,
+								latitude            = EXCLUDED.latitude,
+								longitude           = EXCLUDED.longitude,
+								rooms               = EXCLUDED.rooms,
+								floor               = EXCLUDED.floor,
+								total_floors        = EXCLUDED.total_floors,
+								category            = EXCLUDED.category,
+								has_document        = EXCLUDED.has_document,
+								has_mortgage        = EXCLUDED.has_mortgage,
+								has_repair          = EXCLUDED.has_repair,
+								description         = EXCLUDED.description,
+								image_urls          = EXCLUDED.image_urls,
+								is_urgent           = EXCLUDED.is_urgent,
+								has_active_mortgage = EXCLUDED.has_active_mortgage,
+								posted_date         = EXCLUDED.posted_date,
+								price_drop_count    = CASE
+									WHEN EXCLUDED.price < "Property".price
+									THEN "Property".price_drop_count + 1
+									ELSE "Property".price_drop_count
+								END,
+								updated_at          = now()
+							RETURNING id, source_url, price, price_per_sqm
+						),
+						price_changed AS (
+							SELECT u.id AS property_id, old.price AS old_price, old.price_per_sqm AS old_ppsm
+							FROM upserted u
+							JOIN old_prices old ON old.source_url = u.source_url
+							WHERE old.price > u.price
+						)
+						INSERT INTO "PriceHistory" (property_id, price, price_per_sqm, recorded_at)
+						SELECT property_id, old_price, old_ppsm, now()
+						FROM price_changed
+					`);
 
 				persisted += affected;
 			} catch (err) {
