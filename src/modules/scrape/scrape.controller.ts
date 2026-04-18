@@ -1,8 +1,8 @@
-import type { ScrapeProgressEvent } from "../scrapers/base.scraper.js";
-import { BinaScraper } from "../scrapers/bina.scraper.js";
-import { ScrapingService } from "../services/scraping.service.js";
-import { parseQueryNum } from "../utils/query.js";
-import { acquireLock, releaseLock } from "../utils/scrape-lock.js";
+import type { ScrapeProgressEvent } from "@/scrapers/base.scraper.js";
+import { BinaScraper } from "@/scrapers/bina.scraper.js";
+import { parseQueryNum } from "@/utils/query.js";
+import { acquireLock, releaseLock } from "@/utils/scrape-lock.js";
+import { ScrapingService } from "./scrape.service.js";
 
 const scrapingService = new ScrapingService([new BinaScraper()]);
 
@@ -12,12 +12,6 @@ const SSE_HEADERS = {
 	Connection: "keep-alive",
 } as const;
 
-/**
- * GET /api/scrape/stream
- *
- * Streams Server-Sent Events with live scrape progress.
- * Optional query params: maxPages, startPage, endPage, delayMs
- */
 export function streamScrape(req: Request): Response {
 	const q = new URL(req.url).searchParams;
 	const encoder = new TextEncoder();

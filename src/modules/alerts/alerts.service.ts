@@ -1,10 +1,11 @@
-import type { AlertFilters } from "../types.js";
-import { classifyDeal } from "../utils/deals.js";
-import { prisma } from "../utils/prisma.js";
-import { AnalyticsService } from "./analytics.service.js";
-import { sendMessage } from "./telegram.service.js";
-
-const analytics = new AnalyticsService();
+import {
+	getUndervaluedAll,
+	getUndervaluedByLocation,
+} from "@/modules/deals/deals.service.js";
+import { sendMessage } from "@/modules/telegram/telegram.service.js";
+import type { AlertFilters } from "@/types/index.js";
+import { classifyDeal } from "@/utils/deals.js";
+import { prisma } from "@/utils/prisma.js";
 
 function fmt(n: number, d = 0): string {
 	return Number(n).toLocaleString("az-AZ", { maximumFractionDigits: d });
@@ -96,14 +97,13 @@ export async function runAlerts(): Promise<void> {
 
 			const { data } =
 				location === "__all__"
-					? await analytics.getUndervaluedAll(threshold, filterArgs)
-					: await analytics.getUndervaluedByLocation(
+					? await getUndervaluedAll(threshold, filterArgs)
+					: await getUndervaluedByLocation(
 							location.split(",").filter(Boolean),
 							threshold,
 							filterArgs,
 						);
 
-			// Always update watermark so we don't re-check these listings next run
 			await prisma.alert.update({
 				where: { id: alert.id },
 				data: { last_run_at: new Date() },

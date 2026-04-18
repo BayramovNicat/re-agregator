@@ -12,7 +12,7 @@
  *  3. Derive district from location.slug using slugToDistrict().
  */
 
-import { slugToDistrict } from "../utils/district-normalizer.js";
+import { slugToDistrict } from "@/utils/district-normalizer.js";
 import {
 	BaseScraper,
 	type ScrapedListing,

@@ -1,17 +1,11 @@
-/**
- * ScrapingService orchestrates the scraping pipeline.
- * It runs all registered scrapers and upserts results into the database,
- * computing price_per_sqm before persistence.
- */
-
 import { Prisma } from "@prisma/client";
+import { runAlerts } from "@/modules/alerts/alerts.service.js";
 import type {
 	IScraper,
 	ScrapedListing,
 	ScraperOptions,
-} from "../scrapers/base.scraper.js";
-import { prisma, queryRaw } from "../utils/prisma.js";
-import { runAlerts } from "./alert.service.js";
+} from "@/scrapers/base.scraper.js";
+import { prisma, queryRaw } from "@/utils/prisma.js";
 
 export interface ScrapeResult {
 	platform: string;
@@ -27,15 +21,10 @@ export class ScrapingService {
 		this.scrapers = scrapers;
 	}
 
-	/** Adds a scraper implementation at runtime */
 	registerScraper(scraper: IScraper): void {
 		this.scrapers.push(scraper);
 	}
 
-	/**
-	 * Triggers all registered scrapers concurrently and persists results.
-	 * Returns a per-platform summary of what was upserted vs skipped.
-	 */
 	async runAll(options?: ScraperOptions): Promise<ScrapeResult[]> {
 		const results = await Promise.all(
 			this.scrapers.map(async (scraper) => {
@@ -87,7 +76,6 @@ export class ScrapingService {
 		const total_persisted = results.reduce((sum, r) => sum + r.persisted, 0);
 		options?.onProgress?.({ type: "complete", total_persisted });
 
-		// Trigger alerts after scraping is done
 		await runAlerts();
 
 		return results;
@@ -102,7 +90,6 @@ export class ScrapingService {
 
 		if (listings.length === 0) return { persisted, skipped, errors };
 
-		// Pre-compute price_per_sqm and normalise nullables for all rows up front.
 		const rows = listings.map((l) => ({
 			source_url: l.source_url,
 			price: l.price,
@@ -147,12 +134,6 @@ export class ScrapingService {
           )`,
 				);
 
-				// CTE-based upsert:
-				//   1. Capture current prices before upsert (old_prices)
-				//   2. Upsert with price_drop_count increment when price drops
-				//   3. Insert old price into PriceHistory for each price drop detected
-				//   4. Return COUNT(*) from upserted — executeRaw returns the last statement's
-				//      row count which would be the PriceHistory insert, not property upserts.
 				const [{ count }] = await queryRaw<[{ count: number }]>(Prisma.sql`
 					WITH old_prices AS (
 							SELECT id, source_url, price, price_per_sqm
@@ -214,7 +195,6 @@ export class ScrapingService {
 
 				persisted += count;
 			} catch (err) {
-				// Chunk failed — fall back to row-by-row to isolate the bad listing.
 				console.warn(
 					`[ScrapingService] Batch upsert failed at offset ${i}, falling back to row-by-row:`,
 					err,

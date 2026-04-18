@@ -1,22 +1,19 @@
-import { AnalyticsService } from "../services/analytics.service.js";
-import type { PropertyFilters } from "../types.js";
-import { parseQueryBool, parseQueryNum } from "../utils/query.js";
-import * as res from "../utils/response.js";
-
-const analytics = new AnalyticsService();
+import type { PropertyFilters } from "@/types/index.js";
+import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
+import * as res from "@/utils/response.js";
+import * as dealsService from "./deals.service.js";
 
 type TrendCacheEntry = {
-	data: Awaited<ReturnType<typeof analytics.getPriceTrend>>;
+	data: Awaited<ReturnType<typeof dealsService.getPriceTrend>>;
 	cachedAt: number;
 };
 const trendCache = new Map<string, TrendCacheEntry>();
-const TREND_TTL_MS = 30 * 60_000; // 30 min — data changes only on scrape cycles
-const TREND_CACHE_MAX = 300; // evict oldest entry when limit hit
+const TREND_TTL_MS = 30 * 60_000;
+const TREND_CACHE_MAX = 300;
 
-/** GET /api/deals/locations — distinct location names that have at least one listing */
 export async function getLocations(): Promise<Response> {
 	try {
-		const data = await analytics.getLocations();
+		const data = await dealsService.getLocations();
 		return res.json({ data }, 60, 30);
 	} catch (err) {
 		console.error("[DealsController] getLocations:", err);
@@ -24,7 +21,6 @@ export async function getLocations(): Promise<Response> {
 	}
 }
 
-/** GET /api/deals/trend?location=X — weekly avg ₼/m² for the sparkline */
 export async function getTrend(req: Request): Promise<Response> {
 	const location = new URL(req.url).searchParams.get("location");
 	if (!location) {
@@ -35,7 +31,7 @@ export async function getTrend(req: Request): Promise<Response> {
 		return res.json({ location, data: cached.data }, 1800, 300);
 	}
 	try {
-		const data = await analytics.getPriceTrend(location);
+		const data = await dealsService.getPriceTrend(location);
 		if (trendCache.size >= TREND_CACHE_MAX) {
 			const oldest = trendCache.keys().next().value;
 			if (oldest !== undefined) trendCache.delete(oldest);
@@ -48,10 +44,9 @@ export async function getTrend(req: Request): Promise<Response> {
 	}
 }
 
-/** GET /api/heatmap — avg price_per_sqm + listing count + trend per location_name */
 export async function getHeatmap(): Promise<Response> {
 	try {
-		const data = await analytics.getHeatmapData();
+		const data = await dealsService.getHeatmapData();
 		return res.json({ data }, 900, 300);
 	} catch (err) {
 		console.error("[DealsController] getHeatmap:", err);
@@ -59,7 +54,6 @@ export async function getHeatmap(): Promise<Response> {
 	}
 }
 
-/** POST /api/deals/by-urls — fetch specific properties by source_url list */
 export async function getDealsByUrls(req: Request): Promise<Response> {
 	let body: { urls?: unknown } = {};
 	try {
@@ -84,7 +78,7 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 		return res.json({ data: [] });
 	}
 	try {
-		const data = await analytics.getPropertiesByUrls(safeUrls);
+		const data = await dealsService.getPropertiesByUrls(safeUrls);
 		return res.json({ data });
 	} catch (err) {
 		console.error("[DealsController] getDealsByUrls:", err);
@@ -92,7 +86,6 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 	}
 }
 
-/** GET /api/deals/map-pins — lightweight pins for map view, same filters as undervalued */
 export async function getMapPins(req: Request): Promise<Response> {
 	const q = new URL(req.url).searchParams;
 
@@ -108,7 +101,7 @@ export async function getMapPins(req: Request): Promise<Response> {
 	const filters = parsePropertyFilters(q);
 
 	try {
-		const data = await analytics.getMapPins({
+		const data = await dealsService.getMapPins({
 			locations: loc.isAll ? "__all__" : loc.list,
 			thresholdPercent: thresholdPct,
 			filters,
@@ -120,7 +113,6 @@ export async function getMapPins(req: Request): Promise<Response> {
 	}
 }
 
-/** GET /api/deals/price-drops?location=X&minDrops=1&limit=200&offset=0 */
 export async function getPriceDrops(req: Request): Promise<Response> {
 	const q = new URL(req.url).searchParams;
 
@@ -137,7 +129,7 @@ export async function getPriceDrops(req: Request): Promise<Response> {
 	if (pg.error) return pg.error;
 
 	try {
-		const { total, data } = await analytics.getPriceDropDeals(
+		const { total, data } = await dealsService.getPriceDropDeals(
 			loc.isAll ? "__all__" : loc.list,
 			{
 				minDropCount,
@@ -160,7 +152,6 @@ export async function getPriceDrops(req: Request): Promise<Response> {
 	}
 }
 
-/** GET /api/deals/undervalued */
 export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const q = new URL(req.url).searchParams;
 
@@ -184,8 +175,8 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 
 	try {
 		const { total, data } = loc.isAll
-			? await analytics.getUndervaluedAll(thresholdPct, filterArgs)
-			: await analytics.getUndervaluedByLocation(
+			? await dealsService.getUndervaluedAll(thresholdPct, filterArgs)
+			: await dealsService.getUndervaluedByLocation(
 					loc.list,
 					thresholdPct,
 					filterArgs,
@@ -205,9 +196,8 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	}
 }
 
-// --- Internal Query Parsing Helpers ---
+// --- Query Parsing Helpers ---
 
-/** Parses and validates the "location" parameter */
 function parseLocationParams(q: URLSearchParams) {
 	const param = q.get("location");
 	if (!param) {
@@ -226,7 +216,6 @@ function parseLocationParams(q: URLSearchParams) {
 	return { isAll, list, raw: param };
 }
 
-/** Parses standard property filtering parameters */
 function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
 	return {
 		minPrice: parseQueryNum(q.get("minPrice")),
@@ -251,7 +240,6 @@ function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
 	};
 }
 
-/** Parses limit/offset pagination parameters */
 function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {
 	const limitRaw = q.get("limit");
 	const limit = limitRaw !== null ? Number(limitRaw) : defaultLimit;

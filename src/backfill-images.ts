@@ -10,8 +10,8 @@
  * Re-run safe: only processes rows where image_urls = '{}' (empty array).
  */
 
-import { BinaScraper } from "./scrapers/bina.scraper.js";
-import { prisma } from "./utils/prisma.js";
+import { BinaScraper } from "@/scrapers/bina.scraper.js";
+import { prisma } from "@/utils/prisma.js";
 
 const BATCH_SIZE = 100;
 const DELAY_MS = 800;

@@ -1,5 +1,4 @@
-/** Shared type definitions to avoid duplication across controllers and services */
-import type { DealTier } from "./utils/deals.js";
+import type { DealTier } from "@/utils/deals.js";
 
 export type PropertyFilters = {
 	minPrice?: number;
