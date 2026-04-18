@@ -2,8 +2,6 @@ import { ScrapingService } from "@/modules/scrape/scrape.service.js";
 import { BinaScraper } from "@/scrapers/bina.scraper.js";
 import { acquireLock, releaseLock } from "@/utils/scrape-lock.js";
 
-const CRON_INTERVAL_MS = 60 * 60 * 1000;
-
 export function startCron(): void {
 	const cronService = new ScrapingService([new BinaScraper()]);
 
@@ -24,10 +22,29 @@ export function startCron(): void {
 		}
 	}
 
-	setInterval(runCronScrape, CRON_INTERVAL_MS);
-	runCronScrape();
+	function scheduleNext() {
+		const now = new Date();
+		const next = new Date(
+			now.getFullYear(),
+			now.getMonth(),
+			now.getDate(),
+			now.getHours() + 1,
+			0,
+			0,
+			0,
+		);
+		const delay = next.getTime() - now.getTime();
 
-	console.log(
-		`[Cron] Hourly scrape scheduled (every ${CRON_INTERVAL_MS / 60000} min)`,
-	);
+		console.log(
+			`[Cron] Next hourly scrape scheduled in ${Math.round(delay / 60000)} min (at ${next.toISOString()})`,
+		);
+
+		setTimeout(async () => {
+			await runCronScrape();
+			scheduleNext();
+		}, delay);
+	}
+
+	runCronScrape();
+	scheduleNext();
 }
