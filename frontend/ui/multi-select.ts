@@ -18,6 +18,7 @@ interface MultiSelectProps {
 	options: MultiSelectOption[];
 	placeholder?: string;
 	className?: string;
+	exclusiveValue?: string;
 	onChange?: (values: string[]) => void;
 }
 
@@ -26,6 +27,7 @@ export function MultiSelect({
 	options,
 	placeholder = "Select options...",
 	className = "",
+	exclusiveValue,
 	onChange,
 }: MultiSelectProps): HTMLElement {
 	let selectedValues: string[] = [];
@@ -172,7 +174,10 @@ export function MultiSelect({
 	function toggleValue(val: string) {
 		if (selectedValues.includes(val)) {
 			selectedValues = selectedValues.filter((v) => v !== val);
+		} else if (exclusiveValue !== undefined && val === exclusiveValue) {
+			selectedValues = [exclusiveValue];
 		} else {
+			selectedValues = selectedValues.filter((v) => v !== exclusiveValue);
 			selectedValues.push(val);
 		}
 		updateUI();

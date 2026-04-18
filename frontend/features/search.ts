@@ -313,6 +313,7 @@ export function initSearch(container: HTMLElement): () => void {
 						options: [],
 						placeholder: t("chooseLocs"),
 						className: "w-full",
+						exclusiveValue: "__all__",
 						onChange: () => {
 							updateChips();
 							void doSearch(false);
@@ -488,8 +489,10 @@ export function initSearch(container: HTMLElement): () => void {
 			if (locParam) {
 				const vals = locParam.split(",").filter(Boolean);
 				el.setValue(vals);
-				void doSearch(false);
+			} else {
+				el.setValue(["__all__"]);
 			}
+			void doSearch(false);
 		} catch {
 			el.setOptions([{ value: "", label: t("failedLocs") }]);
 		}
