@@ -1,4 +1,5 @@
 /** Shared type definitions to avoid duplication across controllers and services */
+import type { DealTier } from "./utils/deals.js";
 
 export type PropertyFilters = {
 	minPrice?: number;
@@ -79,5 +80,33 @@ export type TrendPoint = {
 	week: Date;
 	avg_ppsm: number;
 	listing_count: number;
+};
+
+export type HeatmapPoint = {
+	location_name: string;
+	avg_price_per_sqm: number;
+	count: number;
+	lat: number;
+	lng: number;
+	recent_avg: number | null;
+	prior_avg: number | null;
+	trend: "up" | "down" | "flat";
+};
+
+export type MapPin = {
+	source_url: string;
+	lat: number;
+	lng: number;
+	price: number;
+	price_per_sqm: number;
+	rooms: number | null;
+	location_name: string | null;
+	image_url: string | null;
+	discount_percent: number;
+	tier: DealTier;
+};
+
+export type PropertyRowWithHistory = PropertyRowWithCount & {
+	price_history: PriceHistoryEntry[] | null;
 };
 
