@@ -4,6 +4,7 @@ import { fmt, fmtFloor, frag, html, timeAgo, tTier } from "../core/utils";
 import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
+import { LazyThumb } from "./lazy-thumb";
 import { StatBox } from "./stat-box";
 import { ts } from "./tier";
 
@@ -42,17 +43,20 @@ export function Product({
 			history && history.length > 0
 				? Number(history[history.length - 1]?.price)
 				: null;
+		const dropTip =
+			dropCount > 0 && originalPrice !== null
+				? `₼${fmt(originalPrice, 0)} → ₼${fmt(property.price, 0)}`
+				: null;
 		const dropLabel =
 			dropCount > 0
-				? originalPrice !== null
-					? `▼ ₼${fmt(originalPrice, 0)} → ₼${fmt(property.price, 0)} · ${t("tagPriceDrop", { n: dropCount })}`
-					: `▼ ${t("tagPriceDrop", { n: dropCount })}`
+				? `▼ ${t("tagPriceDrop", { n: dropCount })}`
 				: null;
 
 		const tagList = [
 			{
 				if: dropCount > 0,
 				label: dropLabel || "",
+				tip: dropTip ?? undefined,
 				cls: "text-(--yellow) border-(--yellow-b) bg-(--yellow-dim) font-medium",
 			},
 			{
@@ -87,13 +91,26 @@ export function Product({
 
 		const tags = tagList
 			.filter((t) => t.if)
-			.map((t) =>
-				Tag({
-					label: t.label || "",
-					icon: t.icon,
-					className: t.cls,
-				}),
-			);
+			.map((tag) => {
+				const el = Tag({
+					label: tag.label || "",
+					icon: tag.icon,
+					className: tag.cls,
+				});
+				if ((tag as { tip?: string }).tip) {
+					el.setAttribute("data-tip", (tag as { tip: string }).tip);
+				}
+				return el;
+			});
+
+		const thumbUrl = property.image_urls?.[0];
+		const thumb = thumbUrl
+			? LazyThumb({
+					src: thumbUrl,
+					className:
+						"rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)",
+				})
+			: null;
 
 		element = html`<article
       class="bg-(--surface)
@@ -106,8 +123,10 @@ export function Product({
       transition-[border-color,box-shadow,transform]
       duration-200
       hover:border-(--border-h)
-      hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]"
+      hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]
+      hover:-translate-y-0.5"
     >
+      ${thumb}
       <div class="flex justify-between items-start gap-2">
         <div class="min-w-0">
           <div class="text-xs text-(--muted) mb-0.75 tracking-tight">
@@ -133,7 +152,7 @@ export function Product({
             >${property.discount_percent >= 0 ? "-" : "+"}${Math.abs(property.discount_percent)}%</span
           >
         </div>
-        <div class="h-1 bg-(--surface-3) rounded-full overflow-hidden">
+        <div class="h-2 bg-(--surface-3) rounded-full overflow-hidden">
           <div
             class="h-full rounded-full transition-[width] duration-500 ease-in-out"
             style="width:${barW}%;background:${tier.hex}"
@@ -159,7 +178,7 @@ export function Product({
           class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
           href="${property.source_url}"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
           >${t("viewListing")} ${Icons.external()}</a
         >
         <div class="flex items-center gap-1">

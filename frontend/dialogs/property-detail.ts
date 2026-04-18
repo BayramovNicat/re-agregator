@@ -47,27 +47,25 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 
           <!-- Header -->
           <div class="px-5 pt-4 pb-3 border-b border-(--border)">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <div
-                  id="pd-location"
-                  class="text-xs text-(--muted) mb-0.5 truncate"
-                ></div>
-                <div class="flex items-baseline gap-2.5 flex-wrap">
-                  <span
-                    id="pd-price"
-                    class="text-2xl font-bold tracking-tight"
-                  ></span>
-                  <span
-                    id="pd-tier"
-                    class="inline-flex items-center text-[10px] font-semibold tracking-wider px-2 py-0.75 rounded-full border border-current whitespace-nowrap"
-                  ></span>
-                </div>
-              </div>
+            <div class="flex items-center justify-between gap-3 mb-1">
+              <div
+                id="pd-location"
+                class="text-xs text-(--muted) truncate"
+              ></div>
               <div
                 id="pd-posted"
-                class="text-xs text-(--muted) shrink-0 pt-0.5"
+                class="text-xs text-(--muted) shrink-0"
               ></div>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <span
+                id="pd-price"
+                class="text-2xl font-bold tracking-tight"
+              ></span>
+              <span
+                id="pd-tier"
+                class="inline-flex items-center text-[10px] font-semibold tracking-wider px-2 py-0.75 rounded-full border border-current whitespace-nowrap"
+              ></span>
             </div>
           </div>
 
@@ -82,7 +80,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
               ></span>
               <span id="pd-disc-pct" class="text-sm font-bold"></span>
             </div>
-            <div class="h-1.5 bg-(--surface-3) rounded-full overflow-hidden">
+            <div class="h-2 bg-(--surface-3) rounded-full overflow-hidden">
               <div
                 id="pd-disc-bar"
                 class="h-full rounded-full transition-[width] duration-500 ease-out"
@@ -128,6 +126,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
             target="_blank"
             rel="noopener"
             class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors hover:text-(--text)"
+            rel="noopener noreferrer"
           >
             ${t("viewListing")} ${Icons.external()}
           </a>
