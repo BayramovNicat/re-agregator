@@ -324,7 +324,7 @@ export function initSearch(container: HTMLElement): () => void {
 						${Label({ htmlFor: "thresh", text: t("discountThreshold") })}
 						<span id="tval" class="text-xs font-bold text-(--accent) bg-(--accent-dim) px-2 py-0.5 rounded-full tracking-[0.02em]">10%</span>
 					</div>
-					${Range({ id: "thresh", min: 1, max: 50, value: 10, ariaLabel: t("discountThreshold") })}
+					${Range({ id: "thresh", min: 0, max: 50, value: 10, ariaLabel: t("discountThreshold") })}
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Go</span>
@@ -403,9 +403,9 @@ export function initSearch(container: HTMLElement): () => void {
 	// 2. State & Restoration
 	const params = new URLSearchParams(window.location.search);
 	const threshVal = params.get("threshold");
-	if (threshVal) {
+	if (threshVal !== null) {
 		(ge("thresh") as HTMLInputElement).value = threshVal;
-		ge("tval").textContent = `${threshVal}%`;
+		ge("tval").textContent = threshVal === "0" ? t("all") : `${threshVal}%`;
 		setRangeProgress(ge("thresh") as HTMLInputElement);
 	}
 	for (const f of NUM_FILTERS()) {
@@ -438,7 +438,8 @@ export function initSearch(container: HTMLElement): () => void {
 
 	add(ge("search-btn"), "click", () => void doSearch(false));
 	add(ge("thresh"), "input", (e) => {
-		ge("tval").textContent = `${(e.target as HTMLInputElement).value}%`;
+		const val = (e.target as HTMLInputElement).value;
+		ge("tval").textContent = val === "0" ? t("all") : `${val}%`;
 	});
 	add(ge("adv-toggle"), "click", () => {
 		const panel = ge("adv-panel");

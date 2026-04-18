@@ -9,7 +9,7 @@
 		"build:frontend": "bun run scripts/build-frontend.ts",
 		"typecheck": "tsc --noEmit",
 		"db:generate": "prisma generate",
-		"db:migrate": "prisma migrate dev",
+		"db:migrate": "prisma migrate deploy",
 		"db:push": "prisma db push",
 		"db:studio": "prisma studio",
 		"backfill:active-mortgage": "bun ./src/backfill-active-mortgage.ts",
