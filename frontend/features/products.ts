@@ -177,14 +177,6 @@ export function initProducts(container: HTMLElement): () => void {
 		const ct = ge("cards");
 		if (!ct) return;
 
-		// Map view handles its own rendering; just keep results-bar visible
-		if (state.currentView === "map") {
-			show("results-bar");
-			return;
-		}
-
-		ct.replaceChildren();
-
 		let list = state.showingSaved
 			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
 			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
@@ -194,6 +186,20 @@ export function initProducts(container: HTMLElement): () => void {
 			(document.querySelector("#tier-filter") as HTMLSelectElement)?.value ||
 			"";
 		if (tierSel) list = list.filter((p) => p.tier === tierSel);
+
+		// Map view handles its own rendering; update count and bail
+		if (state.currentView === "map") {
+			show("results-bar");
+			const showing = list.length;
+			ge("results-meta").innerHTML = trust(
+				state.showingSaved
+					? `<strong>${showing}</strong> ${showing !== 1 ? t("savedDeals") : t("savedDeal")}`
+					: `<strong>${showing}</strong> ${showing !== 1 ? t("results") : t("result")}${state.currentTotal > state.allResults.length ? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>` : ""}`,
+			) as string;
+			return;
+		}
+
+		ct.replaceChildren();
 
 		list = [...list].sort((a, b) => {
 			if (sortBy === "disc") return b.discount_percent - a.discount_percent;
