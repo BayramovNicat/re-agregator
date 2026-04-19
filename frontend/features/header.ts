@@ -1,11 +1,8 @@
-import { bus, EVENTS } from "../core/events";
 import { getLang, setLang, t } from "../core/i18n";
-import { ge, html } from "../core/utils";
-import { openHeatmap } from "../dialogs/heatmap";
+import { html } from "../core/utils";
 import { Button } from "../ui/button";
 import { HealthStatus } from "../ui/health-status";
 import { Icons } from "../ui/icons";
-import type { MultiSelectElement } from "../ui/multi-select";
 import { openDistrictStats } from "./district-stats";
 
 const LANGS = [
@@ -84,14 +81,6 @@ export function initHeader(container: HTMLElement): () => void {
 
 	logo.addEventListener("click", () => window.location.reload());
 
-	const mapBtn = Button({
-		title: t("priceMapTitle"),
-		color: "indigo",
-		variant: "square",
-		ariaLabel: t("priceMap"),
-		content: Icons.globe(),
-	});
-
 	const statsBtn = Button({
 		title: t("districtStats"),
 		color: "indigo",
@@ -106,7 +95,7 @@ export function initHeader(container: HTMLElement): () => void {
 		>
 			${logo}
 			<div class="flex items-center gap-1.5">
-				${statsBtn}${mapBtn}${LangSwitcher()}
+				${statsBtn}${LangSwitcher()}
 			</div>
 		</header>
 	`;
@@ -114,32 +103,9 @@ export function initHeader(container: HTMLElement): () => void {
 	const onStatsClick = () => openDistrictStats();
 	statsBtn.addEventListener("click", onStatsClick);
 
-	const onMapClick = () => {
-		const el = ge("loc") as MultiSelectElement;
-		const active = el ? el.getValue() : [];
-
-		openHeatmap(active, (locName, isToggle) => {
-			if (!el) return;
-
-			if (isToggle) {
-				const current = el.getValue();
-				const idx = current.indexOf(locName);
-				if (idx > -1) el.setValue(current.filter((v) => v !== locName));
-				else el.setValue([...current, locName]);
-			} else {
-				el.setValue([locName]);
-			}
-
-			// Trigger search via the bus instead of importing doSearch
-			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
-		});
-	};
-	mapBtn.addEventListener("click", onMapClick);
-
 	container.appendChild(header);
 
 	return () => {
 		statsBtn.removeEventListener("click", onStatsClick);
-		mapBtn.removeEventListener("click", onMapClick);
 	};
 }

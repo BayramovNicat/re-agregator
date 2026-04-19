@@ -3,7 +3,9 @@ import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { frag, ge, hide, makeEventManager, show, toast } from "../core/utils";
+import { openHeatmap } from "../dialogs/heatmap";
 import { Chip, CloseableChip } from "../ui/chip";
+import { Button } from "../ui/button";
 import { Field } from "../ui/field";
 import { Icons } from "../ui/icons";
 import { Input } from "../ui/input";
@@ -324,7 +326,7 @@ export function initSearch(container: HTMLElement): () => void {
 	// 1. Render Structure
 	const root = frag`
 		<div class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-5 mb-3.5">
-			<div class="grid grid-cols-[1fr_260px_120px] gap-3 items-end max-[680px]:grid-cols-1">
+			<div class="grid grid-cols-[1fr_auto_260px_120px] gap-3 items-end max-[680px]:grid-cols-1">
 				${Field({
 					htmlFor: "loc-trigger",
 					label: t("location"),
@@ -340,6 +342,17 @@ export function initSearch(container: HTMLElement): () => void {
 						},
 					}),
 				})}
+				<div class="flex flex-col gap-1.5">
+					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Map</span>
+					${Button({
+						id: "loc-map-btn",
+						title: t("priceMapTitle"),
+						color: "indigo",
+						variant: "base",
+						ariaLabel: t("priceMap"),
+						content: `${Icons.globe().outerHTML} ${t("priceMap")}`,
+					})}
+				</div>
 				<div class="flex flex-col gap-1.5">
 					<div class="flex items-center justify-between">
 						${Label({ htmlFor: "thresh", text: t("discountThreshold") })}
@@ -467,6 +480,22 @@ export function initSearch(container: HTMLElement): () => void {
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
 
 	add(ge("search-btn"), "click", () => void doSearch(false));
+	add(ge("loc-map-btn"), "click", () => {
+		const el = ge("loc") as MultiSelectElement;
+		const active = el ? el.getValue() : [];
+		openHeatmap(active, (locName, isToggle) => {
+			if (!el) return;
+			if (isToggle) {
+				const current = el.getValue();
+				const idx = current.indexOf(locName);
+				if (idx > -1) el.setValue(current.filter((v) => v !== locName));
+				else el.setValue([...current, locName]);
+			} else {
+				el.setValue([locName]);
+			}
+			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
+		});
+	});
 	let threshTimer: ReturnType<typeof setTimeout> | null = null;
 	add(ge("thresh"), "input", (e) => {
 		const val = (e.target as HTMLInputElement).value;

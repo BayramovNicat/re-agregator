@@ -14,8 +14,8 @@ const translations = {
 		allLocations: "All locations",
 		all: "All",
 		failedLocs: "Failed to load locations",
-		priceMap: "Price Map",
-		priceMapTitle: "Price heatmap by district",
+		priceMap: "Location Map",
+		priceMapTitle: "Location map by district",
 		discountThreshold: "Discount threshold",
 		advancedFilters: "Advanced filters",
 		search: "Search",
@@ -235,8 +235,8 @@ const translations = {
 		appName: "Redeal",
 		appTagline: "Bakı bazarında ucuz əmlak axtarıcısı",
 
-		priceMap: "Qiymət xəritəsi",
-		priceMapTitle: "Rayonlar üzrə qiymət xəritəsi",
+		priceMap: "Ərazi xəritəsi",
+		priceMapTitle: "Ərazilər üzrə xəritə",
 
 		location: "Ərazi",
 		chooseLocs: "Ərazi seçin...",
@@ -446,8 +446,8 @@ const translations = {
 		appName: "Redeal",
 		appTagline: "Поиск недооцененной недвижимости в Баку",
 
-		priceMap: "Карта цен",
-		priceMapTitle: "Тепловая карта цен по районам",
+		priceMap: "Карта локаций",
+		priceMapTitle: "Карта локаций по районам",
 
 		location: "Район",
 		chooseLocs: "Выберите район...",
