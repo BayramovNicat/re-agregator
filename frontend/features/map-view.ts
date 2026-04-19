@@ -8,7 +8,8 @@ import {
 import { bus, EVENTS } from "../core/events";
 import { state } from "../core/state";
 import type { MapPin, Property } from "../core/types";
-import { fmt, fmtFloor, toast } from "../core/utils";
+import { fmt, fmtFloor, toast, tTier } from "../core/utils";
+import { t } from "../core/i18n";
 import { openPropertyDetail } from "../dialogs/property-detail";
 import { initLeaflet } from "../ui/map-base";
 import { ts } from "../ui/tier";
@@ -132,6 +133,26 @@ async function fetchAndRender(): Promise<void> {
 			fitDone = true;
 			const group = featureGroup(pinLayers);
 			lmap.fitBounds(group.getBounds().pad(0.12));
+		}
+
+		const meta = document.getElementById("results-meta");
+		if (meta && d.data?.length) {
+			const total = d.data.length;
+			const tierCounts = d.data.reduce<Record<string, number>>((acc, p) => {
+				acc[p.tier] = (acc[p.tier] ?? 0) + 1;
+				return acc;
+			}, {});
+			const tierBadges: { tier: string; color: string }[] = [
+				{ tier: "High Value Deal", color: "var(--green)" },
+				{ tier: "Good Deal", color: "var(--blue)" },
+				{ tier: "Fair Price", color: "var(--yellow)" },
+				{ tier: "Overpriced", color: "var(--red)" },
+			];
+			const distStr = tierBadges
+				.filter((tb) => tierCounts[tb.tier])
+				.map((tb) => `<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`)
+				.join(' <span style="color:var(--border)">·</span> ');
+			meta.innerHTML = `<strong>${fmt(total, 0)}</strong> ${total !== 1 ? t("results") : t("result")}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`;
 		}
 	} catch (e) {
 		toast((e as Error).message, true);

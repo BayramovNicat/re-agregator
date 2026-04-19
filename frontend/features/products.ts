@@ -50,11 +50,13 @@ export function initProducts(container: HTMLElement): () => void {
 						id: "export-btn",
 						title: t("exportBtn"),
 						content: frag`${Icons.download()} ${t("exportBtn")}`,
+						color: "blue",
 					})}
 					${Button({
 						id: "alert-btn",
 						title: t("telegramAlerts"),
 						content: frag`${Icons.bell()} ${t("alertMe")}`,
+						color: "yellow",
 					})}
 					${Button({
 						id: "saved-btn",
@@ -462,6 +464,7 @@ export function initProducts(container: HTMLElement): () => void {
 			ge("cards").style.display = "none";
 			ge("scroll-sentinel").style.display = "none";
 			hide("load-more");
+			render();
 			showMapView();
 		} else {
 			if (wasMap) {
