@@ -1,6 +1,7 @@
-import { html, trust } from "../core/utils";
-
+import { ce, cn, html, trust } from "../core/utils";
+import { RawButton } from "./button";
 import { Icons } from "./icons";
+import { RawInput } from "./input";
 
 export interface MultiSelectOption {
 	value: string;
@@ -13,101 +14,110 @@ export interface MultiSelectElement extends HTMLElement {
 	setOptions: (options: MultiSelectOption[]) => void;
 }
 
-interface MultiSelectProps {
-	id: string;
+export type MultiSelectProps = {
 	options: MultiSelectOption[];
 	placeholder?: string;
-	className?: string;
 	exclusiveValue?: string;
 	onChange?: (values: string[]) => void;
-}
+} & Partial<HTMLElement>;
 
+/**
+ * A stylized multi-select component with search and standardized branding.
+ * Supports full property forwarding to the underlying {@link HTMLElement} (div).
+ */
 export function MultiSelect({
-	id,
-	options,
+	options: initialOptions,
 	placeholder = "Select options...",
 	className = "",
 	exclusiveValue,
 	onChange,
-}: MultiSelectProps): HTMLElement {
+	...props
+}: MultiSelectProps): MultiSelectElement {
+	let options = initialOptions;
 	let selectedValues: string[] = [];
 	let isOpen = false;
 	let searchQuery = "";
 
-	const el = html<HTMLElement>`
-    <div id="${id}" class="relative ${className}">
-      <button
-        type="button"
-        id="${id}-trigger"
-        role="combobox"
-        aria-expanded="false"
-        aria-haspopup="listbox"
-        aria-controls="${id}-dropdown"
-        class="w-full flex items-center justify-between gap-2 px-3 py-2 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-sm text-(--text) text-left transition-all hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]"
-      >
-        <span id="${id}-label" class="truncate text-(--text-2)"
-          >${placeholder}</span
-        >
-        ${Icons.chevron(12, "transition-transform duration-200")}
-      </button>
+	// 1. Create sub-elements upfront
+	const label = html`<span class="truncate text-(--text-2)"
+		>${placeholder}</span
+	>`;
+	const chevron = Icons.chevron(12, "transition-transform duration-200");
+	const optionsList = html`<div
+		class="max-h-55 overflow-y-auto p-1 custom-scrollbar"
+	></div>`;
+	const countBadge = html`<span
+		class="px-2 py-0.5 text-[10px] font-bold bg-(--accent-dim) text-(--accent) rounded-full"
+		>0 selected</span
+	>`;
 
-      <div
-        id="${id}-dropdown"
-        role="listbox"
-        aria-labelledby="${id}-trigger"
-        class="absolute top-full left-0 right-0 mt-1.5 bg-(--surface) border border-(--border) rounded-(--r-sm) shadow-[0_8px_24px_rgba(0,0,0,0.3)] z-50 overflow-hidden hidden animate-[fadeUp_0.2s_ease]"
-      >
-        <div class="p-2 border-b border-(--border)">
-          <div class="relative">
-            <span
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--muted)"
-            >
-              ${Icons.search(12)}
-            </span>
-            <input
-              type="text"
-              id="${id}-search"
-              placeholder="Search..."
-              aria-label="Search locations"
-              class="w-full pl-8 pr-3 py-1.5 bg-(--surface-2) border border-(--border) rounded-(--r-xs) text-xs text-(--text) focus:outline-none focus:border-(--accent)"
-            />
-          </div>
-        </div>
-        <div
-          id="${id}-options"
-          class="max-h-55 overflow-y-auto p-1 custom-scrollbar"
-        >
-          <!-- options injected here -->
-        </div>
-        <div
-          class="p-1.5 border-t border-(--border) bg-(--surface-2) flex items-center justify-between"
-        >
-          <button
-            type="button"
-            id="${id}-clear"
-            class="px-2 py-1 text-[11px] font-medium text-(--muted) hover:text-(--text) transition-colors"
-          >
-            Clear all
-          </button>
-          <span
-            id="${id}-count"
-            class="px-2 py-0.5 text-[10px] font-bold bg-(--accent-dim) text-(--accent) rounded-full"
-          >
-            0 selected
-          </span>
-        </div>
-      </div>
-    </div>
-  `;
+	const search = RawInput({
+		type: "text",
+		placeholder: "Search...",
+		ariaLabel: "Search locations",
+		className:
+			"w-full pl-8 pr-3 py-1.5 bg-(--surface-2) border border-(--border) rounded-(--r-xs) text-xs text-(--text) focus:outline-none focus:border-(--accent)",
+		oninput: (e) => {
+			searchQuery = (e.target as HTMLInputElement).value;
+			updateUI();
+		},
+	});
 
-	const trigger = el.querySelector(`#${id}-trigger`) as HTMLButtonElement;
-	const label = el.querySelector(`#${id}-label`) as HTMLElement;
-	const dropdown = el.querySelector(`#${id}-dropdown`) as HTMLElement;
-	const search = el.querySelector(`#${id}-search`) as HTMLInputElement;
-	const optionsList = el.querySelector(`#${id}-options`) as HTMLElement;
-	const clearBtn = el.querySelector(`#${id}-clear`) as HTMLButtonElement;
-	const countBadge = el.querySelector(`#${id}-count`) as HTMLElement;
-	const chevron = trigger.querySelector("svg") as SVGElement;
+	const trigger = RawButton({
+		role: "combobox",
+		ariaExpanded: "false",
+		ariaHasPopup: "listbox",
+		className:
+			"w-full flex items-center justify-between gap-2 px-3 py-2 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-sm text-(--text) text-left transition-all hover:border-(--border-h) focus:outline-none focus:border-(--accent) focus:shadow-[0_0_0_3px_var(--accent-dim)]",
+		content: html`${label} ${chevron}`,
+		onclick: (e) => {
+			e.stopPropagation();
+			setOpen(!isOpen);
+		},
+	});
+
+	const clearBtn = RawButton({
+		className:
+			"px-2 py-1 text-[11px] font-medium text-(--muted) hover:text-(--text) transition-colors",
+		content: "Clear all",
+		onclick: (e) => {
+			e.stopPropagation();
+			selectedValues = [];
+			updateUI();
+			onChange?.(selectedValues);
+		},
+	});
+
+	const dropdown = html`
+		<div
+			role="listbox"
+			class="absolute top-full left-0 right-0 mt-1.5 bg-(--surface) border border-(--border) rounded-(--r-sm) shadow-[0_8px_24px_rgba(0,0,0,0.3)] z-50 overflow-hidden hidden animate-[fadeUp_0.2s_ease]"
+		>
+			<div class="p-2 border-b border-(--border)">
+				<div class="relative">
+					<span
+						class="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--muted)"
+					>
+						${Icons.search(12)}
+					</span>
+					${search}
+				</div>
+			</div>
+			${optionsList}
+			<div
+				class="p-1.5 border-t border-(--border) bg-(--surface-2) flex items-center justify-between"
+			>
+				${clearBtn} ${countBadge}
+			</div>
+		</div>
+	`;
+
+	const el = ce<MultiSelectElement>(
+		html`
+			<div class="${cn("relative", className)}">${trigger} ${dropdown}</div>
+		`,
+		props,
+	);
 
 	function updateUI() {
 		// Update options list
@@ -124,20 +134,18 @@ export function MultiSelect({
 			for (const opt of filtered) {
 				const isSelected = selectedValues.includes(opt.value);
 				const item = html`
-          <div
-            role="option"
-            aria-selected="${isSelected}"
-            class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-(--r-xs) cursor-pointer transition-colors ${
-							isSelected
-								? "bg-(--accent-dim) text-(--accent)"
-								: "hover:bg-(--surface-2)"
-						}"
-            data-value="${opt.value}"
-          >
-            <span class="text-xs font-medium truncate">${opt.label}</span>
-            ${isSelected ? Icons.check(12) : ""}
-          </div>
-        `;
+					<div
+						role="option"
+						aria-selected="${isSelected}"
+						class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-(--r-xs) cursor-pointer transition-colors ${isSelected
+							? "bg-(--accent-dim) text-(--accent)"
+							: "hover:bg-(--surface-2)"}"
+						data-value="${opt.value}"
+					>
+						<span class="text-xs font-medium truncate">${opt.label}</span>
+						${isSelected ? Icons.check(12) : ""}
+					</div>
+				`;
 				item.onclick = (e) => {
 					e.stopPropagation();
 					toggleValue(opt.value);
@@ -200,23 +208,6 @@ export function MultiSelect({
 			updateUI();
 		}
 	}
-
-	trigger.onclick = (e) => {
-		e.stopPropagation();
-		setOpen(!isOpen);
-	};
-
-	search.oninput = (e) => {
-		searchQuery = (e.target as HTMLInputElement).value;
-		updateUI();
-	};
-
-	clearBtn.onclick = (e) => {
-		e.stopPropagation();
-		selectedValues = [];
-		updateUI();
-		onChange?.(selectedValues);
-	};
 
 	// Close on click outside
 	const handleOutside = (e: MouseEvent) => {

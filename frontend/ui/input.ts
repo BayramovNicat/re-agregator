@@ -16,9 +16,20 @@ const VARIANTS = {
 	xs: "px-2.5 py-1.5 text-xs hover:border-(--border-h)",
 };
 
+/** Props accepted by {@link RawInput}. */
+export type RawInputProps = Partial<HTMLInputElement>;
+
+/**
+ * A basic input component that forwards all properties to the underlying `<input>`.
+ */
+export function RawInput(props: RawInputProps): HTMLInputElement {
+	return ce(html`<input />`, props);
+}
+
+/** Props accepted by {@link Input}. */
 export type InputProps = {
 	variant?: keyof typeof VARIANTS;
-} & Partial<HTMLInputElement>;
+} & RawInputProps;
 
 /**
  * A stylized text input with standardized branding.
@@ -40,10 +51,10 @@ export function Input({
 	className = "",
 	...props
 }: InputProps) {
-	return ce<HTMLInputElement>(
-		html`<input class="${cn(SHARED_CLS, VARIANTS[variant], className)}" />`,
-		props,
-	);
+	return RawInput({
+		className: cn(SHARED_CLS, VARIANTS[variant], className),
+		...props,
+	});
 }
 
 /** Props accepted by {@link Field}. */
