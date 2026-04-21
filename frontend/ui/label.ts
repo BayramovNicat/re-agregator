@@ -1,4 +1,4 @@
-import { cn, html } from "../core/utils.ts";
+import { ce, cn, html } from "../core/utils.ts";
 
 /** Props accepted by {@link Label}. */
 export type LabelProps = {
@@ -20,23 +20,18 @@ export type LabelProps = {
  * container.appendChild(label);
  * ```
  */
-export function Label({
-	text,
-	className = "",
-	...rest
-}: LabelProps): HTMLLabelElement {
-	const el = html`
-		<label
-			class="${cn(
-				"text-xs font-medium text-(--muted) tracking-[0.06em] uppercase",
-				className,
-			)}"
-		>
-			${text}
-		</label>
-	` as HTMLLabelElement;
-
-	Object.assign(el, rest);
-
-	return el;
+export function Label({ text, className = "", ...props }: LabelProps) {
+	return ce<HTMLLabelElement>(
+		html`
+			<label
+				class="${cn(
+					"text-xs font-medium text-(--muted) tracking-[0.06em] uppercase",
+					className,
+				)}"
+			>
+				${text}
+			</label>
+		`,
+		props,
+	);
 }

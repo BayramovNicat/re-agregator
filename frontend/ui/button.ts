@@ -24,6 +24,18 @@ const COLORS = {
 	muted: "text-(--muted) border-none bg-transparent hover:text-(--text)",
 };
 
+/** Props accepted by {@link RawButton}. */
+export type RawButtonProps = {
+	content: unknown;
+} & Partial<HTMLButtonElement>;
+
+/**
+ * A basic button component that forwards all properties to the underlying `<button>`.
+ */
+export function RawButton({ content, ...props }: RawButtonProps) {
+	return ce(html`<button type="button">${content}</button>`, props);
+}
+
 /** Props accepted by {@link Button}. */
 export type ButtonProps = {
 	content: unknown;
@@ -54,21 +66,16 @@ export function Button({
 	className = "",
 	active = false,
 	...props
-}: ButtonProps): HTMLButtonElement {
-	const el = html<HTMLButtonElement>`
-		<button
-			type="button"
-			class="${cn(
-				SHARED,
-				VARIANTS[variant],
-				COLORS[color],
-				active && "on",
-				className,
-			)}"
-		>
-			${content}
-		</button>
-	`;
-
-	return ce(el, props);
+}: ButtonProps) {
+	return RawButton({
+		content,
+		className: cn(
+			SHARED,
+			VARIANTS[variant],
+			COLORS[color],
+			active && "on",
+			className,
+		),
+		...props,
+	});
 }

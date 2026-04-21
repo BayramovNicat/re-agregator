@@ -1,4 +1,4 @@
-import { cn, html } from "../core/utils.ts";
+import { ce, cn, html } from "../core/utils.ts";
 
 const SHARED_CLS = `
 	bg-(--surface-2) border border-(--border) rounded-(--r-sm)
@@ -37,13 +37,10 @@ export type InputProps = {
 export function Input({
 	variant = "sm",
 	className = "",
-	...rest
-}: InputProps): HTMLInputElement {
-	const el = html`
-		<input class="${cn(SHARED_CLS, VARIANTS[variant], className)}" />
-	` as HTMLInputElement;
-
-	Object.assign(el, rest);
-
-	return el;
+	...props
+}: InputProps) {
+	return ce<HTMLInputElement>(
+		html`<input class="${cn(SHARED_CLS, VARIANTS[variant], className)}" />`,
+		props,
+	);
 }
