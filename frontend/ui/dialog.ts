@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { ce, cn, html } from "../core/utils";
 
 const BACKDROP = `
 	bg-transparent border-none p-0 
@@ -13,36 +13,50 @@ const INNER = `
 	shadow-[0_24px_80px_rgba(0,0,0,0.6)]
 `;
 
-export function Dialog({
-	id,
-	maxWidth,
-	className = "",
-	ariaLabel,
-	ariaLabelledBy,
-	content,
-}: {
-	id: string;
+/** Props accepted by {@link Dialog}. */
+export type DialogProps = {
 	/** Maximum width of the dialog panel (e.g. "860px"). Responsive width is handled automatically. */
 	maxWidth: string;
-	className?: string;
-	ariaLabel?: string;
-	ariaLabelledBy?: string;
 	content: unknown;
-}): HTMLDialogElement {
-	const el = html<HTMLDialogElement>`
-    <dialog
-      id="${id}"
-      class="${BACKDROP}"
-      aria-modal="true"
-      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
-      ${ariaLabelledBy ? `aria-labelledby="${ariaLabelledBy}"` : ""}
-    >
-      <div
-        class="${INNER} ${className}"
-        style="width:calc(100vw - 2rem);max-width:${maxWidth}"
-      >${content}</div>
-    </dialog>
-  `;
+} & Partial<HTMLDialogElement>;
+
+/**
+ * A stylized dialog component with standardized branding and backdrop logic.
+ *
+ * Renders a stylized `<dialog>` using standardized typographic and surface tokens.
+ * Supports full property forwarding to the underlying {@link HTMLDialogElement},
+ * allowing for standard attributes like `id`, `aria-label`, and event listeners to be passed directly.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog MDN <dialog> element}
+ *
+ * @example
+ * ```ts
+ * const dialog = Dialog({
+ *   maxWidth: "600px",
+ *   content: html`<div>Hello World</div>`,
+ *   onclick: (e) => console.log("clicked")
+ * });
+ * ```
+ */
+export function Dialog({
+	maxWidth,
+	content,
+	className = "",
+	...props
+}: DialogProps): HTMLDialogElement {
+	const el = ce<HTMLDialogElement>(
+		html`
+			<dialog class="${BACKDROP}" aria-modal="true">
+				<div
+					class="${cn(INNER, className)}"
+					style="width:calc(100vw - 2rem);max-width:${maxWidth}"
+				>
+					${content}
+				</div>
+			</dialog>
+		`,
+		props,
+	);
 
 	el.addEventListener("click", (e) => {
 		if (e.target === e.currentTarget) el.close();
