@@ -198,17 +198,17 @@ const _parse = (
 	return content;
 };
 
-export const html = <T extends HTMLElement = HTMLElement>(
+export function html<T extends HTMLElement = HTMLElement>(
 	strings: TemplateStringsArray,
 	...values: unknown[]
-): T => {
+): T {
 	const content = _parse(strings, values);
 	const el = content.firstElementChild;
 	if (!el)
 		throw new Error("html`` utility requires at least one root element.");
 
 	return el as T;
-};
+}
 
 export const frag = (
 	strings: TemplateStringsArray,

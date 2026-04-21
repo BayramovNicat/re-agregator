@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils.ts";
+import { ce, cn, html } from "../core/utils";
 
 const SHARED =
 	"transition-all duration-150 rounded-(--r) font-medium active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none select-none";
@@ -55,7 +55,7 @@ export function Button({
 	active = false,
 	...props
 }: ButtonProps): HTMLButtonElement {
-	const el = html`
+	const el = html<HTMLButtonElement>`
 		<button
 			type="button"
 			class="${cn(
@@ -68,7 +68,7 @@ export function Button({
 		>
 			${content}
 		</button>
-	` as HTMLButtonElement;
+	`;
 
 	return ce(el, props);
 }
