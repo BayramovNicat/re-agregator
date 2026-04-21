@@ -2,6 +2,11 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getLang, type TranslationKey, t } from "./i18n";
 
+/** Rewrites a full-resolution URL to its 460×345 thumbnail variant. */
+export function toThumbUrl(src: string): string {
+	return src.replace("/uploads/full/", "/uploads/f460x345/");
+}
+
 // --- Trusted Types ---
 interface TrustedHTML {
 	__brand: "TrustedHTML";

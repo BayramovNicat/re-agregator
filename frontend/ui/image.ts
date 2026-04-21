@@ -1,11 +1,4 @@
-import { cn, html } from "../core/utils.ts";
-
-// ─── URL ─────────────────────────────────────────────────────────────────────
-
-/** Rewrites a full-resolution URL to its 460×345 thumbnail variant. */
-function toThumbUrl(src: string): string {
-	return src.replace("/uploads/full/", "/uploads/f460x345/");
-}
+import { ce, cn, html } from "../core/utils.ts";
 
 // ─── Concurrency queue ────────────────────────────────────────────────────────
 
@@ -61,7 +54,7 @@ function enqueue(img: HTMLImageElement): void {
 // ─── Intersection observer ────────────────────────────────────────────────────
 
 /**
- * Shared singleton observer for all {@link LazyThumb} instances.
+ * Shared singleton observer for all {@link Image} instances.
  *
  * The `100px` top/bottom root margin pre-fetches images just before they scroll
  * into view. Images that leave the expanded viewport are removed from the
@@ -85,54 +78,58 @@ const observer = new IntersectionObserver(
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /**
- * Props accepted by {@link LazyThumb}.
- *
- * `src` is required — all other `HTMLImageElement` properties are optional
- * and forwarded directly to the underlying `<img>` via `Object.assign`.
+ * Props accepted by {@link Image}.
  */
-export type LazyThumbProps = Pick<HTMLImageElement, "src"> &
-	Partial<HTMLImageElement>;
+export type ImageProps = {
+	/** Source URL of the image. */
+	src: string;
+} & Partial<Omit<HTMLImageElement, "src">>;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 /**
- * Viewport-aware lazy-loading thumbnail.
+ * Viewport-aware lazy-loading image component.
  *
- * Returns a bare `<img>` element — no wrapper — that starts transparent and
- * fades in once the image has decoded. Loading is deferred until the element
- * enters the viewport (+ 100 px margin) and capped at {@link MAX_CONCURRENT}
- * concurrent requests to respect the browser's HTTP/1.1 connection pool.
+ * Returns a bare `<img>` element that starts transparent and fades in once
+ * the image has decoded. Loading is deferred until the element enters the
+ * viewport (+ 100 px margin) and capped at {@link MAX_CONCURRENT} concurrent
+ * requests to respect the browser's HTTP/1.1 connection pool.
  *
  * @example
  * ```ts
- * const thumb = LazyThumb({ src: deal.images[0], className: "w-full h-48 rounded", alt: "Property photo" });
- * card.prepend(thumb);
+ * const img = Image({ src: "photo.jpg", className: "w-full object-cover", alt: "Property photo" });
+ * container.appendChild(img);
  * ```
  */
-export function LazyThumb({
+export function Image({
 	src,
 	className = "",
-	...rest
-}: LazyThumbProps): HTMLImageElement {
-	const img = html`
-		<img
+	...props
+}: ImageProps): HTMLImageElement {
+	const img = ce<HTMLImageElement>(
+		html`<img
 			alt=""
 			referrerpolicy="no-referrer"
-			class="${cn("object-cover opacity-0 transition-opacity duration-400", className)}"
-		/>
-	` as HTMLImageElement;
+			class="${cn("opacity-0 transition-opacity duration-400", className)}"
+		/>`,
+		props,
+	);
 
-	img.dataset.src = toThumbUrl(src);
-	Object.assign(img, rest);
+	img.dataset.src = src;
 
 	img.addEventListener(
 		"load",
 		() => {
 			img.dataset.loaded = "1";
 			delete img.dataset.loading;
-			img.decode().then(() => {
-				img.classList.replace("opacity-0", "opacity-100");
-			});
+			img.decode()
+				.then(() => {
+					img.classList.replace("opacity-0", "opacity-100");
+				})
+				.catch(() => {
+					// Fallback if decode fails
+					img.classList.replace("opacity-0", "opacity-100");
+				});
 			observer.unobserve(img);
 			drainQueue();
 		},
@@ -154,3 +151,4 @@ export function LazyThumb({
 
 	return img;
 }
+

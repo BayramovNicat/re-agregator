@@ -1,10 +1,10 @@
 import { t } from "../core/i18n";
 import type { CardCallbacks, Property } from "../core/types";
-import { fmt, fmtFloor, frag, html, timeAgo, tTier } from "../core/utils";
+import { fmt, fmtFloor, frag, html, timeAgo, tTier, toThumbUrl } from "../core/utils";
 import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
-import { LazyThumb } from "./lazy-thumb";
+import { Image } from "./image";
 import { Sparkline } from "./sparkline";
 import { StatBox } from "./stat-box";
 import { ts } from "./tier";
@@ -123,18 +123,22 @@ export function Product({
 		const thumbUrl = property.image_urls?.[0];
 		const imgCount = property.image_urls?.length ?? 0;
 		const thumb = thumbUrl
-			? LazyThumb({
-					src: thumbUrl,
-					className:
-						"relative rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)",
-				})
+			? html`<div
+					class="relative rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)"
+				>
+					${Image({
+						src: toThumbUrl(thumbUrl),
+						className: "w-full h-full object-cover",
+					})}
+				</div>`
 			: null;
+
 		if (thumb && imgCount > 1) {
-			const badge = document.createElement("span");
-			badge.className =
-				"absolute bottom-1.5 right-1.5 inline-flex items-center gap-0.75 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm tabular-nums pointer-events-none";
-			badge.appendChild(Icons.gallery());
-			badge.appendChild(document.createTextNode(` ${imgCount}`));
+			const badge = html`<span
+				class="absolute bottom-1.5 right-1.5 inline-flex items-center gap-0.75 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm tabular-nums pointer-events-none"
+			>
+				${Icons.gallery()} ${imgCount}
+			</span>`;
 			thumb.appendChild(badge);
 		}
 
@@ -228,20 +232,24 @@ export function Product({
 		const rowThumbUrl = property.image_urls?.[0];
 		const rowImgCount = property.image_urls?.length ?? 0;
 		const rowThumb = rowThumbUrl
-			? LazyThumb({
-					src: rowThumbUrl,
-					className:
-						"relative w-10 h-10 rounded-(--r-sm) overflow-hidden bg-(--surface-3) shrink-0",
-				})
+			? html`<div
+					class="relative w-10 h-10 rounded-(--r-sm) overflow-hidden bg-(--surface-3) shrink-0"
+				>
+					${Image({
+						src: toThumbUrl(rowThumbUrl),
+						className: "w-full h-full object-cover",
+					})}
+				</div>`
 			: html`<div
 					class="w-10 h-10 rounded-(--r-sm) bg-(--surface-2) shrink-0"
 				></div>`;
 
 		if (rowThumbUrl && rowImgCount > 1) {
-			const badge = document.createElement("span");
-			badge.className =
-				"absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[8px] font-medium px-1 py-px rounded-full tabular-nums pointer-events-none leading-none";
-			badge.textContent = String(rowImgCount);
+			const badge = html`<span
+				class="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[8px] font-medium px-1 py-px rounded-full tabular-nums pointer-events-none leading-none"
+			>
+				${rowImgCount}
+			</span>`;
 			rowThumb.appendChild(badge);
 		}
 

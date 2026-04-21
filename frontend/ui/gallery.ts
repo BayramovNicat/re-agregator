@@ -1,11 +1,7 @@
 import { t } from "../core/i18n";
-import { ce, cn, html, makeEventManager } from "../core/utils";
+import { ce, cn, html, makeEventManager, toThumbUrl } from "../core/utils";
 import { RawButton } from "./button";
 import { Icons } from "./icons";
-
-function toThumbUrl(src: string): string {
-	return src.replace("/uploads/full/", "/uploads/f460x345/");
-}
 
 /** Props accepted by {@link Gallery}. */
 export type GalleryProps = {
