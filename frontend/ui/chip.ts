@@ -47,13 +47,19 @@ export type ChipProps = {
  * Renders a stylized checkbox wrapped in a label.
  * Properties are forwarded to the underlying {@link HTMLInputElement}.
  */
-export function Chip({ label, className = "", ...props }: ChipProps) {
+export function Chip({
+	label,
+	className = "",
+	...props
+}: ChipProps): HTMLLabelElement {
 	const input = ce<HTMLInputElement>(
 		html`<input type="checkbox" class="peer absolute opacity-0 w-0 h-0" />`,
 		props,
 	);
 	const el = html`
-		<label class="group inline-flex cursor-pointer select-none">
+		<label
+			class="${cn("group inline-flex cursor-pointer select-none", className)}"
+		>
 			${input}
 			<span class="${cn(CHIP_SHARED, className)}">${label}</span>
 		</label>
@@ -70,7 +76,12 @@ export type TagProps = {
 /**
  * A static display tag (used on cards).
  */
-export function Tag({ label, icon, className = "", ...props }: TagProps) {
+export function Tag({
+	label,
+	icon,
+	className = "",
+	...props
+}: TagProps): HTMLSpanElement {
 	return ce<HTMLSpanElement>(
 		html`
 			<span class="${cn(TAG_SHARED, className)}">
@@ -95,7 +106,7 @@ export function CloseableChip({
 	onClose,
 	className = "",
 	...props
-}: CloseableChipProps) {
+}: CloseableChipProps): HTMLSpanElement {
 	return ce<HTMLSpanElement>(
 		html`
 			<span class="${cn(CLOSEABLE_SHARED, className)}">
