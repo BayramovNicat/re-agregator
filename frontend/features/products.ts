@@ -47,21 +47,22 @@ export function initProducts(container: HTMLElement): () => void {
 				></div>
 				<div class="flex items-center gap-1.75">
 					${Button({
-						id: "export-btn",
 						title: t("exportBtn"),
 						content: frag`${Icons.download()} ${t("exportBtn")}`,
 						color: "blue",
+						onclick: handleExport,
 					})}
 					${Button({
-						id: "alert-btn",
 						title: t("telegramAlerts"),
 						content: frag`${Icons.bell()} ${t("alertMe")}`,
 						color: "yellow",
+						onclick: () => bus.emit(EVENTS.ALERTS_OPEN),
 					})}
 					${Button({
 						id: "saved-btn",
 						className: "hidden",
 						content: frag`${Icons.bookmark(false)} ${t("saved")} <span id="saved-badge"></span>`,
+						onclick: handleSavedClick,
 					})}
 					${Select({
 						id: "sort-sel",
@@ -85,6 +86,7 @@ export function initProducts(container: HTMLElement): () => void {
 						active: state.currentView === "grid",
 						title: t("gridView"),
 						content: Icons.grid(),
+						onclick: () => setView("grid"),
 					})}
 					${Button({
 						id: "vlist",
@@ -93,6 +95,7 @@ export function initProducts(container: HTMLElement): () => void {
 						active: state.currentView === "list",
 						title: t("listView"),
 						content: Icons.list(),
+						onclick: () => setView("list"),
 					})}
 					${Button({
 						id: "vmapview",
@@ -101,6 +104,7 @@ export function initProducts(container: HTMLElement): () => void {
 						active: state.currentView === "map",
 						title: t("mapView"),
 						content: Icons.mapPins(),
+						onclick: () => setView("map"),
 					})}
 				</div>
 			</div>
@@ -241,11 +245,9 @@ export function initProducts(container: HTMLElement): () => void {
 		hide("s-empty");
 
 		const wrap = html`<div
-			class="${
-				state.currentView === "grid"
-					? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
-					: "flex flex-col gap-2"
-			}"
+			class="${state.currentView === "grid"
+				? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
+				: "flex flex-col gap-2"}"
 		></div>`;
 
 		let newCount = 0;
@@ -439,51 +441,10 @@ export function initProducts(container: HTMLElement): () => void {
 			});
 	}
 
-	// 4. Event Handlers
-	const { add, cleanup: cleanupHandlers } = makeEventManager();
-
-	add(ge("export-btn"), "click", () => handleExport());
-
-	add(ge("sort-sel"), "change", () => {
-		localStorage.setItem(
-			"re-sort",
-			(ge("sort-sel") as HTMLSelectElement).value,
-		);
-		state.renderedSet.clear();
-		render();
-	});
-
-	const setView = (view: "grid" | "list" | "map") => {
-		const wasMap = state.currentView === "map";
-		state.currentView = view;
-		ge("vgrid").classList.toggle("on", view === "grid");
-		ge("vlist").classList.toggle("on", view === "list");
-		ge("vmapview").classList.toggle("on", view === "map");
-
-		if (view === "map") {
-			ge("cards").style.display = "none";
-			ge("scroll-sentinel").style.display = "none";
-			hide("load-more");
-			render();
-			showMapView();
-		} else {
-			if (wasMap) {
-				hideMapView();
-				ge("cards").style.display = "";
-				ge("scroll-sentinel").style.display = "";
-			}
-			state.renderedSet.clear();
-			render();
-		}
-	};
-
-	add(ge("vgrid"), "click", () => setView("grid"));
-	add(ge("vlist"), "click", () => setView("list"));
-	add(ge("vmapview"), "click", () => setView("map"));
-
-	add(ge("saved-btn"), "click", async () => {
+	async function handleSavedClick(e: MouseEvent) {
+		const btn = e.currentTarget as HTMLElement;
 		state.showingSaved = !state.showingSaved;
-		ge("saved-btn").classList.toggle("on", state.showingSaved);
+		btn.classList.toggle("on", state.showingSaved);
 		state.renderedSet.clear();
 
 		if (!state.showingSaved || state.bookmarks.size === 0) {
@@ -519,7 +480,46 @@ export function initProducts(container: HTMLElement): () => void {
 		} catch {
 			// Cached data already shown — silent fail is fine
 		}
+	}
+
+	// 4. Event Handlers
+	const { add, cleanup: cleanupHandlers } = makeEventManager();
+
+	add(ge("sort-sel"), "change", () => {
+		localStorage.setItem(
+			"re-sort",
+			(ge("sort-sel") as HTMLSelectElement).value,
+		);
+		state.renderedSet.clear();
+		render();
 	});
+
+	const setView = (view: "grid" | "list" | "map") => {
+		const wasMap = state.currentView === "map";
+		state.currentView = view;
+		ge("vgrid").classList.toggle("on", view === "grid");
+		ge("vlist").classList.toggle("on", view === "list");
+		ge("vmapview").classList.toggle("on", view === "map");
+
+		if (view === "map") {
+			ge("cards").style.display = "none";
+			ge("scroll-sentinel").style.display = "none";
+			hide("load-more");
+			render();
+			showMapView();
+		} else {
+			if (wasMap) {
+				hideMapView();
+				ge("cards").style.display = "";
+				ge("scroll-sentinel").style.display = "";
+			}
+			state.renderedSet.clear();
+			render();
+		}
+	};
+
+
+
 
 	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => render());
 

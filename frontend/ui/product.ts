@@ -156,7 +156,9 @@ export function Product({
       hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]
       hover:-translate-y-0.5
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg)"
-      style="border-color:${property.tier === "Overpriced" ? "var(--red-b)" : "var(--border)"}"
+			style="border-color:${property.tier === "Overpriced"
+				? "var(--red-b)"
+				: "var(--border)"}"
 		>
 			${thumb}
 			<div class="flex justify-between items-start gap-2">
@@ -206,11 +208,9 @@ export function Product({
 				${StatBox({ label: t("rooms"), value: property.rooms ?? "—" })}
 				${StatBox({ label: t("floor"), value: floorStr })}
 			</div>
-			${
-				tags.length
-					? html`<div class="flex flex-wrap gap-1.25">${tags}</div>`
-					: ""
-			}
+			${tags.length
+				? html`<div class="flex flex-wrap gap-1.25">${tags}</div>`
+				: ""}
 			<div class="flex items-center justify-between mt-auto">
 				<a
 					class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
@@ -394,7 +394,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		active: bookmarked,
 		title: t("btnSave"),
 		ariaLabel: t("btnSave"),
-		attrs: { "data-action": "bmark" },
+		dataset: { action: "bmark" },
 		content: Icons.bookmark(bookmarked),
 	});
 
@@ -403,7 +403,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		color: "red",
 		title: t("btnHide"),
 		ariaLabel: t("btnHide"),
-		attrs: { "data-action": "hide" },
+		dataset: { action: "hide" },
 		content: Icons.hide(),
 	});
 
@@ -414,7 +414,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 					color: "blue",
 					title: t("btnPhotos"),
 					ariaLabel: t("btnPhotos"),
-					attrs: { "data-action": "gallery" },
+					dataset: { action: "gallery" },
 					content: frag`${Icons.gallery()}`,
 				})
 			: "";

@@ -28,11 +28,10 @@ function LangSwitcher(): HTMLElement {
 	for (const lang of LANGS) {
 		const item = html`<button
 			type="button"
-			class="w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors duration-100 ${
-				cur === lang.code
-					? "text-(--accent)"
-					: "text-(--muted) hover:text-(--text) hover:bg-(--surface-2)"
-			}"
+			class="w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors duration-100 ${cur ===
+			lang.code
+				? "text-(--accent)"
+				: "text-(--muted) hover:text-(--text) hover:bg-(--surface-2)"}"
 		>
 			${lang.label}
 		</button>`;
@@ -94,9 +93,7 @@ export function initHeader(container: HTMLElement): () => void {
 			class="flex items-center justify-between py-3.5 border-b border-(--border) mb-4"
 		>
 			${logo}
-			<div class="flex items-center gap-1.5">
-				${statsBtn}${LangSwitcher()}
-			</div>
+			<div class="flex items-center gap-1.5">${statsBtn}${LangSwitcher()}</div>
 		</header>
 	`;
 

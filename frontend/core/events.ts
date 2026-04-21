@@ -4,6 +4,7 @@ export const EVENTS = {
 	LOCATION_CHANGED: "location_changed",
 	GALLERY_OPEN: "gallery_open",
 	PROPERTY_OPEN: "property_open",
+	ALERTS_OPEN: "alerts_open",
 } as const;
 
 export type EventPayloads = {
@@ -12,6 +13,7 @@ export type EventPayloads = {
 	[EVENTS.LOCATION_CHANGED]: string;
 	[EVENTS.GALLERY_OPEN]: { urls: string[]; index?: number };
 	[EVENTS.PROPERTY_OPEN]: import("./types").Property;
+	[EVENTS.ALERTS_OPEN]: undefined;
 };
 
 type Callback<T> = (data: T) => void;
