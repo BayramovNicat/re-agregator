@@ -6,14 +6,13 @@ import { frag, ge, hide, makeEventManager, show, toast } from "../core/utils";
 import { openHeatmap } from "../dialogs/heatmap";
 import { Chip, CloseableChip } from "../ui/chip";
 import { Button } from "../ui/button";
-import { Field } from "../ui/field";
-import { Icons } from "../ui/icons";
-import { Input } from "../ui/input";
+import { Field, Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { MultiSelect, type MultiSelectElement } from "../ui/multi-select";
 import { Range, setRangeProgress } from "../ui/range";
 import { Select } from "../ui/select";
 import { SkeletonList } from "../ui/skeleton";
+import { Icons } from "../ui/icons";
 
 const NUM_FILTERS = () => [
 	{

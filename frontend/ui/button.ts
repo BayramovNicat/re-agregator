@@ -32,8 +32,14 @@ export type RawButtonProps = {
 /**
  * A basic button component that forwards all properties to the underlying `<button>`.
  */
-export function RawButton({ content, ...props }: RawButtonProps) {
-	return ce(html`<button type="button">${content}</button>`, props);
+export function RawButton({
+	content,
+	...props
+}: RawButtonProps): HTMLButtonElement {
+	return ce<HTMLButtonElement>(
+		html`<button type="button">${content}</button>`,
+		props,
+	);
 }
 
 /** Props accepted by {@link Button}. */
@@ -66,7 +72,7 @@ export function Button({
 	className = "",
 	active = false,
 	...props
-}: ButtonProps) {
+}: ButtonProps): HTMLButtonElement {
 	return RawButton({
 		content,
 		className: cn(
