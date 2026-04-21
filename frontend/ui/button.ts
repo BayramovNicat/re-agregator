@@ -1,4 +1,4 @@
-import { cn, html } from "../core/utils.ts";
+import { ce, cn, html } from "../core/utils.ts";
 
 const SHARED =
 	"transition-all duration-150 rounded-(--r) font-medium active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none select-none";
@@ -53,7 +53,7 @@ export function Button({
 	color = "yellow",
 	className = "",
 	active = false,
-	...rest
+	...props
 }: ButtonProps): HTMLButtonElement {
 	const el = html`
 		<button
@@ -70,9 +70,5 @@ export function Button({
 		</button>
 	` as HTMLButtonElement;
 
-	const { dataset, ...props } = rest;
-	if (dataset) Object.assign(el.dataset, dataset);
-	Object.assign(el, props);
-
-	return el;
+	return ce(el, props);
 }

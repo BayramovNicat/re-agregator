@@ -236,3 +236,17 @@ export function makeEventManager() {
 	};
 	return { add, cleanup };
 }
+
+/**
+ * Short for "Create Element" or "Configure Element".
+ * Assigns properties and dataset to an element.
+ */
+export function ce<T extends HTMLElement>(
+	el: T,
+	props: Partial<T> & { dataset?: Record<string, string | undefined> },
+): T {
+	const { dataset, ...rest } = props;
+	if (dataset) Object.assign(el.dataset, dataset);
+	Object.assign(el, rest);
+	return el;
+}
