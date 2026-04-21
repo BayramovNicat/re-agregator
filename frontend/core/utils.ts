@@ -1,3 +1,5 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { getLang, type TranslationKey, t } from "./i18n";
 
 // --- Trusted Types ---
@@ -31,6 +33,11 @@ declare global {
 	interface Window {
 		trustedTypes?: TrustedTypePolicyFactory;
 	}
+}
+
+/** Merges Tailwind classes without conflicts. */
+export function cn(...inputs: ClassValue[]): string {
+	return twMerge(clsx(inputs));
 }
 
 const policy = window.trustedTypes?.createPolicy("redeal", {
