@@ -2,6 +2,7 @@ import { cn, html } from "../core/utils.ts";
 
 // ─── URL ─────────────────────────────────────────────────────────────────────
 
+/** Rewrites a full-resolution URL to its 460×345 thumbnail variant. */
 function toThumbUrl(src: string): string {
 	return src.replace("/uploads/full/", "/uploads/f460x345/");
 }
@@ -14,6 +15,7 @@ const MAX_CONCURRENT = 6;
 let active = 0;
 const queue = new Set<HTMLImageElement>();
 
+/** Claims a concurrency slot, marks the image as in-flight, and initiates the request. */
 function startLoad(img: HTMLImageElement, src: string): void {
 	active++;
 	img.dataset.loading = "1";
@@ -21,11 +23,11 @@ function startLoad(img: HTMLImageElement, src: string): void {
 }
 
 /**
- * Called after every load/error settlement.
+ * Releases one concurrency slot and dispatches the next eligible queued image.
  *
- * Decrements the active counter and promotes the next eligible queued image.
  * Stale entries (disconnected from DOM) are silently discarded; iteration stops
- * as soon as one valid candidate is found and dispatched.
+ * as soon as one valid candidate is found and started. Call after every
+ * load/error settlement.
  */
 function drainQueue(): void {
 	active = Math.max(0, active - 1);
@@ -82,7 +84,12 @@ const observer = new IntersectionObserver(
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/** Props accepted by {@link LazyThumb}. */
+/**
+ * Props accepted by {@link LazyThumb}.
+ *
+ * `src` is required — all other `HTMLImageElement` properties are optional
+ * and forwarded directly to the underlying `<img>` via `Object.assign`.
+ */
 export type LazyThumbProps = Pick<HTMLImageElement, "src"> &
 	Partial<HTMLImageElement>;
 
@@ -122,7 +129,10 @@ export function LazyThumb({
 		"load",
 		() => {
 			img.dataset.loaded = "1";
-			img.classList.replace("opacity-0", "opacity-100");
+			delete img.dataset.loading;
+			img.decode().then(() => {
+				img.classList.replace("opacity-0", "opacity-100");
+			});
 			observer.unobserve(img);
 			drainQueue();
 		},
@@ -132,6 +142,7 @@ export function LazyThumb({
 	img.addEventListener(
 		"error",
 		() => {
+			delete img.dataset.loading;
 			img.style.display = "none";
 			observer.unobserve(img);
 			drainQueue();
