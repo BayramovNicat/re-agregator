@@ -15,14 +15,14 @@ export function initAlerts(root: HTMLElement): () => void {
 		id: "alert-chat-id",
 		placeholder: t("chatIdPlaceholder"),
 		className: "w-full",
-		attrs: { inputmode: "numeric" },
+		inputMode: "numeric",
 	});
 
 	const labelInput = Input({
 		id: "alert-label",
 		placeholder: t("alertLabelPlaceholder"),
 		className: "w-full",
-		attrs: { maxlength: "80" },
+		maxLength: 80,
 	});
 
 	const previewEl = html`<div class="text-xs text-(--muted) bg-(--surface-2) border border-(--border) rounded-sm px-2.5 py-2"></div>`;

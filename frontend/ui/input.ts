@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { cn, html } from "../core/utils.ts";
 
 const SHARED_CLS = `
 	bg-(--surface-2) border border-(--border) rounded-(--r-sm)
@@ -15,40 +15,35 @@ const VARIANTS = {
 	xs: "px-2.5 py-1.5 text-xs hover:border-(--border-h)",
 };
 
-interface InputProps {
-	id?: string;
-	type?: string;
-	placeholder?: string;
-	value?: string;
+export type InputProps = {
 	variant?: keyof typeof VARIANTS;
-	className?: string;
-	ariaLabel?: string;
-	attrs?: Record<string, string>;
-}
+} & Partial<HTMLInputElement>;
 
+/**
+ * A stylized text input with standardized branding.
+ *
+ * Renders a stylized `<input>` using standardized typographic and surface tokens.
+ * Supports full property forwarding to the underlying {@link HTMLInputElement},
+ * allowing for standard attributes like `type`, `placeholder`, and `value` to be passed directly.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input MDN <input> element}
+ *
+ * @example
+ * ```ts
+ * const input = Input({ type: "number", placeholder: "0.00", variant: "sm" });
+ * container.appendChild(input);
+ * ```
+ */
 export function Input({
-	id,
-	type = "text",
-	placeholder = "",
-	value = "",
 	variant = "sm",
 	className = "",
-	ariaLabel,
-	attrs = {},
+	...rest
 }: InputProps): HTMLInputElement {
-	const attrStr = Object.entries(attrs)
-		.map(([k, v]) => `${k}="${v}"`)
-		.join(" ");
+	const el = html`
+		<input class="${cn(SHARED_CLS, VARIANTS[variant], className)}" />
+	` as HTMLInputElement;
 
-	return html<HTMLInputElement>`
-    <input
-      ${id ? `id="${id}"` : ""}
-      type="${type}"
-      placeholder="${placeholder}"
-      value="${value}"
-      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
-      class="${SHARED_CLS} ${VARIANTS[variant]} ${className}"
-      ${attrStr}
-    />
-  `;
+	Object.assign(el, rest);
+
+	return el;
 }
