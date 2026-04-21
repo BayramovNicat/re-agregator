@@ -1,6 +1,6 @@
 import { bus, EVENTS } from "../core/events";
 import { html } from "../core/utils";
-import { GalleryView } from "../ui/gallery-view";
+import { Gallery } from "../ui/gallery";
 import { Icons } from "../ui/icons";
 
 /**
@@ -8,7 +8,7 @@ import { Icons } from "../ui/icons";
  * It listens for bus EVENTS.GALLERY_OPEN to trigger the modal.
  */
 export function initGallery(root: HTMLElement): () => void {
-	const gallery = GalleryView({ fullscreen: true });
+	const gallery = Gallery({ fullscreen: true });
 
 	function open(data: { urls: string[]; index?: number }): void {
 		const { urls, index = 0 } = data;
@@ -38,7 +38,7 @@ export function initGallery(root: HTMLElement): () => void {
     </dialog>
   ` as HTMLDialogElement;
 
-	modal.querySelector("#gallery-content")?.appendChild(gallery.el);
+	modal.querySelector("#gallery-content")?.appendChild(gallery);
 
 	// 2. Event Listeners
 	const handlers: [HTMLElement | Window, string, EventListener][] = [
@@ -61,9 +61,9 @@ export function initGallery(root: HTMLElement): () => void {
 			"keydown",
 			(e: Event) => {
 				const key = (e as KeyboardEvent).key;
-				if (key === "ArrowLeft" || key === "ArrowUp") gallery.go(-1);
+				if (key === "ArrowLeft" || key === "ArrowUp") gallery.navigate(-1);
 				if (key === "ArrowRight" || key === "ArrowDown" || key === " ")
-					gallery.go(1);
+					gallery.navigate(1);
 				if (key === "Escape") modal.close();
 			},
 		],

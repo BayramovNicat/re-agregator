@@ -4,7 +4,7 @@ import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
 import { fmt, fmtFloor, getLocale, html, timeAgo, tTier } from "../core/utils";
 import { Tag } from "../ui/chip";
-import { GalleryView } from "../ui/gallery-view";
+import { Gallery } from "../ui/gallery";
 import { Icons } from "../ui/icons";
 import { initLeaflet } from "../ui/map-base";
 import { StatBox } from "../ui/stat-box";
@@ -277,14 +277,14 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		if (!el) throw new Error(`Element #${id} not found`);
 		return el;
 	};
-	const gallery = GalleryView({
+	const gallery = Gallery({
 		onExpand: () => {
 			if (currentProperty?.image_urls) {
 				openGallery(currentProperty.image_urls, gallery.getIndex());
 			}
 		},
 	});
-	$("pd-gallery-ct").appendChild(gallery.el);
+	$("pd-gallery-ct").appendChild(gallery);
 
 	// Ensure hidden elements have their layout class for when they are shown
 	const $location = $("pd-location");
@@ -446,8 +446,8 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 			"keydown",
 			(e: Event) => {
 				const key = (e as KeyboardEvent).key;
-				if (key === "ArrowLeft") gallery.go(-1);
-				if (key === "ArrowRight") gallery.go(1);
+				if (key === "ArrowLeft") gallery.navigate(-1);
+				if (key === "ArrowRight") gallery.navigate(1);
 				if (key === "Escape") modal.close();
 			},
 		],
