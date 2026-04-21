@@ -1,25 +1,42 @@
-import { html } from "../core/utils";
+import { cn, html } from "../core/utils.ts";
 
-const SHARED_CLS = `
-  text-xs font-medium text-(--muted)
-  tracking-[0.06em] uppercase
-`;
+/** Props accepted by {@link Label}. */
+export type LabelProps = {
+	text: string;
+} & Partial<HTMLLabelElement>;
 
+/**
+ * A semantically-compliant `<label>` element with standardized branding.
+ *
+ * Renders a stylized label using standardized typographic tokens.
+ * Supports full property forwarding to the underlying {@link HTMLLabelElement},
+ * allowing for standard attributes like `htmlFor` to be passed directly.
+ *
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/label MDN <label> element}
+ *
+ * @example
+ * ```ts
+ * const label = Label({ text: "Email Address", htmlFor: "email-input" });
+ * container.appendChild(label);
+ * ```
+ */
 export function Label({
 	text,
-	htmlFor,
 	className = "",
-}: {
-	text: string;
-	htmlFor?: string;
-	className?: string;
-}): HTMLLabelElement {
-	return html<HTMLLabelElement>`
-    <label
-      ${htmlFor ? `for="${htmlFor}"` : ""}
-      class="${SHARED_CLS} ${className}"
-    >
-      ${text}
-    </label>
-  `;
+	...rest
+}: LabelProps): HTMLLabelElement {
+	const el = html`
+		<label
+			class="${cn(
+				"text-xs font-medium text-(--muted) tracking-[0.06em] uppercase",
+				className,
+			)}"
+		>
+			${text}
+		</label>
+	` as HTMLLabelElement;
+
+	Object.assign(el, rest);
+
+	return el;
 }
