@@ -1,7 +1,7 @@
 import { getLang, setLang, t } from "../core/i18n";
 import { html } from "../core/utils";
 import { Button } from "../ui/button";
-import { HealthStatus } from "../ui/health-status";
+import { HealthStatus } from "../components/health-status";
 import { Icons } from "../ui/icons";
 import { openDistrictStats } from "./district-stats";
 
