@@ -127,9 +127,9 @@ export function timeAgo(s: string | null | undefined): string | null {
 
 export function toast(msg: string, err = false): void {
 	const el = html`<div
-		class="bg-(--surface-3) border border-(--border) rounded-(--r) px-4 py-2.5 text-[13px] text-(--text-2) shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto animate-[fadeUp_0.2s_ease] ${err
-			? "border-(--red-b) text-(--red)"
-			: ""}"
+		class="bg-(--surface-3) border border-(--border) rounded-(--r) px-4 py-2.5 text-[13px] text-(--text-2) shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto animate-[fadeUp_0.2s_ease] ${
+			err ? "border-(--red-b) text-(--red)" : ""
+		}"
 	>
 		${msg}
 	</div>`;

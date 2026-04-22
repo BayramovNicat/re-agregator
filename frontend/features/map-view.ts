@@ -6,10 +6,10 @@ import {
 	tooltip as leafletTooltip,
 } from "leaflet";
 import { bus, EVENTS } from "../core/events";
+import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { MapPin, Property } from "../core/types";
 import { fmt, fmtFloor, toast, tTier } from "../core/utils";
-import { t } from "../core/i18n";
 import { openPropertyDetail } from "../dialogs/property-detail";
 import { initLeaflet } from "../ui/map-base";
 import { ts } from "../ui/tier";
@@ -150,7 +150,10 @@ async function fetchAndRender(): Promise<void> {
 			];
 			const distStr = tierBadges
 				.filter((tb) => tierCounts[tb.tier])
-				.map((tb) => `<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`)
+				.map(
+					(tb) =>
+						`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`,
+				)
 				.join(' <span style="color:var(--border)">·</span> ');
 			meta.innerHTML = `<strong>${fmt(total, 0)}</strong> ${total !== 1 ? t("results") : t("result")}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`;
 		}

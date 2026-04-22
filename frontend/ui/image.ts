@@ -122,7 +122,8 @@ export function Image({
 		() => {
 			img.dataset.loaded = "1";
 			delete img.dataset.loading;
-			img.decode()
+			img
+				.decode()
 				.then(() => {
 					img.classList.replace("opacity-0", "opacity-100");
 				})
@@ -151,4 +152,3 @@ export function Image({
 
 	return img;
 }
-

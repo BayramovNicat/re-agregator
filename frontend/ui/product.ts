@@ -1,6 +1,14 @@
 import { t } from "../core/i18n";
 import type { CardCallbacks, Property } from "../core/types";
-import { fmt, fmtFloor, frag, html, timeAgo, tTier, toThumbUrl } from "../core/utils";
+import {
+	fmt,
+	fmtFloor,
+	frag,
+	html,
+	timeAgo,
+	toThumbUrl,
+	tTier,
+} from "../core/utils";
 import { Button } from "./button";
 import { Tag } from "./chip";
 import { Icons } from "./icons";
@@ -160,9 +168,9 @@ export function Product({
       hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]
       hover:-translate-y-0.5
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg)"
-			style="border-color:${property.tier === "Overpriced"
-				? "var(--red-b)"
-				: "var(--border)"}"
+			style="border-color:${
+				property.tier === "Overpriced" ? "var(--red-b)" : "var(--border)"
+			}"
 		>
 			${thumb}
 			<div class="flex justify-between items-start gap-2">
@@ -212,9 +220,11 @@ export function Product({
 				${StatBox({ label: t("rooms"), value: property.rooms ?? "—" })}
 				${StatBox({ label: t("floor"), value: floorStr })}
 			</div>
-			${tags.length
-				? html`<div class="flex flex-wrap gap-1.25">${tags}</div>`
-				: ""}
+			${
+				tags.length
+					? html`<div class="flex flex-wrap gap-1.25">${tags}</div>`
+					: ""
+			}
 			<div class="flex items-center justify-between mt-auto">
 				<a
 					class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"

@@ -1,7 +1,7 @@
+import { HealthStatus } from "../components/health-status";
 import { getLang, setLang, t } from "../core/i18n";
 import { html } from "../core/utils";
 import { Button } from "../ui/button";
-import { HealthStatus } from "../components/health-status";
 import { Icons } from "../ui/icons";
 import { openDistrictStats } from "./district-stats";
 
@@ -28,10 +28,11 @@ function LangSwitcher(): HTMLElement {
 	for (const lang of LANGS) {
 		const item = html`<button
 			type="button"
-			class="w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors duration-100 ${cur ===
-			lang.code
-				? "text-(--accent)"
-				: "text-(--muted) hover:text-(--text) hover:bg-(--surface-2)"}"
+			class="w-full text-left px-3 py-1.5 text-xs font-semibold transition-colors duration-100 ${
+				cur === lang.code
+					? "text-(--accent)"
+					: "text-(--muted) hover:text-(--text) hover:bg-(--surface-2)"
+			}"
 		>
 			${lang.label}
 		</button>`;

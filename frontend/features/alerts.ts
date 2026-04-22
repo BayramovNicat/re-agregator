@@ -4,8 +4,8 @@ import type { Alert, AlertFilters } from "../core/types";
 import { ge, html, toast } from "../core/utils";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
-import { Field, Input } from "../ui/input";
 import { Icons } from "../ui/icons";
+import { Field, Input } from "../ui/input";
 import type { MultiSelectElement } from "../ui/multi-select";
 
 export function initAlerts(root: HTMLElement): () => void {

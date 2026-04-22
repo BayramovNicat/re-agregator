@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { ce, cn, html } from "../core/utils";
 
 const CONTAINER_CLS = `
   flex items-center h-10 px-3.5 
@@ -38,32 +38,43 @@ export function setRangeProgress(input: HTMLInputElement): void {
 	input.style.setProperty("--p", `${p}%`);
 }
 
-export function Range({
-	id,
-	min = 0,
-	max = 100,
-	value = 0,
-	className = "",
-	ariaLabel,
-}: {
-	id?: string;
-	min?: number | string;
-	max?: number | string;
-	value?: number | string;
+/** Props accepted by {@link RawRange}. */
+export type RawRangeProps = Partial<HTMLInputElement>;
+
+/**
+ * A basic range input component that forwards all properties to the underlying `<input type="range">`.
+ */
+export function RawRange(props: RawRangeProps): HTMLInputElement {
+	return ce<HTMLInputElement>(
+		html`<input type="range" class="${INPUT_CLS}" />`,
+		props,
+	);
+}
+
+/** Props accepted by {@link Range}. */
+export type RangeProps = {
 	className?: string;
-	ariaLabel?: string;
-}): HTMLElement {
-	const input = html<HTMLInputElement>`
-    <input
-      type="range"
-      ${id ? `id="${id}"` : ""}
-      min="${min}"
-      max="${max}"
-      value="${value}"
-      ${ariaLabel ? `aria-label="${ariaLabel}"` : ""}
-      class="${INPUT_CLS}"
-    />
-  `;
+} & RawRangeProps;
+
+/**
+ * A stylized range input component with standardized branding.
+ *
+ * Renders a stylized `<input type="range">` wrapped in a container that provides
+ * standardized typographic and surface tokens.
+ * Supports full property forwarding to the underlying {@link HTMLInputElement},
+ * allowing for standard attributes like `id`, `min`, `max`, and event listeners to be passed directly.
+ *
+ * @example
+ * ```ts
+ * const range = Range({ id: "price", min: 0, max: 1000, value: 500, oninput: (e) => console.log(e.target.value) });
+ * container.appendChild(range);
+ * ```
+ */
+export function Range({
+	className = "",
+	...props
+}: RangeProps): HTMLDivElement {
+	const input = RawRange(props);
 
 	// Initialize progress
 	setRangeProgress(input);
@@ -71,9 +82,12 @@ export function Range({
 	// Automatically update progress on input
 	input.addEventListener("input", () => setRangeProgress(input));
 
-	return html`
-    <div class="${CONTAINER_CLS} ${className}">
-      ${input}
-    </div>
-  `;
+	return ce(
+		html`
+			<div class="${cn(CONTAINER_CLS, className)}">
+				${input}
+			</div>
+		`,
+		{},
+	);
 }
