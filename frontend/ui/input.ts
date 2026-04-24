@@ -17,13 +17,25 @@ const VARIANTS = {
 };
 
 /** Props accepted by {@link RawInput}. */
-export type RawInputProps = Partial<HTMLInputElement>;
+export type RawInputProps = Omit<
+	Partial<HTMLInputElement>,
+	"min" | "max" | "value"
+> & {
+	min?: string | number;
+	max?: string | number;
+	value?: string | number;
+};
 
 /**
  * A basic input component that forwards all properties to the underlying `<input>`.
  */
 export function RawInput(props: RawInputProps): HTMLInputElement {
-	return ce(html`<input />`, props);
+	return ce<HTMLInputElement>(html`<input />`, {
+		...props,
+		min: props.min !== undefined ? String(props.min) : undefined,
+		max: props.max !== undefined ? String(props.max) : undefined,
+		value: props.value !== undefined ? String(props.value) : undefined,
+	});
 }
 
 /** Props accepted by {@link Input}. */

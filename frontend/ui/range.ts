@@ -39,16 +39,25 @@ export function setRangeProgress(input: HTMLInputElement): void {
 }
 
 /** Props accepted by {@link RawRange}. */
-export type RawRangeProps = Partial<HTMLInputElement>;
+export type RawRangeProps = Omit<
+	Partial<HTMLInputElement>,
+	"min" | "max" | "value"
+> & {
+	min?: string | number;
+	max?: string | number;
+	value?: string | number;
+};
 
 /**
  * A basic range input component that forwards all properties to the underlying `<input type="range">`.
  */
 export function RawRange(props: RawRangeProps): HTMLInputElement {
-	return ce<HTMLInputElement>(
-		html`<input type="range" class="${INPUT_CLS}" />`,
-		props,
-	);
+	return ce<HTMLInputElement>(html`<input type="range" class="${INPUT_CLS}" />`, {
+		...props,
+		min: props.min !== undefined ? String(props.min) : undefined,
+		max: props.max !== undefined ? String(props.max) : undefined,
+		value: props.value !== undefined ? String(props.value) : undefined,
+	});
 }
 
 /** Props accepted by {@link Range}. */
@@ -83,11 +92,7 @@ export function Range({
 	input.addEventListener("input", () => setRangeProgress(input));
 
 	return ce(
-		html`
-			<div class="${cn(CONTAINER_CLS, className)}">
-				${input}
-			</div>
-		`,
+		html` <div class="${cn(CONTAINER_CLS, className)}">${input}</div> `,
 		{},
 	);
 }
