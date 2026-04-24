@@ -145,7 +145,7 @@ export function Product({
 			const badge = html`<span
 				class="absolute bottom-1.5 right-1.5 inline-flex items-center gap-0.75 bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded-full backdrop-blur-sm tabular-nums pointer-events-none"
 			>
-				${Icons.gallery()} ${imgCount}
+				${Icons.gallery(12)} ${imgCount}
 			</span>`;
 			thumb.appendChild(badge);
 		}
@@ -231,7 +231,7 @@ export function Product({
 					href="${property.source_url}"
 					target="_blank"
 					rel="noopener noreferrer"
-					>${t("viewListing")} ${Icons.external()}</a
+					>${t("viewListing")} ${Icons.external(10)}</a
 				>
 				<div class="flex items-center gap-1">
 					${galleryBtn}${bmarkBtn}${hideBtn}
@@ -413,7 +413,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		title: t("btnSave"),
 		ariaLabel: t("btnSave"),
 		dataset: { action: "bmark" },
-		content: Icons.bookmark(bookmarked),
+		content: Icons.bookmark({ size: 12, fill: bookmarked }),
 	});
 
 	const hideBtn = Button({
@@ -422,7 +422,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 		title: t("btnHide"),
 		ariaLabel: t("btnHide"),
 		dataset: { action: "hide" },
-		content: Icons.hide(),
+		content: Icons.hide(12),
 	});
 
 	const galleryBtn =
@@ -433,7 +433,7 @@ function createButtons(property: Property, bookmarked: boolean) {
 					title: t("btnPhotos"),
 					ariaLabel: t("btnPhotos"),
 					dataset: { action: "gallery" },
-					content: frag`${Icons.gallery()}`,
+					content: frag`${Icons.gallery(12)}`,
 				})
 			: "";
 

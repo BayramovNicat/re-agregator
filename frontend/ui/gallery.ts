@@ -44,7 +44,7 @@ export function Gallery({
 		<div
 			class="absolute inset-0 flex-col items-center justify-center gap-2 text-(--muted) text-sm hidden"
 		>
-			${Icons.gallery()}
+			${Icons.gallery(24)}
 			<span>${t("propNoImages")}</span>
 		</div>
 	`;

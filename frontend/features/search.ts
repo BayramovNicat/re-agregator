@@ -349,7 +349,7 @@ export function initSearch(container: HTMLElement): () => void {
 						color: "indigo",
 						variant: "base",
 						ariaLabel: t("priceMap"),
-						content: `${Icons.globe().outerHTML} ${t("priceMap")}`,
+						content: frag`${Icons.globe(14)} ${t("priceMap")}`,
 					})}
 				</div>
 				<div class="flex flex-col gap-1.5">
@@ -362,7 +362,7 @@ export function initSearch(container: HTMLElement): () => void {
 				<div class="flex flex-col gap-1.5">
 					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Go</span>
 					<button type="button" id="search-btn" class="inline-flex items-center justify-center gap-1.5 bg-(--accent-solid) text-white border-none rounded-(--r) px-4 py-2.25 font-semibold text-sm h-10 transition-all hover:bg-(--accent-h) hover:shadow-[0_4px_12px_rgba(79,70,229,0.3)] active:scale-[0.97] disabled:opacity-45 disabled:cursor-not-allowed">
-						${Icons.search()} ${t("search")}
+						${Icons.search(14)} ${t("search")}
 					</button>
 				</div>
 			</div>

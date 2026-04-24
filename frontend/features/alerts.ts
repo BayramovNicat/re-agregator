@@ -220,7 +220,7 @@ function updateAlertList(
     `;
 
 		const delBtn = Button({
-			content: Icons.trash(),
+			content: Icons.trash(12),
 			variant: "ghost",
 			color: "red",
 			title: t("deleteAlert"),

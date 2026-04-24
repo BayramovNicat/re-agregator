@@ -72,7 +72,7 @@ export function initHeader(container: HTMLElement): () => void {
 			<div
 				class="w-8 h-8 rounded-(--r-sm) bg-(--accent-dim) border border-[rgba(99,102,241,0.35)] flex items-center justify-center text-(--accent) shrink-0 transition-transform group-hover:scale-105"
 			>
-				${Icons.home()}
+				${Icons.home(18)}
 			</div>
 			<span class="text-sm font-bold tracking-[-0.3px]">${t("appName")}</span>
 			${HealthStatus()}
@@ -86,7 +86,7 @@ export function initHeader(container: HTMLElement): () => void {
 		color: "indigo",
 		variant: "square",
 		ariaLabel: t("statsBtn"),
-		content: Icons.barChart(),
+		content: Icons.barChart(14),
 	});
 
 	const header = html`

@@ -48,20 +48,20 @@ export function initProducts(container: HTMLElement): () => void {
 				<div class="flex items-center gap-1.75">
 					${Button({
 						title: t("exportBtn"),
-						content: frag`${Icons.download()} ${t("exportBtn")}`,
+						content: frag`${Icons.download(12)} ${t("exportBtn")}`,
 						color: "blue",
 						onclick: handleExport,
 					})}
 					${Button({
 						title: t("telegramAlerts"),
-						content: frag`${Icons.bell()} ${t("alertMe")}`,
+						content: frag`${Icons.bell(12)} ${t("alertMe")}`,
 						color: "yellow",
 						onclick: () => bus.emit(EVENTS.ALERTS_OPEN),
 					})}
 					${Button({
 						id: "saved-btn",
 						className: "hidden",
-						content: frag`${Icons.bookmark(false)} ${t("saved")} <span id="saved-badge"></span>`,
+						content: frag`${Icons.bookmark({ size: 12, fill: false })} ${t("saved")} <span id="saved-badge"></span>`,
 						onclick: handleSavedClick,
 					})}
 					${Select({
@@ -85,7 +85,7 @@ export function initProducts(container: HTMLElement): () => void {
 						color: "indigo",
 						active: state.currentView === "grid",
 						title: t("gridView"),
-						content: Icons.grid(),
+						content: Icons.grid(13),
 						onclick: () => setView("grid"),
 					})}
 					${Button({
@@ -94,7 +94,7 @@ export function initProducts(container: HTMLElement): () => void {
 						color: "indigo",
 						active: state.currentView === "list",
 						title: t("listView"),
-						content: Icons.list(),
+						content: Icons.list(13),
 						onclick: () => setView("list"),
 					})}
 					${Button({
@@ -103,7 +103,7 @@ export function initProducts(container: HTMLElement): () => void {
 						color: "indigo",
 						active: state.currentView === "map",
 						title: t("mapView"),
-						content: Icons.mapPins(),
+						content: Icons.mapPins(13),
 						onclick: () => setView("map"),
 					})}
 				</div>
@@ -112,18 +112,29 @@ export function initProducts(container: HTMLElement): () => void {
 	`;
 	const loading = EmptyState({
 		id: "s-loading",
-		icon: Icons.spinnerLg(),
+		icon: Icons.spinner({
+			size: 26,
+			className: "animate-spin text-(--muted) opacity-40 mb-1",
+		}),
 		title: t("searching"),
 	});
 	const empty = EmptyState({
 		id: "s-empty",
-		icon: Icons.noResults(),
+		icon: Icons.noResults({
+			size: 42,
+			strokeWidth: 1.4,
+			className: "text-(--muted) opacity-40 mb-1",
+		}),
 		title: t("noResults"),
 		subtitle: t("noResultsSub"),
 	});
 	const welcome = EmptyState({
 		id: "s-welcome",
-		icon: Icons.homeLg(),
+		icon: Icons.home({
+			size: 52,
+			strokeWidth: 1.1,
+			className: "text-(--muted) opacity-40 mb-1",
+		}),
 		title: t("welcome"),
 		subtitle: t("welcomeSub"),
 		hidden: false,

@@ -244,26 +244,26 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 						class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors hover:text-(--text)"
 						rel="noopener noreferrer"
 					>
-						${t("viewListing")} ${Icons.external()}
+						${t("viewListing")} ${Icons.external(10)}
 					</a>
 					<div class="flex items-center gap-1.5">
 						<button
 							id="pd-share-btn"
 							class="inline-flex items-center gap-1.25 text-xs px-2.5 py-1.5 rounded-(--r-sm) border border-(--border) text-(--muted) hover:text-(--text) transition-colors"
 						>
-							${Icons.external()} <span>${t("btnShare")}</span>
+							${Icons.external(10)} <span>${t("btnShare")}</span>
 						</button>
 						<button
 							id="pd-bmark-btn"
 							class="inline-flex items-center gap-1.25 text-xs px-2.5 py-1.5 rounded-(--r-sm) border border-(--border) text-(--muted) hover:text-(--text) transition-colors"
 						>
-							${Icons.bookmark(false)} <span>${t("btnSave")}</span>
+							${Icons.bookmark({ size: 12, fill: false })} <span>${t("btnSave")}</span>
 						</button>
 						<button
 							id="pd-hide-btn"
 							class="inline-flex items-center gap-1.25 text-xs px-2.5 py-1.5 rounded-(--r-sm) border border-(--border) text-(--muted) hover:text-red-400 transition-colors"
 						>
-							${Icons.hide()} <span>${t("btnHide")}</span>
+							${Icons.hide(12)} <span>${t("btnHide")}</span>
 						</button>
 					</div>
 				</div>
