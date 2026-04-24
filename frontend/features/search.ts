@@ -461,14 +461,16 @@ export function initSearch(container: HTMLElement): () => void {
 	}
 	for (const f of NUM_FILTERS()) {
 		const val = params.get(f.id);
-		if (val) (ge(f.id) as HTMLInputElement).value = val;
+		if (val && val !== "undefined" && val !== "null")
+			(ge(f.id) as HTMLInputElement).value = val;
 	}
 	const catVal = params.get("category");
 	if (catVal) (ge("category") as HTMLSelectElement).value = catVal;
 	const amVal = params.get("hasActiveMortgage");
 	if (amVal) (ge("hasActiveMortgage") as HTMLSelectElement).value = amVal;
 	const descVal = params.get("descriptionSearch");
-	if (descVal) (ge("descriptionSearch") as HTMLInputElement).value = descVal;
+	if (descVal && descVal !== "undefined" && descVal !== "null")
+		(ge("descriptionSearch") as HTMLInputElement).value = descVal;
 	for (const f of CHECK_FILTERS()) {
 		if (params.get(f.id) === "true") {
 			(ge(f.id) as HTMLInputElement).checked = true;

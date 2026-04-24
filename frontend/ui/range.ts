@@ -52,12 +52,17 @@ export type RawRangeProps = Omit<
  * A basic range input component that forwards all properties to the underlying `<input type="range">`.
  */
 export function RawRange(props: RawRangeProps): HTMLInputElement {
-	return ce<HTMLInputElement>(html`<input type="range" class="${INPUT_CLS}" />`, {
-		...props,
-		min: props.min !== undefined ? String(props.min) : undefined,
-		max: props.max !== undefined ? String(props.max) : undefined,
-		value: props.value !== undefined ? String(props.value) : undefined,
-	});
+	const { min, max, value, className = "", ...rest } = props;
+	const el = html`<input
+		type="range"
+		class="${cn(INPUT_CLS, className)}"
+	/>` as HTMLInputElement;
+
+	if (min != null) el.min = String(min);
+	if (max != null) el.max = String(max);
+	if (value != null) el.value = String(value);
+
+	return ce<HTMLInputElement>(el, rest);
 }
 
 /** Props accepted by {@link Range}. */

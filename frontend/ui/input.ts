@@ -30,12 +30,14 @@ export type RawInputProps = Omit<
  * A basic input component that forwards all properties to the underlying `<input>`.
  */
 export function RawInput(props: RawInputProps): HTMLInputElement {
-	return ce<HTMLInputElement>(html`<input />`, {
-		...props,
-		min: props.min !== undefined ? String(props.min) : undefined,
-		max: props.max !== undefined ? String(props.max) : undefined,
-		value: props.value !== undefined ? String(props.value) : undefined,
-	});
+	const el = html`<input />` as HTMLInputElement;
+	const { min, max, value, ...rest } = props;
+
+	if (min != null) el.min = String(min);
+	if (max != null) el.max = String(max);
+	if (value != null) el.value = String(value);
+
+	return ce<HTMLInputElement>(el, rest);
 }
 
 /** Props accepted by {@link Input}. */
