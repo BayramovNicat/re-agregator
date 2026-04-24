@@ -16,7 +16,7 @@ export interface SelectOption {
 export type SelectProps = {
 	options: SelectOption[];
 	variant?: keyof typeof VARIANTS;
-} & Partial<HTMLSelectElement>;
+} & Omit<Partial<HTMLSelectElement>, "options">;
 
 /**
  * A stylized select component with standardized branding and variations.

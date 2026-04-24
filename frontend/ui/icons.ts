@@ -8,7 +8,7 @@ export interface IconProps extends Partial<SVGSVGElement> {
 	strokeWidth?: number | string;
 	className?: string;
 	color?: string;
-	fill?: string;
+	fill?: string | boolean;
 }
 
 /**
@@ -72,7 +72,12 @@ const i = (path: string): IconComponent => {
 		if (strokeWidth) el.setAttribute("stroke-width", String(strokeWidth));
 		if (className) el.setAttribute("class", className);
 		if (color) el.setAttribute("stroke", color);
-		if (fill) el.setAttribute("fill", fill);
+		if (fill !== undefined) {
+			el.setAttribute(
+				"fill",
+				typeof fill === "boolean" ? (fill ? "currentColor" : "none") : fill,
+			);
+		}
 
 		return ce(el, rest) as unknown as SVGSVGElement;
 	}
