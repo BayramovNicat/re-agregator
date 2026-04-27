@@ -287,6 +287,7 @@ export function initProducts(container: HTMLElement): () => void {
 
 	// --- 3. Initialization ---
 
+	const { add, cleanup: cleanupHandlers } = makeEventManager();
 	const cleanupMapView = initMapView(mapViewCt);
 
 	const backToTopBtn = RawButton({
@@ -308,7 +309,7 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 	};
 
-	window.addEventListener("scroll", onScroll, { passive: true });
+	add(window, "scroll", onScroll);
 
 	// Restore persisted sort
 	const savedSort = localStorage.getItem("re-sort");
@@ -393,9 +394,7 @@ export function initProducts(container: HTMLElement): () => void {
 				? t("results")
 				: t("result");
 
-		resultsMeta.innerHTML = trust(
-			`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
-		) as string;
+		resultsMeta.replaceChildren(frag`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`);
 	}
 
 	function renderList(ct: HTMLElement, list: Property[]): void {
@@ -576,8 +575,6 @@ export function initProducts(container: HTMLElement): () => void {
 		return style.gridTemplateColumns.split(" ").filter(Boolean).length || 1;
 	};
 
-	const { add, cleanup: cleanupHandlers } = makeEventManager();
-
 	add(cards, "keydown", (e: KeyboardEvent) => {
 		if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
 			return;
@@ -652,8 +649,8 @@ export function initProducts(container: HTMLElement): () => void {
 		const p = (e as CustomEvent<Property>).detail;
 		if (p) hideItem(p.source_url);
 	};
-	document.addEventListener("pd:bmark", onPdBmark);
-	document.addEventListener("pd:hide", onPdHide);
+	add(document, "pd:bmark", onPdBmark);
+	add(document, "pd:hide", onPdHide);
 
 	// --- 6. Cleanup ---
 
@@ -665,9 +662,6 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 		offDeals();
 		offSearchStart();
-		document.removeEventListener("pd:bmark", onPdBmark);
-		document.removeEventListener("pd:hide", onPdHide);
-		window.removeEventListener("scroll", onScroll);
 		backToTopBtn.remove();
 		cleanupMapView();
 	};

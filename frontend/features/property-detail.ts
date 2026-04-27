@@ -2,7 +2,7 @@ import { divIcon, type map, marker } from "leaflet";
 import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
-import { fmt, fmtFloor, getLocale, html, timeAgo, tTier } from "../core/utils";
+import { fmt, fmtFloor, getLocale, html, timeAgo, tTier, makeEventManager } from "../core/utils";
 import { Button } from "../ui/button";
 import { Tag } from "../ui/chip";
 import { Dialog } from "../ui/dialog";
@@ -110,6 +110,8 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	let lastTriggerUrl: string | null = null;
 
 	// ── UI Components & Refs ───────────────────────────────────────────────────
+
+	const { add, cleanup } = makeEventManager();
 
 	const gallery = Gallery({
 		onExpand: () => {
@@ -414,7 +416,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 
 	// ── Interaction Handlers ───────────────────────────────────────────────────
 
-	modal.addEventListener("close", () => {
+	add(modal, "close", () => {
 		if (lastTriggerUrl) {
 			const el = document.querySelector(
 				`.product-card[data-url="${lastTriggerUrl}"]`,
@@ -428,7 +430,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		if (e.key === "ArrowLeft") gallery.navigate(-1);
 		if (e.key === "ArrowRight") gallery.navigate(1);
 	};
-	modal.addEventListener("keydown", onKey);
+	add(modal, "keydown", onKey);
 
 	root.appendChild(modal);
 
@@ -449,7 +451,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	const offOpen = bus.on(EVENTS.PROPERTY_OPEN, (p) => open(p));
 
 	return () => {
-		modal.removeEventListener("keydown", onKey);
+		cleanup();
 		offOpen();
 		if (lmap) {
 			lmap.remove();

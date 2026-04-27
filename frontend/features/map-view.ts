@@ -9,7 +9,7 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { MapPin, Property } from "../core/types";
-import { debounce, fmt, fmtFloor, toast, tTier } from "../core/utils";
+import { debounce, fmt, fmtFloor, toast, tTier, frag } from "../core/utils";
 import { initLeaflet } from "../ui/map-base";
 import { ts } from "../ui/tier";
 import { openPropertyDetail } from "./property-detail";
@@ -158,7 +158,7 @@ function updateResultsMeta(pins: MapPin[]) {
 	if (!meta) return;
 
 	if (pins.length === 0) {
-		meta.innerHTML = `<span style="color:var(--muted)">${t("noResults")}</span>`;
+		meta.replaceChildren(frag`<span style="color:var(--muted)">${t("noResults")}</span>`);
 		return;
 	}
 
@@ -183,9 +183,9 @@ function updateResultsMeta(pins: MapPin[]) {
 		)
 		.join(' <span style="color:var(--border)">·</span> ');
 
-	meta.innerHTML = `<strong>${fmt(total, 0)}</strong> ${
+	meta.replaceChildren(frag`<strong>${fmt(total, 0)}</strong> ${
 		total !== 1 ? t("results") : t("result")
-	}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`;
+	}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`);
 }
 
 export function initMapView(container: HTMLElement): () => void {

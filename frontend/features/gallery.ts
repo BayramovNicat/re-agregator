@@ -1,5 +1,5 @@
 import { bus, EVENTS } from "../core/events";
-import { html } from "../core/utils";
+import { html, makeEventManager } from "../core/utils";
 import { Dialog } from "../ui/dialog";
 import { Gallery } from "../ui/gallery";
 
@@ -9,6 +9,7 @@ import { Gallery } from "../ui/gallery";
  */
 export function initGallery(root: HTMLElement): () => void {
 	const gallery = Gallery({ fullscreen: true });
+	const { add, cleanup } = makeEventManager();
 
 	// Use Dialog with overrides for a seamless full-screen experience
 	const modal = Dialog({
@@ -30,16 +31,17 @@ export function initGallery(root: HTMLElement): () => void {
 
 	// ── Interaction Handlers ───────────────────────────────────────────────────
 
-	modal.addEventListener("close", () => {
+	add(modal, "close", () => {
 		if (lastTrigger) {
 			lastTrigger.focus({ preventScroll: true });
 			lastTrigger = null;
 		}
 	});
 
-	modal.addEventListener("keydown", (e: KeyboardEvent) => {
-		if (e.key === "ArrowLeft" || e.key === "ArrowUp") gallery.navigate(-1);
-		if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ")
+	add(modal, "keydown", (e: Event) => {
+		const evt = e as KeyboardEvent;
+		if (evt.key === "ArrowLeft" || evt.key === "ArrowUp") gallery.navigate(-1);
+		if (evt.key === "ArrowRight" || evt.key === "ArrowDown" || evt.key === " ")
 			gallery.navigate(1);
 	});
 
@@ -48,6 +50,7 @@ export function initGallery(root: HTMLElement): () => void {
 	const offGallery = bus.on(EVENTS.GALLERY_OPEN, (data) => open(data));
 
 	return () => {
+		cleanup();
 		offGallery();
 		modal.remove();
 	};

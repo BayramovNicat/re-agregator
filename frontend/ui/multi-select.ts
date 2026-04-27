@@ -1,4 +1,4 @@
-import { ce, cn, html, trust } from "../core/utils";
+import { ce, cn, html, frag } from "../core/utils";
 import { RawButton } from "./button";
 import { Icons } from "./icons";
 import { RawInput } from "./input";
@@ -131,9 +131,7 @@ export function MultiSelect({
 
 		optionsList.replaceChildren();
 		if (filtered.length === 0) {
-			optionsList.innerHTML = trust(
-				`<div class="p-4 text-center text-xs text-(--muted)">No results found</div>`,
-			) as string;
+			optionsList.replaceChildren(frag`<div class="p-4 text-center text-xs text-(--muted)">No results found</div>`);
 		} else {
 			for (const opt of filtered) {
 				const isSelected = selectedValues.includes(opt.value);
@@ -215,8 +213,12 @@ export function MultiSelect({
 		}
 	}
 
-	// Close on click outside
+	// Close on click outside and auto-cleanup
 	const handleOutside = (e: MouseEvent) => {
+		if (!document.body.contains(el)) {
+			document.removeEventListener("click", handleOutside);
+			return;
+		}
 		if (!el.contains(e.target as Node)) {
 			setOpen(false);
 		}

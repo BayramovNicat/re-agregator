@@ -279,7 +279,7 @@ function trendBadge(row: LocationRow): HTMLElement {
 
 function renderTable(): void {
 	const data = getProcessedData();
-	refs.tbody.innerHTML = "";
+	refs.tbody.replaceChildren();
 
 	if (data.length === 0) {
 		refs.table.classList.add("hidden");

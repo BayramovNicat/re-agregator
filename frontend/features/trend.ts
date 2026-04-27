@@ -2,12 +2,13 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { TrendPoint } from "../core/types";
-import { fmt, getLocale, hide, html, show, trust } from "../core/utils";
+import { fmt, getLocale, hide, html, show, trust, makeEventManager, frag } from "../core/utils";
 
 /**
  * Trend feature manages the property price trend chart above search results.
  */
 export function initTrend(container: HTMLElement): () => void {
+	const { add, cleanup } = makeEventManager();
 	const trendLoc = html`<span></span>`;
 	const trendCur = html`<span></span>`;
 	const trendChg = html`<span
@@ -109,9 +110,9 @@ export function initTrend(container: HTMLElement): () => void {
 			{ n: data.length },
 		);
 
-		trendDates.innerHTML = trust(
-			`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
-		) as string;
+		trendDates.replaceChildren(
+			frag`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`
+		);
 
 		const old = trendChart.querySelector("svg");
 		if (old) old.remove();
@@ -149,11 +150,7 @@ export function initTrend(container: HTMLElement): () => void {
 		const areaD = `${lineD} L ${lastPt[0]},${H} L ${firstPt[0]},${H} Z`;
 		const lp = lastPt;
 
-		const ns = "http://www.w3.org/2000/svg";
-		const svg = document.createElementNS(ns, "svg");
-		svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-		svg.style.cssText = `width:100%;height:${H}px;display:block;cursor:crosshair`;
-		svg.innerHTML = trust(`
+		const svg = html`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;cursor:crosshair" xmlns="http://www.w3.org/2000/svg">
 			<defs>
 				<linearGradient id="spark-g" x1="0" y1="0" x2="0" y2="1">
 					<stop offset="0%" stop-color="${color}" stop-opacity="0.28"/>
@@ -163,30 +160,30 @@ export function initTrend(container: HTMLElement): () => void {
 			<path d="${areaD}" fill="url(#spark-g)" vector-effect="non-scaling-stroke"/>
 			<path d="${lineD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2"/>
-			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}"/>`) as string;
+			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}"/>
+		</svg>`;
 
 		trendChart.insertBefore(svg, trendTip);
 
-		svg.addEventListener("mousemove", (e: MouseEvent) => {
+		add(svg, "mousemove", (e: Event) => {
+			const evt = e as MouseEvent;
 			const svgW = svg.clientWidth;
-			const normX = e.offsetX / svgW;
+			const normX = evt.offsetX / svgW;
 			const idx = Math.max(
 				0,
 				Math.min(data.length - 1, Math.round(normX * (data.length - 1))),
 			);
 			const p = data[idx];
 			if (!p) return;
-			trendTip.innerHTML = trust(
-				`<span style="font-size:10px;color:var(--muted);display:block;margin-bottom:1px">${dfmt(p.week)}</span><strong>₼ ${fmt(Number(p.avg_ppsm), 0)}/m²</strong><span style="font-size:10px;color:var(--muted);margin-left:5px">${p.listing_count} ${t(p.listing_count !== 1 ? "listings" : "listing")}</span>`,
-			) as string;
+			trendTip.replaceChildren(frag`<span style="font-size:10px;color:var(--muted);display:block;margin-bottom:1px">${dfmt(p.week)}</span><strong>₼ ${fmt(Number(p.avg_ppsm), 0)}/m²</strong><span style="font-size:10px;color:var(--muted);margin-left:5px">${p.listing_count} ${t(p.listing_count !== 1 ? "listings" : "listing")}</span>`);
 
 			trendTip.style.display = "block";
 			const tipW = trendTip.offsetWidth || 160;
-			const left = Math.min(e.offsetX + 12, svgW - tipW - 4);
+			const left = Math.min(evt.offsetX + 12, svgW - tipW - 4);
 			trendTip.style.left = `${left}px`;
-			trendTip.style.top = `${Math.max(4, e.offsetY - trendTip.offsetHeight - 8)}px`;
+			trendTip.style.top = `${Math.max(4, evt.offsetY - trendTip.offsetHeight - 8)}px`;
 		});
-		svg.addEventListener("mouseleave", () => {
+		add(svg, "mouseleave", () => {
 			trendTip.style.display = "none";
 		});
 	}
@@ -204,5 +201,6 @@ export function initTrend(container: HTMLElement): () => void {
 
 	return () => {
 		offLoc();
+		cleanup();
 	};
 }

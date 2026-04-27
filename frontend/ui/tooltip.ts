@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { html, makeEventManager } from "../core/utils";
 
 /**
  * Super-optimized global tooltip system.
@@ -13,6 +13,7 @@ let activeTarget: HTMLElement | null = null;
  */
 export function initTooltip(root: HTMLElement = document.body): () => void {
 	if (el) return () => {};
+	const { add, cleanup } = makeEventManager();
 
 	el = html`
     <div
@@ -53,16 +54,13 @@ export function initTooltip(root: HTMLElement = document.body): () => void {
 
 	const onScroll = () => hide();
 
-	window.addEventListener("mouseover", onMouseOver, { passive: true });
-	window.addEventListener("mouseout", onMouseOut, { passive: true });
-	window.addEventListener("scroll", onScroll, { passive: true });
-	window.addEventListener("resize", onScroll, { passive: true });
+	add(window, "mouseover", onMouseOver);
+	add(window, "mouseout", onMouseOut);
+	add(window, "scroll", onScroll);
+	add(window, "resize", onScroll);
 
 	return () => {
-		window.removeEventListener("mouseover", onMouseOver);
-		window.removeEventListener("mouseout", onMouseOut);
-		window.removeEventListener("scroll", onScroll);
-		window.removeEventListener("resize", onScroll);
+		cleanup();
 		el?.remove();
 		el = null;
 	};
