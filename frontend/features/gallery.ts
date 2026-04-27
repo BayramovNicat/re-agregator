@@ -32,7 +32,7 @@ export function initGallery(root: HTMLElement): () => void {
 
 	modal.addEventListener("close", () => {
 		if (lastTrigger) {
-			lastTrigger.focus();
+			lastTrigger.focus({ preventScroll: true });
 			lastTrigger = null;
 		}
 	});

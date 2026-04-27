@@ -435,12 +435,6 @@ export function initProducts(container: HTMLElement): () => void {
 				return;
 			}
 		}
-
-		// Full Refresh: Capture focus, replace all children, and restore focus.
-		const focusedUrl = (document.activeElement as HTMLElement)
-			?.closest(".product-card")
-			?.getAttribute("data-url");
-
 		ct.replaceChildren();
 		const newWrap = html`<div class="${viewClass}"></div>`;
 
@@ -463,15 +457,6 @@ export function initProducts(container: HTMLElement): () => void {
 			newWrap.appendChild(el);
 		}
 		ct.appendChild(newWrap);
-
-		if (focusedUrl) {
-			const elToFocus = ct.querySelector(
-				`.product-card[data-url="${focusedUrl}"]`,
-			) as HTMLElement;
-			if (elToFocus) {
-				elToFocus.focus({ preventScroll: true });
-			}
-		}
 	}
 
 	function updatePagination(): void {
@@ -505,7 +490,8 @@ export function initProducts(container: HTMLElement): () => void {
 					entries[0]?.isIntersecting &&
 					!state.showingSaved &&
 					!state.loading &&
-					state.allResults.length < state.currentTotal
+					state.allResults.length < state.currentTotal &&
+					!document.querySelector("dialog[open]")
 				) {
 					loadMoreFn();
 				}
@@ -630,7 +616,7 @@ export function initProducts(container: HTMLElement): () => void {
 			nextIndex !== currentIndex
 		) {
 			e.preventDefault();
-			allCards[nextIndex].focus();
+			allCards[nextIndex].focus({ preventScroll: true });
 			allCards[nextIndex].scrollIntoView({
 				block: "nearest",
 				behavior: "instant",

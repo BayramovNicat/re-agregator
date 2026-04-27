@@ -135,7 +135,7 @@ function createSearchBar(): HTMLElement {
 			state.filterQuery = "";
 			refs.clear.classList.remove("visible");
 			renderTable();
-			refs.search.focus();
+			refs.search.focus({ preventScroll: true });
 		},
 	});
 

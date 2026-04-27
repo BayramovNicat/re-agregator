@@ -44,7 +44,7 @@
 }
 
 html {
-	scroll-behavior: smooth;
+	scrollbar-gutter: stable;
 }
 body {
 	background: var(--bg);
@@ -55,8 +55,9 @@ body {
 	min-height: 100vh;
 	-webkit-font-smoothing: antialiased;
 }
+html:has(dialog[open]),
 body:has(dialog[open]) {
-	overflow: hidden;
+	overflow: hidden !important;
 }
 ::-webkit-scrollbar {
 	width: 5px;

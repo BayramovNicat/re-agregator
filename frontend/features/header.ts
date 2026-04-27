@@ -114,7 +114,7 @@ export function initHeader(container: HTMLElement): () => void {
 
 	evm.add(logo, "click", () => {
 		if (window.location.pathname === "/" && !window.location.search) {
-			window.scrollTo({ top: 0, behavior: "smooth" });
+			window.scrollTo({ top: 0, behavior: "auto" });
 		} else {
 			window.location.href = "/";
 		}

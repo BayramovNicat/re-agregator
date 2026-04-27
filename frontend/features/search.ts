@@ -298,7 +298,7 @@ export function initSearch(container: HTMLElement): () => void {
 
 		const locations = ui.locationSelect.getValue();
 		if (locations.length === 0) {
-			ui.locationSelect.querySelector("button")?.focus();
+			ui.locationSelect.querySelector("button")?.focus({ preventScroll: true });
 			return;
 		}
 
@@ -702,6 +702,7 @@ export function initSearch(container: HTMLElement): () => void {
 	add(document, "keydown", (e: KeyboardEvent) => {
 		if (
 			e.key === "Enter" &&
+			!e.defaultPrevented &&
 			!["BUTTON", "A", "SELECT"].includes((e.target as Element).tagName)
 		) {
 			void executeSearch(false);

@@ -204,7 +204,7 @@ export function MultiSelect({
 			dropdown.classList.remove("hidden");
 			chevron.style.transform = "rotate(180deg)";
 			trigger.setAttribute("aria-expanded", "true");
-			search.focus();
+			search.focus({ preventScroll: true });
 		} else {
 			dropdown.classList.add("hidden");
 			chevron.style.transform = "";

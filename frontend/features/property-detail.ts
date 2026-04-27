@@ -419,7 +419,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 			const el = document.querySelector(
 				`.product-card[data-url="${lastTriggerUrl}"]`,
 			) as HTMLElement;
-			if (el) el.focus();
+			if (el) el.focus({ preventScroll: true });
 			lastTriggerUrl = null;
 		}
 	});
