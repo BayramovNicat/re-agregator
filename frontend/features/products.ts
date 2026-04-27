@@ -152,6 +152,8 @@ export function initProducts(container: HTMLElement): () => void {
 
 	const resultsMeta = html`<div
 		class="text-sm text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
+		aria-live="polite"
+		role="status"
 	></div>`;
 
 	const savedBadge = html`<span></span>`;
