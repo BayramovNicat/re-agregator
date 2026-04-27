@@ -74,11 +74,13 @@ export function Dialog({
 					<div class="text-lg font-bold text-(--text) tracking-tight mb-1">
 						${title}
 					</div>
-					${description
-						? html`<p class="text-xs text-(--muted) leading-relaxed pr-8">
+					${
+						description
+							? html`<p class="text-xs text-(--muted) leading-relaxed pr-8">
 								${description}
 							</p>`
-						: ""}
+							: ""
+					}
 				</div>
 			`
 		: displayClose

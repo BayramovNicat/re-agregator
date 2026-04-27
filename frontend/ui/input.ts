@@ -93,13 +93,15 @@ export function Field({
 }: FieldProps): HTMLDivElement {
 	const content = html`
 		<div class="${cn("flex flex-col gap-1.5", className)}">
-			${htmlFor
-				? frag`${Label({ htmlFor, text: label })}${input}`
-				: Label({
-						text: label,
-						content: input,
-						className: "flex flex-col gap-1.5 cursor-pointer",
-					})}
+			${
+				htmlFor
+					? frag`${Label({ htmlFor, text: label })}${input}`
+					: Label({
+							text: label,
+							content: input,
+							className: "flex flex-col gap-1.5 cursor-pointer",
+						})
+			}
 		</div>
 	`;
 	return ce<HTMLDivElement>(content as unknown as HTMLDivElement, props);

@@ -31,11 +31,13 @@ export function EmptyState({
 				>
 					${icon}
 					<p class="text-base font-medium text-(--text-2)">${title}</p>
-					${subtitle
-						? html`<p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
+					${
+						subtitle
+							? html`<p class="text-sm text-(--muted) max-w-75 leading-[1.6]">
 								${subtitle}
 							</p>`
-						: ""}
+							: ""
+					}
 				</div>
 			</div>
 		`,

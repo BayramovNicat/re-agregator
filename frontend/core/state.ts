@@ -43,5 +43,5 @@ export const state = {
 		tierFilter: null as HTMLSelectElement | null,
 	},
 	/** Shared bridge to retrieve current search filters across features. */
-	getFilters: () => ({} as import("./types").AlertFilters),
+	getFilters: () => ({}) as import("./types").AlertFilters,
 };

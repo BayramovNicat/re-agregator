@@ -9,12 +9,7 @@ export type LabelProps = {
 /**
  * A semantically-compliant `<label>` element with standardized branding.
  */
-export function Label({
-	text,
-	content,
-	className = "",
-	...props
-}: LabelProps) {
+export function Label({ text, content, className = "", ...props }: LabelProps) {
 	return ce<HTMLLabelElement>(
 		html`
 			<label

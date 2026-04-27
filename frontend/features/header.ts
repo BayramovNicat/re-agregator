@@ -1,9 +1,9 @@
-import { HealthStatus } from "./health-status";
 import { getLang, setLang, t } from "../core/i18n";
 import { cn, html, makeEventManager } from "../core/utils";
 import { Button } from "../ui/button";
 import { Icons } from "../ui/icons";
 import { openDistrictStats } from "./district-stats";
+import { HealthStatus } from "./health-status";
 
 const LANGS = [
 	{ code: "en" as const, label: "EN" },

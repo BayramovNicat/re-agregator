@@ -84,20 +84,23 @@ function createSortHeader(
 
 	const th = html`
 		<th
-			class="px-4 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-(--muted) cursor-pointer select-none hover:text-(--text) transition-colors ${align ===
-			"right"
-				? "text-right"
-				: align === "center"
-					? "text-center"
-					: "text-left"}"
+			class="px-4 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-(--muted) cursor-pointer select-none hover:text-(--text) transition-colors ${
+				align === "right"
+					? "text-right"
+					: align === "center"
+						? "text-center"
+						: "text-left"
+			}"
 			data-col="${key}"
 		>
 			<div
-				class="flex items-center gap-1 ${align === "right"
-					? "justify-end"
-					: align === "center"
-						? "justify-center"
-						: ""}"
+				class="flex items-center gap-1 ${
+					align === "right"
+						? "justify-end"
+						: align === "center"
+							? "justify-center"
+							: ""
+				}"
 			>
 				${label} ${indicator}
 			</div>
