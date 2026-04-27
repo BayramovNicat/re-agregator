@@ -2,8 +2,8 @@ import {
 	circle,
 	DomEvent,
 	featureGroup,
-	layerGroup,
 	type LeafletMouseEvent,
+	layerGroup,
 	type map,
 } from "leaflet";
 import { bus, EVENTS, type EventPayloads } from "../core/events";
@@ -73,7 +73,14 @@ export function initHeatmap(root: HTMLElement): () => void {
 				};
 				if (res.error) throw new Error(res.error);
 				if (res.data) {
-					renderPoints(lmap, lgroup, res.data, activeLocations, onAction, modal);
+					renderPoints(
+						lmap,
+						lgroup,
+						res.data,
+						activeLocations,
+						onAction,
+						modal,
+					);
 				}
 			} catch (err) {
 				toast((err as Error).message, true);
