@@ -3,7 +3,6 @@ import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { frag, html, makeEventManager, show, toast } from "../core/utils";
-import { openHeatmap } from "./heatmap";
 import { Button, RawButton } from "../ui/button";
 import { Chip, CloseableChip } from "../ui/chip";
 import { Icons } from "../ui/icons";
@@ -13,89 +12,95 @@ import { MultiSelect, type MultiSelectElement } from "../ui/multi-select";
 import { Range, setRangeProgress } from "../ui/range";
 import { Select } from "../ui/select";
 import { SkeletonList } from "../ui/skeleton";
+import { openHeatmap } from "./heatmap";
 
-const getNumericFilters = () => [
-	{
-		id: "minPrice",
-		label: t("minPrice"),
-		placeholder: "30 000",
-		chipLabel: t("chipMinPrice"),
-	},
-	{
-		id: "maxPrice",
-		label: t("maxPrice"),
-		placeholder: "150 000",
-		chipLabel: t("chipMaxPrice"),
-	},
-	{
-		id: "minPriceSqm",
-		label: t("minPriceSqm"),
-		placeholder: "500",
-		chipLabel: t("chipMinPriceSqm"),
-	},
-	{
-		id: "maxPriceSqm",
-		label: t("maxPriceSqm"),
-		placeholder: "2000",
-		chipLabel: t("chipMaxPriceSqm"),
-	},
-	{
-		id: "minArea",
-		label: t("minArea"),
-		placeholder: "40",
-		chipLabel: t("chipMinArea"),
-	},
-	{
-		id: "maxArea",
-		label: t("maxArea"),
-		placeholder: "120",
-		chipLabel: t("chipMaxArea"),
-	},
-	{
-		id: "minRooms",
-		label: t("minRooms"),
-		placeholder: "2",
-		chipLabel: t("chipMinRooms"),
-	},
-	{
-		id: "maxRooms",
-		label: t("maxRooms"),
-		placeholder: "4",
-		chipLabel: t("chipMaxRooms"),
-	},
-	{
-		id: "minFloor",
-		label: t("minFloor"),
-		placeholder: "2",
-		chipLabel: t("chipMinFloor"),
-	},
-	{
-		id: "maxFloor",
-		label: t("maxFloor"),
-		placeholder: "15",
-		chipLabel: t("chipMaxFloor"),
-	},
-	{
-		id: "minTotalFloors",
-		label: t("minTotalFloors"),
-		placeholder: "2",
-		chipLabel: t("chipMinTotalFloors"),
-	},
-	{
-		id: "maxTotalFloors",
-		label: t("maxTotalFloors"),
-		placeholder: "5",
-		chipLabel: t("chipMaxTotalFloors"),
-	},
-];
+const getNumericFilters = () =>
+	[
+		{
+			id: "minPrice",
+			label: t("minPrice"),
+			placeholder: "30 000",
+			chipLabel: t("chipMinPrice"),
+		},
+		{
+			id: "maxPrice",
+			label: t("maxPrice"),
+			placeholder: "150 000",
+			chipLabel: t("chipMaxPrice"),
+		},
+		{
+			id: "minPriceSqm",
+			label: t("minPriceSqm"),
+			placeholder: "500",
+			chipLabel: t("chipMinPriceSqm"),
+		},
+		{
+			id: "maxPriceSqm",
+			label: t("maxPriceSqm"),
+			placeholder: "2000",
+			chipLabel: t("chipMaxPriceSqm"),
+		},
+		{
+			id: "minArea",
+			label: t("minArea"),
+			placeholder: "40",
+			chipLabel: t("chipMinArea"),
+		},
+		{
+			id: "maxArea",
+			label: t("maxArea"),
+			placeholder: "120",
+			chipLabel: t("chipMaxArea"),
+		},
+		{
+			id: "minRooms",
+			label: t("minRooms"),
+			placeholder: "2",
+			chipLabel: t("chipMinRooms"),
+		},
+		{
+			id: "maxRooms",
+			label: t("maxRooms"),
+			placeholder: "4",
+			chipLabel: t("chipMaxRooms"),
+		},
+		{
+			id: "minFloor",
+			label: t("minFloor"),
+			placeholder: "2",
+			chipLabel: t("chipMinFloor"),
+		},
+		{
+			id: "maxFloor",
+			label: t("maxFloor"),
+			placeholder: "15",
+			chipLabel: t("chipMaxFloor"),
+		},
+		{
+			id: "minTotalFloors",
+			label: t("minTotalFloors"),
+			placeholder: "2",
+			chipLabel: t("chipMinTotalFloors"),
+		},
+		{
+			id: "maxTotalFloors",
+			label: t("maxTotalFloors"),
+			placeholder: "5",
+			chipLabel: t("chipMaxTotalFloors"),
+		},
+	] as const;
 
-const getBooleanFilters = () => [
-	{ id: "hasRepair", label: t("hasRepair") },
-	{ id: "hasDocument", label: t("hasDocument") },
-	{ id: "hasMortgage", label: t("hasMortgage") },
-	{ id: "isUrgent", label: t("isUrgent") },
-	{ id: "notLastFloor", label: t("notLastFloor") },
-];
+const getBooleanFilters = () =>
+	[
+		{ id: "hasRepair", label: t("hasRepair") },
+		{ id: "hasDocument", label: t("hasDocument") },
+		{ id: "hasMortgage", label: t("hasMortgage") },
+		{ id: "isUrgent", label: t("isUrgent") },
+		{ id: "notLastFloor", label: t("notLastFloor") },
+	] as const;
+
+type NumericFilterKey = ReturnType<typeof getNumericFilters>[number]["id"];
+type BooleanFilterKey = ReturnType<typeof getBooleanFilters>[number]["id"];
 
 export function initSearch(container: HTMLElement): () => void {
 	// --- 1. References ---
@@ -267,12 +272,16 @@ export function initSearch(container: HTMLElement): () => void {
 		// Numeric filters
 		for (const config of getNumericFilters()) {
 			const val = getNumericValue(config.id);
-			if (val) (filters as any)[config.id] = Number(val);
+			if (val) {
+				filters[config.id as NumericFilterKey] = Number(val);
+			}
 		}
 
 		// Boolean filters
 		for (const config of getBooleanFilters()) {
-			if (isFilterChecked(config.id)) (filters as any)[config.id] = true;
+			if (isFilterChecked(config.id)) {
+				filters[config.id as BooleanFilterKey] = true;
+			}
 		}
 
 		// Dropdowns & Custom
@@ -600,7 +609,10 @@ export function initSearch(container: HTMLElement): () => void {
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<div class="flex items-center justify-between">
-						${Label({ text: t("discountThreshold"), htmlFor: "discount-threshold" })}
+						${Label({
+							text: t("discountThreshold"),
+							htmlFor: "discount-threshold",
+						})}
 						${ui.discountValueDisplay}
 					</div>
 					${rangeWrapper}
