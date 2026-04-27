@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils.ts";
+import { ce, cn, html } from "../core/utils";
 
 // ─── Concurrency queue ────────────────────────────────────────────────────────
 

@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"moduleResolution": "bundler",
+		"module": "ESNext",
+		"target": "ES2022",
+		"lib": ["DOM", "DOM.Iterable", "ES2022"],
+		"types": [],
+		"baseUrl": ".",
+		"paths": { "@/*": ["./src/*"] },
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true
+	},
+	"include": ["frontend/**/*"],
+	"exclude": ["frontend/sw.ts"]
+}

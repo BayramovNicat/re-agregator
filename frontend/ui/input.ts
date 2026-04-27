@@ -1,4 +1,4 @@
-import { ce, cn, frag, html } from "../core/utils.ts";
+import { ce, cn, frag, html } from "../core/utils";
 import { Label } from "./label";
 
 const SHARED_CLS = `
