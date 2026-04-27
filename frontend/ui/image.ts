@@ -2,8 +2,8 @@ import { ce, cn, html } from "../core/utils.ts";
 
 // ─── Concurrency queue ────────────────────────────────────────────────────────
 
-/** Maximum simultaneous image requests — mirrors HTTP/1.1 per-origin connection limit. */
-const MAX_CONCURRENT = 6;
+/** Maximum simultaneous image requests. 8 is a good balance for HTTP/2. */
+const MAX_CONCURRENT = 8;
 
 let active = 0;
 const queue = new Set<HTMLImageElement>();
@@ -17,10 +17,6 @@ function startLoad(img: HTMLImageElement, src: string): void {
 
 /**
  * Releases one concurrency slot and dispatches the next eligible queued image.
- *
- * Stale entries (disconnected from DOM) are silently discarded; iteration stops
- * as soon as one valid candidate is found and started. Call after every
- * load/error settlement.
  */
 function drainQueue(): void {
 	active = Math.max(0, active - 1);
@@ -34,12 +30,38 @@ function drainQueue(): void {
 	}
 }
 
+// ─── Intersection observer ────────────────────────────────────────────────────
+
+/**
+ * Shared singleton observer for all {@link Image} instances.
+ *
+ * Checks isConnected to automatically cleanup stale references from the DOM,
+ * fixing potential memory leaks in large lists.
+ */
+const observer = new IntersectionObserver(
+	(entries) => {
+		for (const entry of entries) {
+			const img = entry.target as HTMLImageElement;
+
+			// Cleanup if element was removed from DOM before it could load
+			if (!img.isConnected) {
+				observer.unobserve(img);
+				queue.delete(img);
+				continue;
+			}
+
+			if (entry.isIntersecting) {
+				enqueue(img);
+			} else {
+				queue.delete(img);
+			}
+		}
+	},
+	{ rootMargin: "200px 0px" }, // Increased margin for smoother scrolling
+);
+
 /**
  * Schedules an image for loading.
- *
- * If a slot is free the load starts immediately; otherwise the image is held in
- * the queue until a slot opens via {@link drainQueue}. Already-loading and
- * already-loaded images are ignored.
  */
 function enqueue(img: HTMLImageElement): void {
 	const src = img.dataset.src;
@@ -51,35 +73,9 @@ function enqueue(img: HTMLImageElement): void {
 	}
 }
 
-// ─── Intersection observer ────────────────────────────────────────────────────
-
-/**
- * Shared singleton observer for all {@link Image} instances.
- *
- * The `100px` top/bottom root margin pre-fetches images just before they scroll
- * into view. Images that leave the expanded viewport are removed from the
- * pending queue; in-flight requests are never aborted to avoid TCP connection
- * exhaustion on HTTP/1.1 origins.
- */
-const observer = new IntersectionObserver(
-	(entries) => {
-		for (const entry of entries) {
-			const img = entry.target as HTMLImageElement;
-			if (entry.isIntersecting) {
-				enqueue(img);
-			} else {
-				queue.delete(img);
-			}
-		}
-	},
-	{ rootMargin: "100px 0px" },
-);
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/**
- * Props accepted by {@link Image}.
- */
+/** Props accepted by {@link Image}. */
 export type ImageProps = {
 	/** Source URL of the image. */
 	src: string;
@@ -90,16 +86,11 @@ export type ImageProps = {
 /**
  * Viewport-aware lazy-loading image component.
  *
- * Returns a bare `<img>` element that starts transparent and fades in once
- * the image has decoded. Loading is deferred until the element enters the
- * viewport (+ 100 px margin) and capped at {@link MAX_CONCURRENT} concurrent
- * requests to respect the browser's HTTP/1.1 connection pool.
- *
- * @example
- * ```ts
- * const img = Image({ src: "photo.jpg", className: "w-full object-cover", alt: "Property photo" });
- * container.appendChild(img);
- * ```
+ * Optimized for large lists:
+ * - Limits concurrent network requests to {@link MAX_CONCURRENT}.
+ * - Uses IntersectionObserver for lazy loading.
+ * - Uses .decode() to prevent main-thread jank during image decoding.
+ * - Automatically cleans up memory when elements are removed from DOM.
  */
 export function Image({
 	src,
@@ -109,6 +100,8 @@ export function Image({
 	const img = ce<HTMLImageElement>(
 		html`<img
 			alt=""
+			loading="lazy"
+			decoding="async"
 			referrerpolicy="no-referrer"
 			class="${cn("opacity-0 transition-opacity duration-400", className)}"
 		/>`,
@@ -117,37 +110,40 @@ export function Image({
 
 	img.dataset.src = src;
 
-	img.addEventListener(
-		"load",
-		() => {
-			img.dataset.loaded = "1";
-			delete img.dataset.loading;
-			img
-				.decode()
-				.then(() => {
-					img.classList.replace("opacity-0", "opacity-100");
-				})
-				.catch(() => {
-					// Fallback if decode fails
-					img.classList.replace("opacity-0", "opacity-100");
-				});
-			observer.unobserve(img);
-			drainQueue();
-		},
-		{ once: true },
-	);
+	const handleLoad = () => {
+		img.dataset.loaded = "1";
+		delete img.dataset.loading;
 
-	img.addEventListener(
-		"error",
-		() => {
-			delete img.dataset.loading;
-			img.style.display = "none";
-			observer.unobserve(img);
-			drainQueue();
-		},
-		{ once: true },
-	);
+		// Move decoding off the critical path for smoother animations
+		img
+			.decode()
+			.then(() => {
+				if (img.isConnected) {
+					img.classList.replace("opacity-0", "opacity-100");
+				}
+			})
+			.catch(() => {
+				if (img.isConnected) {
+					img.classList.replace("opacity-0", "opacity-100");
+				}
+			})
+			.finally(() => {
+				observer.unobserve(img);
+				drainQueue();
+			});
+	};
 
+	const handleError = () => {
+		delete img.dataset.loading;
+		img.style.display = "none";
+		observer.unobserve(img);
+		drainQueue();
+	};
+
+	img.addEventListener("load", handleLoad, { once: true });
+	img.addEventListener("error", handleError, { once: true });
+
+	// Register with observer
 	observer.observe(img);
 
 	return img;
