@@ -258,11 +258,15 @@ export function initSearch(container: HTMLElement): () => void {
 	};
 
 	async function executeSearch(isPagination = false): Promise<void> {
+		if (state.loading) return;
+
 		const locations = ui.locationSelect.getValue();
 		if (locations.length === 0) {
 			ui.locationSelect.querySelector("button")?.focus();
 			return;
 		}
+
+		state.loading = true;
 
 		if (!isPagination) {
 			state.allResults = [];
@@ -384,6 +388,7 @@ export function initSearch(container: HTMLElement): () => void {
 			toast((error as Error).message, true);
 		} finally {
 			ui.searchTrigger.disabled = false;
+			state.loading = false;
 		}
 	}
 

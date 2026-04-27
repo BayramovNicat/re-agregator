@@ -14,6 +14,7 @@ function loadBookmarkData(): Map<string, Property> {
 export const state = {
 	allResults: [] as Property[],
 	savedOnlyResults: [] as Property[],
+	loading: false,
 	currentTotal: 0,
 	currentOffset: 0,
 	currentView: "grid",

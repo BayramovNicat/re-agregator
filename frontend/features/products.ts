@@ -13,7 +13,6 @@ import {
 	trust,
 	tTier,
 } from "../core/utils";
-
 import { openGallery } from "../dialogs/gallery";
 import { openPropertyDetail } from "../dialogs/property-detail";
 import { Button, RawButton } from "../ui/button";
@@ -93,7 +92,9 @@ export function initProducts(container: HTMLElement): () => void {
 		const sortBy = sortSel.value || "disc";
 		const list = sortDeals(
 			state.showingSaved
-				? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
+				? state.savedOnlyResults.filter((p) =>
+						state.bookmarks.has(p.source_url),
+					)
 				: state.allResults.filter((p) => !state.hidden.has(p.source_url)),
 			sortBy,
 		);
@@ -262,8 +263,7 @@ export function initProducts(container: HTMLElement): () => void {
 
 	const cards = html`<div></div>`;
 	const sentinel = html`<div></div>`;
-	const loadInfo = html`<p class="text-xs text-(--muted) mt-2"></p>`;
-	const loadMore = html`<div class="hidden">${loadInfo}</div>`;
+	const loadMore = html`<div class="hidden"></div>`;
 	const mapViewCt = html`<div
 		style="display:none;height:calc(100vh - 280px);min-height:420px"
 		class="rounded-(--r-lg) overflow-hidden border border-(--border)"
@@ -427,13 +427,10 @@ export function initProducts(container: HTMLElement): () => void {
 
 	function updatePagination(): void {
 		if (!state.showingSaved && state.allResults.length < state.currentTotal) {
-			show(loadMore);
-			loadInfo.textContent = `${t("showing")} ${state.allResults.length} ${t("of")} ${fmt(state.currentTotal)}`;
 			setupScrollObserver(() =>
 				bus.emit(EVENTS.SEARCH_STARTED, { more: true }),
 			);
 		} else {
-			hide(loadMore);
 			if (state.scrollObserver) {
 				state.scrollObserver.disconnect();
 				state.scrollObserver = null;
@@ -458,12 +455,13 @@ export function initProducts(container: HTMLElement): () => void {
 				if (
 					entries[0]?.isIntersecting &&
 					!state.showingSaved &&
+					!state.loading &&
 					state.allResults.length < state.currentTotal
 				) {
 					loadMoreFn();
 				}
 			},
-			{ rootMargin: "600px" },
+			{ rootMargin: "0px 0px 1000px 0px" },
 		);
 		state.scrollObserver.observe(sentinel);
 	}
