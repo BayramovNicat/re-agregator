@@ -320,7 +320,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		// 2. Statistics Grid
 		statsEl.replaceChildren();
 		const statData = [
-			{ label: t("area"), value: `${fmt(p.area_sqm, 1)} m²` },
+			{ label: t("area"), value: fmt(p.area_sqm, 1) },
 			{ label: t("ppsm"), value: `₼${fmt(p.price_per_sqm, 0)}` },
 			{ label: t("rooms"), value: p.rooms ?? "—" },
 			{ label: t("floor"), value: fmtFloor(p.floor, p.total_floors) },

@@ -215,7 +215,7 @@ export function Product({
 			<div class="grid grid-cols-4 gap-1.5">
 				${StatBox({
 					label: t("area"),
-					value: `${fmt(property.area_sqm, 1)} m²`,
+					value: fmt(property.area_sqm, 1),
 				})}
 				${StatBox({ label: t("ppsm"), value: fmt(property.price_per_sqm, 0) })}
 				${StatBox({ label: t("rooms"), value: property.rooms ?? "—" })}
@@ -339,7 +339,7 @@ export function Product({
 					</span>
 				</div>
 				<div class="mt-0.5 text-xs text-(--muted) truncate">
-					${fmt(property.area_sqm, 1)} m² · ${property.rooms ?? "—"}
+					${fmt(property.area_sqm, 1)} · ${property.rooms ?? "—"}
 					${t("rooms_")} · ${t("floor_")} ${floorStr} ·
 					₼${fmt(property.price_per_sqm, 0)}/m²
 				</div>
