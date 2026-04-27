@@ -209,59 +209,39 @@ function createUI(handlers: {
 	const modal = Dialog({
 		maxWidth: "440px",
 		className: "p-0 overflow-hidden",
+		title: t("telegramAlerts"),
+		description: t("botInstruction", {
+			bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue) font-semibold hover:underline">@BakuDealsBot</a>',
+			start:
+				'<code class="bg-(--surface-3) px-1.5 py-0.5 rounded text-[10px] font-mono">/start</code>',
+		}),
 		content: html`
-			<div class="flex flex-col">
-				<div
-					class="p-6 pb-4 border-b border-(--border) bg-linear-to-br from-(--surface) to-(--surface-2)"
-				>
-					<div class="flex items-center gap-3 mb-1">
+			<div class="p-6 overflow-y-auto min-h-0">
+				${listEl}
+
+				<div class="flex flex-col gap-4">
+					${Field({
+						label: t("chatIdLabel"),
+						input: chatIdInput,
+					})}
+					${Field({
+						label: t("alertLabel"),
+						input: labelInput,
+					})}
+
+					<div class="space-y-2 mt-1">
 						<div
-							class="size-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500"
+							class="text-[10px] font-bold text-(--muted) uppercase tracking-widest opacity-70"
 						>
-							${Icons.bell(18)}
+							${t("matchingFilters")}
 						</div>
-						<div class="text-lg font-bold text-(--text) tracking-tight">
-							${t("telegramAlerts")}
-						</div>
+						${previewEl}
 					</div>
-					<p class="text-xs text-(--muted) leading-relaxed">
-						${t("botInstruction", {
-							bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue) font-semibold hover:underline">@BakuDealsBot</a>',
-							start:
-								'<code class="bg-(--surface-3) px-1.5 py-0.5 rounded text-[10px] font-mono">/start</code>',
-						})}
-					</p>
-				</div>
 
-				<div class="p-6">
-					${listEl}
-
-					<div class="flex flex-col gap-4">
-						${Field({
-							htmlFor: "alert-chat-id",
-							label: t("chatIdLabel"),
-							input: chatIdInput,
-						})}
-						${Field({
-							htmlFor: "alert-label",
-							label: t("alertLabel"),
-							input: labelInput,
-						})}
-
-						<div class="space-y-2 mt-1">
-							<div
-								class="text-[10px] font-bold text-(--muted) uppercase tracking-widest opacity-70"
-							>
-								${t("matchingFilters")}
-							</div>
-							${previewEl}
-						</div>
-
-						<div
-							class="flex gap-2 justify-end mt-4 pt-4 border-t border-(--border)/50"
-						>
-							${cancelBtn} ${saveBtn}
-						</div>
+					<div
+						class="flex gap-2 justify-end mt-4 pt-4 border-t border-(--border)/50"
+					>
+						${cancelBtn} ${saveBtn}
 					</div>
 				</div>
 			</div>

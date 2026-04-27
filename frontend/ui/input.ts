@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils.ts";
+import { ce, cn, frag, html } from "../core/utils.ts";
 import { Label } from "./label";
 
 const SHARED_CLS = `
@@ -73,7 +73,7 @@ export function Input({
 
 /** Props accepted by {@link Field}. */
 export type FieldProps = {
-	htmlFor: string;
+	htmlFor?: string;
 	label: string;
 	input: HTMLElement;
 } & Partial<HTMLDivElement>;
@@ -81,16 +81,8 @@ export type FieldProps = {
 /**
  * A layout wrapper for form fields that stacks a label above an input or select element.
  *
- * Renders a `<div>` with standardized spacing and property forwarding.
- *
- * @example
- * ```ts
- * const field = Field({
- *   htmlFor: "email",
- *   label: "Email Address",
- *   input: Input({ id: "email", type: "email" })
- * });
- * ```
+ * Supports both explicit ID-based linking (via `htmlFor`) and implicit nesting.
+ * If `htmlFor` is omitted, the input is nested inside the label for accessibility.
  */
 export function Field({
 	htmlFor,
@@ -99,12 +91,16 @@ export function Field({
 	className = "",
 	...props
 }: FieldProps): HTMLDivElement {
-	return ce<HTMLDivElement>(
-		html`
-			<div class="${cn("flex flex-col gap-1.5", className)}">
-				${Label({ htmlFor, text: label })} ${input}
-			</div>
-		`,
-		props,
-	);
+	const content = html`
+		<div class="${cn("flex flex-col gap-1.5", className)}">
+			${htmlFor
+				? frag`${Label({ htmlFor, text: label })}${input}`
+				: Label({
+						text: label,
+						content: input,
+						className: "flex flex-col gap-1.5 cursor-pointer",
+					})}
+		</div>
+	`;
+	return ce<HTMLDivElement>(content as unknown as HTMLDivElement, props);
 }

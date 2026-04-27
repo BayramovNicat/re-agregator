@@ -39,6 +39,7 @@ export function MapDialog({
 		id,
 		maxWidth: MAP_MODAL_MAXWIDTH,
 		className: `max-h-[calc(100vh-2rem)] ${className}`,
+		showClose: true,
 		content: html`<div id="${containerId}" class="w-full h-120 relative"></div>`,
 	});
 }

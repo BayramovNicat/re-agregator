@@ -4,6 +4,7 @@ import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
 import { fmt, fmtFloor, getLocale, html, timeAgo, tTier } from "../core/utils";
 import { Tag } from "../ui/chip";
+import { Dialog } from "../ui/dialog";
 import { Gallery } from "../ui/gallery";
 import { Icons } from "../ui/icons";
 import { initLeaflet } from "../ui/map-base";
@@ -133,27 +134,13 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	let lmark: ReturnType<typeof marker> | null = null;
 
 	// ── DOM scaffold ────────────────────────────────────────────────────────
-	const modal = html`
-		<dialog
-			id="prop-detail-modal"
-			class="bg-transparent border-none p-0 max-w-screen max-h-screen w-full h-full backdrop:bg-black/80 backdrop:backdrop-blur-sm focus:outline-none"
-		>
-			<div
-				class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-               flex flex-col overflow-hidden
-               bg-(--surface) border border-(--border) rounded-(--r-lg) text-(--text)
-               shadow-[0_24px_80px_rgba(0,0,0,0.6)]"
-				style="width:calc(100vw - 2rem);max-width:900px;max-height:calc(100vh - 2rem)"
-			>
-				<!-- Close button (fixed) -->
-				<button
-					id="pd-close"
-					class="absolute top-3 right-3 z-20 flex items-center justify-center w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-95"
-				>
-					${Icons.close(16)}
-				</button>
-
-				<!-- Scrollable body -->
+	const modal = Dialog({
+		id: "prop-detail-modal",
+		maxWidth: "900px",
+		showClose: true,
+		className: "text-(--text)",
+		content: html`
+			<div class="flex flex-col h-full min-h-0">
 				<div class="overflow-y-auto flex-1 min-h-0">
 					<!-- Gallery placeholder -->
 					<div id="pd-gallery-ct"></div>
@@ -198,15 +185,19 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 							></div>
 						</div>
 						<!-- Tags -->
-						<div
-							id="pd-tags"
-							class="flex-wrap gap-1.25 mt-3 empty:hidden"
-						></div>
+						<div id="pd-tags" class="flex-wrap gap-1.25 mt-3 empty:hidden"></div>
 					</div>
 
 					<!-- Price history chart -->
-					<div id="pd-history-section" class="px-5 py-4 border-b border-(--border) hidden">
-						<div class="text-xs font-semibold text-(--muted) uppercase tracking-wider mb-2.5">${t("priceHistory")}</div>
+					<div
+						id="pd-history-section"
+						class="px-5 py-4 border-b border-(--border) hidden"
+					>
+						<div
+							class="text-xs font-semibold text-(--muted) uppercase tracking-wider mb-2.5"
+						>
+							${t("priceHistory")}
+						</div>
 						<div id="pd-history-chart"></div>
 					</div>
 
@@ -257,7 +248,8 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 							id="pd-bmark-btn"
 							class="inline-flex items-center gap-1.25 text-xs px-2.5 py-1.5 rounded-(--r-sm) border border-(--border) text-(--muted) hover:text-(--text) transition-colors"
 						>
-							${Icons.bookmark({ size: 12, fill: false })} <span>${t("btnSave")}</span>
+							${Icons.bookmark({ size: 12, fill: false })}
+							<span>${t("btnSave")}</span>
 						</button>
 						<button
 							id="pd-hide-btn"
@@ -268,8 +260,8 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 					</div>
 				</div>
 			</div>
-		</dialog>
-	` as HTMLDialogElement;
+		`,
+	});
 
 	// ── Refs ─────────────────────────────────────────────────────────────────
 	const $ = <T extends HTMLElement>(id: string): T => {
@@ -433,14 +425,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 
 	// ── Event listeners ──────────────────────────────────────────────────────
 	const handlers: [HTMLElement | Window, string, EventListener][] = [
-		[$("pd-close"), "click", () => modal.close()],
-		[
-			modal,
-			"click",
-			(e: Event) => {
-				if (e.target === modal) modal.close();
-			},
-		],
 		[
 			modal,
 			"keydown",
@@ -448,7 +432,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 				const key = (e as KeyboardEvent).key;
 				if (key === "ArrowLeft") gallery.navigate(-1);
 				if (key === "ArrowRight") gallery.navigate(1);
-				if (key === "Escape") modal.close();
 			},
 		],
 	];

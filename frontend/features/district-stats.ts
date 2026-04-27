@@ -185,30 +185,15 @@ export function initDistrictStats(root: HTMLElement): () => void {
 		</table>
 	` as HTMLTableElement;
 
-	const closeBtn = RawButton({
-		className:
-			"w-7 h-7 flex items-center justify-center rounded-(--r-sm) text-(--muted) hover:text-(--text) hover:bg-(--surface-3) transition-colors",
-		ariaLabel: "Close",
-		content: Icons.close(14),
-		onclick: () => refs.dialogEl?.close(),
-	});
-
 	refs.dialogEl = Dialog({
 		id: "district-stats-modal",
 		maxWidth: "600px",
 		className: "text-(--text)",
+		title: t("districtStats"),
+		description: refs.subtitle,
 		content: html`
 			<div class="flex flex-col h-150 max-h-[85vh]">
-				<div class="px-5 pt-4.5 pb-3.5 border-b border-(--border) shrink-0">
-					<div class="flex items-center justify-between mb-3.5">
-						<div>
-							<div class="text-[15px] font-bold tracking-[-0.3px]">
-								${t("districtStats")}
-							</div>
-							${refs.subtitle}
-						</div>
-						${closeBtn}
-					</div>
+				<div class="px-5 pt-1.5 pb-3.5 border-b border-(--border) shrink-0">
 					${createSearchBar()}
 				</div>
 

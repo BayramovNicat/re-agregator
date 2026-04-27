@@ -6,12 +6,13 @@ export function renderDescModal(root: HTMLElement): void {
 		Dialog({
 			id: "desc-modal",
 			maxWidth: "560px",
+			showClose: true,
 			content: html`<div class="p-5 overflow-y-auto max-h-[60vh]">
-        <p
-          id="desc-body"
-          class="text-sm text-(--text-2) leading-[1.75] whitespace-pre-wrap"
-        ></p>
-      </div>`,
+				<p
+					id="desc-body"
+					class="text-sm text-(--text-2) leading-[1.75] whitespace-pre-wrap"
+				></p>
+			</div>`,
 		}),
 	);
 }
