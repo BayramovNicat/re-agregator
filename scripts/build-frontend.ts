@@ -97,10 +97,7 @@ async function build() {
 		"./public/manifest.json",
 		Bun.file("./frontend/manifest.json"),
 	);
-	await Bun.write(
-		"./public/og-image.png",
-		Bun.file("./frontend/og-image.png"),
-	);
+	await Bun.write("./public/og-image.png", Bun.file("./frontend/og-image.png"));
 
 	// Copy PWA Icons and Screenshots
 	cpSync("./frontend/icons", "./public/icons", {

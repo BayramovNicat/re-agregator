@@ -168,7 +168,8 @@ export function Product({
       duration-200
       hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]
       hover:-translate-y-0.5
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg)"
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg)
+      ${isNew ? "new-deal-anim" : ""}"
 			style="border-color:${
 				property.tier === "Overpriced" ? "var(--red-b)" : "var(--border)"
 			}"
@@ -318,7 +319,8 @@ export function Product({
       transition-colors duration-150
       hover:border-(--border-h)
       hover:bg-(--surface-2)
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-1 focus-visible:ring-offset-(--bg)"
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-1 focus-visible:ring-offset-(--bg)
+      ${isNewRow ? "new-deal-anim" : ""}"
 		>
 			${rowThumb}
 			<div class="text-center" title="${rowTierTip}">
