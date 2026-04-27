@@ -1,8 +1,11 @@
 import { t } from "../core/i18n";
-import { fmt, frag, ge, trust } from "../core/utils";
-
+import { fmt, html, makeEventManager } from "../core/utils";
+import { RawButton } from "../ui/button";
 import { Dialog } from "../ui/dialog";
+import { Icons } from "../ui/icons";
+import { RawInput } from "../ui/input";
 
+// --- Types & Constants ---
 type LocationRow = {
 	location_name: string;
 	avg_price_per_sqm: number;
@@ -15,199 +18,411 @@ type LocationRow = {
 type SortKey = "district" | "avg_ppsm" | "listing_count" | "trend";
 type SortDir = "asc" | "desc";
 
-let dialogEl: HTMLDialogElement | null = null;
-let cachedData: LocationRow[] | null = null;
-let cachedAt = 0;
 const CACHE_TTL = 15 * 60_000;
 
-export function renderDistrictStatsModal(root: HTMLElement): void {
-	dialogEl = Dialog({
+// --- State & References ---
+const state = {
+	cachedData: null as LocationRow[] | null,
+	cachedAt: 0,
+	sortKey: "avg_ppsm" as SortKey,
+	sortDir: "desc" as SortDir,
+	filterQuery: "",
+	isInitialized: false,
+};
+
+const ev = makeEventManager();
+
+const refs = {
+	subtitle: html`<div class="text-xs text-(--muted) mt-0.5"></div>`,
+	loading: createLoadingSkeleton(),
+	table: null as unknown as HTMLTableElement,
+	tbody: html`<tbody></tbody>`,
+	error: null as unknown as HTMLElement,
+	empty: html`
+		<div class="hidden py-20 text-center">
+			<div class="text-(--muted) text-sm">${t("districtEmpty")}</div>
+		</div>
+	`,
+	search: null as unknown as HTMLInputElement,
+	clear: null as unknown as HTMLButtonElement,
+	dialogEl: null as HTMLDialogElement | null,
+	sortIndicators: {} as Record<SortKey, HTMLElement>,
+	sortHeaders: {} as Record<SortKey, HTMLElement>,
+};
+
+// --- Components & Helpers ---
+
+function createLoadingSkeleton(): HTMLElement {
+	return html`
+		<div class="hidden py-1 px-5">
+			${Array.from({ length: 8 }).map(
+				() => html`
+					<div
+						class="py-3.5 border-b border-(--border) flex items-center gap-4 animate-pulse"
+					>
+						<div class="h-4 w-32 bg-(--surface-3) rounded"></div>
+						<div class="flex-1"></div>
+						<div class="h-4 w-16 bg-(--surface-3) rounded"></div>
+						<div class="h-4 w-12 bg-(--surface-3) rounded"></div>
+						<div class="h-4 w-10 bg-(--surface-3) rounded"></div>
+					</div>
+				`,
+			)}
+		</div>
+	`;
+}
+
+function createSortHeader(
+	key: SortKey,
+	label: string,
+	align: "left" | "right" | "center",
+): HTMLElement {
+	const indicator = html`<span
+		class="w-3 text-[10px] opacity-0 transition-opacity"
+	></span>`;
+	refs.sortIndicators[key] = indicator;
+
+	const th = html`
+		<th
+			class="px-4 py-2.5 font-semibold text-[11px] uppercase tracking-wider text-(--muted) cursor-pointer select-none hover:text-(--text) transition-colors ${align ===
+			"right"
+				? "text-right"
+				: align === "center"
+					? "text-center"
+					: "text-left"}"
+			data-col="${key}"
+		>
+			<div
+				class="flex items-center gap-1 ${align === "right"
+					? "justify-end"
+					: align === "center"
+						? "justify-center"
+						: ""}"
+			>
+				${label} ${indicator}
+			</div>
+		</th>
+	`;
+	refs.sortHeaders[key] = th;
+	return th;
+}
+
+function createSearchBar(): HTMLElement {
+	refs.search = RawInput({
+		id: "dst-search",
+		type: "text",
+		placeholder: t("searchDistrict"),
+		className:
+			"w-full h-9 pl-9 pr-9 bg-(--surface-2) border border-(--border) rounded-(--r-sm) text-sm focus:outline-none focus:border-(--accent) focus:ring-2 focus:ring-(--accent)/20 transition-all",
+		oninput: (e) => {
+			const val = (e.target as HTMLInputElement).value;
+			state.filterQuery = val;
+			refs.clear.classList.toggle("visible", val.length > 0);
+			renderTable();
+		},
+	});
+
+	refs.clear = RawButton({
+		className:
+			"w-6 h-6 flex items-center justify-center rounded-(--r-sm) text-(--muted) hover:text-(--text) hover:bg-(--surface-3) transition-all opacity-0 pointer-events-none [&.visible]:opacity-100 [&.visible]:pointer-events-auto",
+		content: Icons.close(12),
+		ariaLabel: "Clear search",
+		onclick: () => {
+			refs.search.value = "";
+			state.filterQuery = "";
+			refs.clear.classList.remove("visible");
+			renderTable();
+			refs.search.focus();
+		},
+	});
+
+	return html`
+		<div class="relative group">
+			<div
+				class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-(--muted) group-focus-within:text-(--text) transition-colors"
+			>
+				${Icons.search(14)}
+			</div>
+			${refs.search}
+			<div class="absolute inset-y-0 right-1.5 flex items-center">
+				${refs.clear}
+			</div>
+		</div>
+	`;
+}
+
+/**
+ * Initializes the District Statistics modal.
+ */
+export function initDistrictStats(root: HTMLElement): () => void {
+	if (state.isInitialized) return () => {};
+
+	const retryBtn = RawButton({
+		className:
+			"px-4 py-2 bg-(--surface-3) rounded-(--r-sm) text-xs font-medium hover:bg-(--surface-4) transition-colors",
+		content: "Retry",
+		onclick: () => void loadStats(),
+	});
+
+	refs.error = html`
+		<div class="hidden py-20 text-center">
+			<div class="text-(--muted) mb-4 text-sm">${t("districtError")}</div>
+			${retryBtn}
+		</div>
+	`;
+
+	refs.table = html`
+		<table class="w-full border-collapse text-sm">
+			<thead>
+				<tr class="border-b border-(--border) sticky top-0 bg-(--surface) z-10">
+					${createSortHeader("district", t("districtCol"), "left")}
+					${createSortHeader("avg_ppsm", t("districtAvgPpsm"), "right")}
+					${createSortHeader("listing_count", t("districtListings"), "right")}
+					${createSortHeader("trend", t("districtTrend"), "center")}
+				</tr>
+			</thead>
+			${refs.tbody}
+		</table>
+	` as HTMLTableElement;
+
+	const closeBtn = RawButton({
+		className:
+			"w-7 h-7 flex items-center justify-center rounded-(--r-sm) text-(--muted) hover:text-(--text) hover:bg-(--surface-3) transition-colors",
+		ariaLabel: "Close",
+		content: Icons.close(14),
+		onclick: () => refs.dialogEl?.close(),
+	});
+
+	refs.dialogEl = Dialog({
 		id: "district-stats-modal",
-		maxWidth: "640px",
+		maxWidth: "600px",
 		className: "text-(--text)",
-		content: frag`
-      <div class="flex items-center justify-between px-5 pt-4.5 pb-3.5 border-b border-(--border) shrink-0">
-        <div>
-          <div class="text-[15px] font-bold tracking-[-0.3px]" id="dst-title">${t("districtStats")}</div>
-          <div class="text-xs text-(--muted) mt-0.5" id="dst-subtitle"></div>
-        </div>
-        <button
-          type="button"
-          id="dst-close"
-          class="w-7 h-7 flex items-center justify-center rounded-(--r-sm) text-(--muted) hover:text-(--text) hover:bg-(--surface-3) transition-colors"
-          aria-label="Close"
-        >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-      <div id="dst-body" class="overflow-y-auto" style="max-height:480px">
-        <div id="dst-loading" class="py-12 text-center text-sm text-(--muted)">${t("districtLoading")}</div>
-        <table id="dst-table" class="hidden w-full border-collapse text-sm">
-          <thead>
-            <tr class="border-b border-(--border) sticky top-0 bg-(--surface) z-10">
-              <th id="dst-th-district" class="text-left px-5 py-2.5 font-semibold text-xs text-(--muted) cursor-pointer select-none hover:text-(--text) whitespace-nowrap" data-col="district">
-                ${t("districtCol")} <span id="dst-sort-district" class="ml-0.5 opacity-50"></span>
-              </th>
-              <th id="dst-th-avg_ppsm" class="text-right px-4 py-2.5 font-semibold text-xs text-(--muted) cursor-pointer select-none hover:text-(--text) whitespace-nowrap" data-col="avg_ppsm">
-                ${t("districtAvgPpsm")} <span id="dst-sort-avg_ppsm" class="ml-0.5 opacity-50"></span>
-              </th>
-              <th id="dst-th-listing_count" class="text-right px-4 py-2.5 font-semibold text-xs text-(--muted) cursor-pointer select-none hover:text-(--text) whitespace-nowrap" data-col="listing_count">
-                ${t("districtListings")} <span id="dst-sort-listing_count" class="ml-0.5 opacity-50"></span>
-              </th>
-              <th id="dst-th-trend" class="text-center px-4 pr-5 py-2.5 font-semibold text-xs text-(--muted) cursor-pointer select-none hover:text-(--text) whitespace-nowrap" data-col="trend">
-                ${t("districtTrend")} <span id="dst-sort-trend" class="ml-0.5 opacity-50"></span>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="dst-tbody"></tbody>
-        </table>
-        <div id="dst-error" class="hidden py-12 text-center text-sm text-(--muted)">${t("districtError")}</div>
-      </div>
-    `,
+		content: html`
+			<div class="flex flex-col h-150 max-h-[85vh]">
+				<div class="px-5 pt-4.5 pb-3.5 border-b border-(--border) shrink-0">
+					<div class="flex items-center justify-between mb-3.5">
+						<div>
+							<div class="text-[15px] font-bold tracking-[-0.3px]">
+								${t("districtStats")}
+							</div>
+							${refs.subtitle}
+						</div>
+						${closeBtn}
+					</div>
+					${createSearchBar()}
+				</div>
+
+				<div class="flex-1 overflow-y-auto min-h-0">
+					${refs.loading} ${refs.table} ${refs.error} ${refs.empty}
+				</div>
+			</div>
+		`,
 	});
 
-	root.appendChild(dialogEl);
+	root.appendChild(refs.dialogEl);
+	state.isInitialized = true;
 
-	ge("dst-close").addEventListener("click", () => dialogEl?.close());
+	return () => {
+		refs.dialogEl?.remove();
+		state.isInitialized = false;
+		ev.cleanup();
+	};
 }
 
-let sortKey: SortKey = "avg_ppsm";
-let sortDir: SortDir = "desc";
+// --- Logic & Data Handling ---
 
-function trendOrder(t: "up" | "down" | "flat"): number {
-	if (t === "up") return 2;
-	if (t === "flat") return 1;
-	return 0;
+function getTrendOrder(t: "up" | "down" | "flat"): number {
+	const orders = { up: 2, flat: 1, down: 0 };
+	return orders[t];
 }
 
-function sortedData(data: LocationRow[]): LocationRow[] {
-	return [...data].sort((a, b) => {
-		let cmp = 0;
-		if (sortKey === "district")
-			cmp = a.location_name.localeCompare(b.location_name);
-		else if (sortKey === "avg_ppsm")
-			cmp = a.avg_price_per_sqm - b.avg_price_per_sqm;
-		else if (sortKey === "listing_count") cmp = a.count - b.count;
-		else if (sortKey === "trend")
-			cmp = trendOrder(a.trend) - trendOrder(b.trend);
-		return sortDir === "asc" ? cmp : -cmp;
+function getProcessedData(): LocationRow[] {
+	if (!state.cachedData) return [];
+
+	let data = [...state.cachedData];
+
+	// Filter
+	if (state.filterQuery) {
+		const q = state.filterQuery.toLowerCase();
+		data = data.filter((r) => r.location_name.toLowerCase().includes(q));
+	}
+
+	// Sort strategies
+	const sorters: Record<SortKey, (a: LocationRow, b: LocationRow) => number> = {
+		district: (a, b) => a.location_name.localeCompare(b.location_name),
+		avg_ppsm: (a, b) => a.avg_price_per_sqm - b.avg_price_per_sqm,
+		listing_count: (a, b) => a.count - b.count,
+		trend: (a, b) => getTrendOrder(a.trend) - getTrendOrder(b.trend),
+	};
+
+	data.sort((a, b) => {
+		const cmp = sorters[state.sortKey](a, b);
+		return state.sortDir === "asc" ? cmp : -cmp;
 	});
+
+	return data;
 }
 
-function trendBadge(row: LocationRow): string {
-	if (row.trend === "up") {
-		const pct =
-			row.recent_avg && row.prior_avg
-				? (((row.recent_avg - row.prior_avg) / row.prior_avg) * 100).toFixed(1)
-				: "";
-		return `<span style="color:var(--red);font-size:11px;font-weight:600">↑${pct ? ` ${pct}%` : ""}</span>`;
+function trendBadge(row: LocationRow): HTMLElement {
+	const { trend, recent_avg, prior_avg } = row;
+	if (trend === "flat" || !recent_avg || !prior_avg) {
+		return html`<span class="text-(--muted) text-[11px]">···</span>`;
 	}
-	if (row.trend === "down") {
-		const pct =
-			row.recent_avg && row.prior_avg
-				? (((row.prior_avg - row.recent_avg) / row.prior_avg) * 100).toFixed(1)
-				: "";
-		return `<span style="color:var(--green);font-size:11px;font-weight:600">↓${pct ? ` ${pct}%` : ""}</span>`;
-	}
-	return `<span style="color:var(--muted);font-size:11px">—</span>`;
+
+	const isUp = trend === "up";
+	const diff = Math.abs(((recent_avg - prior_avg) / prior_avg) * 100);
+	const colorClass = isUp
+		? "bg-(--red)/10 text-(--red)"
+		: "bg-(--green)/10 text-(--green)";
+
+	return html`
+		<div
+			class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full ${colorClass} text-[11px] font-bold"
+		>
+			${Icons.chevron({
+				size: 10,
+				strokeWidth: 3,
+				className: isUp ? "rotate-180" : "",
+			})}
+			${diff.toFixed(1)}%
+		</div>
+	`;
 }
 
-function renderTable(data: LocationRow[]): void {
-	const tbody = ge("dst-tbody");
-	const sorted = sortedData(data);
+function renderTable(): void {
+	const data = getProcessedData();
+	refs.tbody.innerHTML = "";
 
-	const TR_BASE = "padding:10px 0;border-bottom:1px solid var(--border)";
-	const TD_BASE = "padding:10px 16px;color:var(--text);font-size:13px";
-	const TD_MUTED =
-		"padding:10px 16px;color:var(--muted);font-size:13px;text-align:right;font-variant-numeric:tabular-nums";
-	const TD_MONO =
-		"padding:10px 16px;color:var(--text);font-size:13px;text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums";
-	const TD_CENTER = "padding:10px 20px 10px 16px;text-align:center";
+	if (data.length === 0) {
+		refs.table.classList.add("hidden");
+		refs.empty.classList.remove("hidden");
+	} else {
+		refs.table.classList.remove("hidden");
+		refs.empty.classList.add("hidden");
 
-	tbody.innerHTML = trust(
-		sorted
-			.map(
-				(row, i) => `
-    <tr style="${TR_BASE};background:${i % 2 === 0 ? "transparent" : "color-mix(in srgb, var(--surface-2) 40%, transparent)"}">
-      <td style="${TD_BASE};padding-left:20px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row.location_name}">${row.location_name}</td>
-      <td style="${TD_MONO}">₼ ${fmt(row.avg_price_per_sqm, 0)}</td>
-      <td style="${TD_MUTED}">${row.count}</td>
-      <td style="${TD_CENTER}">${trendBadge(row)}</td>
-    </tr>
-  `,
-			)
-			.join(""),
-	) as string;
+		const fragment = document.createDocumentFragment();
+		data.forEach((row) => {
+			fragment.appendChild(html`
+				<tr
+					class="group hover:bg-(--surface-2) border-b border-(--border)/50 transition-colors"
+				>
+					<td
+						class="px-5 py-3 font-medium text-(--text) max-w-50 truncate"
+						title="${row.location_name}"
+					>
+						${row.location_name}
+					</td>
+					<td class="px-4 py-3 text-right font-mono text-[13px]">
+						₼ ${fmt(row.avg_price_per_sqm, 0)}
+					</td>
+					<td class="px-4 py-3 text-right text-(--muted) tabular-nums">
+						${row.count}
+					</td>
+					<td class="px-4 pr-5 py-3 text-center">${trendBadge(row)}</td>
+				</tr>
+			`);
+		});
+		refs.tbody.appendChild(fragment);
+	}
 
-	// Update sort indicators
+	// Sync sort indicators
 	const cols: SortKey[] = ["district", "avg_ppsm", "listing_count", "trend"];
 	for (const col of cols) {
-		const el = ge(`dst-sort-${col}`);
-		if (el)
-			el.textContent = col === sortKey ? (sortDir === "asc" ? "↑" : "↓") : "";
+		const th = refs.sortHeaders[col];
+		const indicator = refs.sortIndicators[col];
+		const isActive = col === state.sortKey;
+
+		indicator.textContent = isActive
+			? state.sortDir === "asc"
+				? "↑"
+				: "↓"
+			: "";
+		indicator.className = `w-3 text-[10px] transition-opacity ${isActive ? "opacity-100" : "opacity-0"}`;
+		th.setAttribute(
+			"aria-sort",
+			isActive
+				? state.sortDir === "asc"
+					? "ascending"
+					: "descending"
+				: "none",
+		);
 	}
 
-	const subtitle = ge("dst-subtitle");
-	if (subtitle)
-		subtitle.textContent = t("districtSubtitle", { n: sorted.length });
+	const countStr = t("districtSubtitle", { n: data.length });
+	const timeStr = state.cachedAt
+		? new Date(state.cachedAt).toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			})
+		: "";
+	refs.subtitle.textContent = timeStr
+		? `${countStr} • Updated at ${timeStr}`
+		: countStr;
 }
 
 async function loadStats(): Promise<void> {
-	const loading = ge("dst-loading");
-	const table = ge("dst-table");
-	const error = ge("dst-error");
-
-	if (cachedData && Date.now() - cachedAt < CACHE_TTL) {
-		loading.classList.add("hidden");
-		table.classList.remove("hidden");
-		renderTable(cachedData);
+	const isFresh = state.cachedData && Date.now() - state.cachedAt < CACHE_TTL;
+	if (isFresh) {
+		refs.loading.classList.add("hidden");
+		renderTable();
 		return;
 	}
 
-	loading.classList.remove("hidden");
-	table.classList.add("hidden");
-	error.classList.add("hidden");
+	refs.loading.classList.remove("hidden");
+	[refs.table, refs.error, refs.empty].forEach((el) => {
+		el.classList.add("hidden");
+	});
 
 	try {
 		const r = await fetch("/api/heatmap");
-		const json = (await r.json()) as { data?: LocationRow[] };
-		if (!json.data || json.data.length === 0) {
-			loading.textContent = t("districtEmpty");
-			return;
-		}
-		cachedData = json.data;
-		cachedAt = Date.now();
-		loading.classList.add("hidden");
-		table.classList.remove("hidden");
-		renderTable(cachedData);
-	} catch {
-		loading.classList.add("hidden");
-		error.classList.remove("hidden");
+		if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+		const { data } = (await r.json()) as { data?: LocationRow[] };
+		if (!data) throw new Error("Invalid response format");
+
+		state.cachedData = data;
+		state.cachedAt = Date.now();
+		refs.loading.classList.add("hidden");
+		renderTable();
+	} catch (e) {
+		console.error("[DistrictStats]", e);
+		refs.loading.classList.add("hidden");
+		refs.error.classList.remove("hidden");
 	}
 }
 
-function attachSortHandlers(): void {
+function attachHandlers(): void {
+	ev.cleanup();
+
 	const cols: SortKey[] = ["district", "avg_ppsm", "listing_count", "trend"];
 	for (const col of cols) {
-		const th = ge(`dst-th-${col}`);
-		if (!th) continue;
-		th.addEventListener("click", () => {
-			if (sortKey === col) {
-				sortDir = sortDir === "asc" ? "desc" : "asc";
+		ev.add(refs.sortHeaders[col], "click", () => {
+			if (state.sortKey === col) {
+				state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
 			} else {
-				sortKey = col;
-				sortDir = col === "district" ? "asc" : "desc";
+				state.sortKey = col;
+				state.sortDir = col === "district" ? "asc" : "desc";
 			}
-			if (cachedData) renderTable(cachedData);
+			renderTable();
 		});
 	}
 }
 
+/**
+ * Public API to open the modal.
+ */
 export function openDistrictStats(): void {
-	if (!dialogEl) return;
-	dialogEl.showModal();
-	attachSortHandlers();
+	if (!refs.dialogEl) return;
+
+	refs.dialogEl.showModal();
+	attachHandlers();
+
+	// Reset UI state on each open
+	if (refs.search) {
+		refs.search.value = "";
+		state.filterQuery = "";
+		refs.clear?.classList.remove("visible");
+	}
+
 	void loadStats();
 }

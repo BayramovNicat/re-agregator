@@ -3,7 +3,7 @@ import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { initPropertyDetail } from "./dialogs/property-detail";
 import { initAlerts } from "./features/alerts";
-import { renderDistrictStatsModal } from "./features/district-stats";
+import { initDistrictStats } from "./features/district-stats";
 import { initHeader } from "./features/header";
 import { initProducts } from "./features/products";
 import { initSearch } from "./features/search";
@@ -43,7 +43,7 @@ const cleanups: (() => void)[] = [
 
 // 3. Global Static Modals & Utilities
 renderHeatmapModal(root);
-renderDistrictStatsModal(root);
+cleanups.push(initDistrictStats(root));
 renderToastsContainer(root);
 
 // 4. Handle cleanup on window pagehide

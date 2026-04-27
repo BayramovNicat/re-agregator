@@ -199,6 +199,7 @@ const translations = {
 		districtError: "Failed to load stats",
 		districtEmpty: "No district data yet",
 		statsBtn: "Stats",
+		searchDistrict: "Search district...",
 
 		// Property detail modal
 		viewDetails: "Details",
@@ -411,6 +412,7 @@ const translations = {
 		districtError: "Statistika yüklənmədi",
 		districtEmpty: "Rayon məlumatı yoxdur",
 		statsBtn: "Statistika",
+		searchDistrict: "Rayon axtar...",
 
 		// Property detail modal
 		viewDetails: "Ətraflı",
@@ -624,6 +626,7 @@ const translations = {
 		districtError: "Не удалось загрузить",
 		districtEmpty: "Нет данных по районам",
 		statsBtn: "Статистика",
+		searchDistrict: "Поиск района...",
 
 		// Property detail modal
 		viewDetails: "Детали",
