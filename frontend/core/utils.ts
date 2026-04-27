@@ -2,7 +2,11 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getLang, type TranslationKey, t } from "./i18n";
 
-/** Rewrites a full-resolution URL to its 460×345 thumbnail variant. */
+/**
+ * Rewrites a full-resolution URL to its 460×345 thumbnail variant.
+ * @param src The original full-resolution image URL.
+ * @returns The thumbnail URL.
+ */
 export function toThumbUrl(src: string): string {
 	return src.replace("/uploads/full/", "/uploads/f460x345/");
 }
@@ -40,7 +44,10 @@ declare global {
 	}
 }
 
-/** Merges Tailwind classes without conflicts. */
+/**
+ * Merges Tailwind classes using clsx and twMerge to handle conflicts.
+ * @param inputs CSS classes, conditions, or arrays.
+ */
 export function cn(...inputs: ClassValue[]): string {
 	return twMerge(clsx(inputs));
 }
@@ -304,6 +311,9 @@ export function makeEventManager() {
 /**
  * Short for "Create Element" or "Configure Element".
  * Assigns properties and dataset to an element.
+ * @param el The element to configure.
+ * @param props Properties and dataset to apply.
+ * @returns The configured element.
  */
 export function ce<T extends HTMLElement>(
 	el: T,
@@ -315,7 +325,10 @@ export function ce<T extends HTMLElement>(
 	return el;
 }
 /**
- * Simple debounce implementation.
+ * Standard debounce implementation.
+ * @param fn The function to debounce.
+ * @param ms Delay in milliseconds.
+ * @returns A debounced version of the function.
  */
 export function debounce<T extends unknown[]>(
 	fn: (...args: T) => unknown,
