@@ -79,21 +79,35 @@ async function fetchAndRender(): Promise<void> {
 			const thumbHtml = pin.image_url
 				? `<img src="${pin.image_url}" style="width:52px;height:52px;object-fit:cover;flex-shrink:0;border-radius:5px">`
 				: "";
-			const tipContent = `<div style="padding:10px 12px;min-width:180px;max-width:240px">
-          <div style="display:flex;align-items:flex-start;gap:8px">
-            ${thumbHtml}
-            <div style="min-width:0;flex:1">
-              <div style="margin-bottom:4px">
-                <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.2">₼ ${fmt(pin.price)}</div>
-              </div>
-              <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px">
-                <span>₼${fmt(pin.price_per_sqm, 0)}/m²</span>
-                <span style="color:${tStyle.c};font-weight:700">${discSign}${discAbs}%</span>
-              </div>
-              ${meta ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${meta}</div>` : ""}
-            </div>
-          </div>
-        </div>`;
+			const tipContent = /*html*/ `<div
+				style="padding:10px 12px;min-width:180px;max-width:240px"
+			>
+				<div style="display:flex;align-items:flex-start;gap:8px">
+					${thumbHtml}
+					<div style="min-width:0;flex:1">
+						<div style="margin-bottom:4px">
+							<div
+								style="font-size:15px;font-weight:700;color:var(--text);line-height:1.2"
+							>
+								₼ ${fmt(pin.price)}
+							</div>
+						</div>
+						<div
+							style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"
+						>
+							<span>₼${fmt(pin.price_per_sqm, 0)}/m²</span>
+							<span style="color:${tStyle.c};font-weight:700"
+								>${discSign}${discAbs}%</span
+							>
+						</div>
+						${
+							meta
+								? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${meta}</div>`
+								: ""
+						}
+					</div>
+				</div>
+			</div>`;
 
 			cm.on("mouseover", () => {
 				cm.setRadius(10);

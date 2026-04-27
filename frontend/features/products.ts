@@ -5,7 +5,6 @@ import type { CardCallbacks, Property } from "../core/types";
 import {
 	fmt,
 	frag,
-	ge,
 	hide,
 	html,
 	makeEventManager,
@@ -28,175 +27,9 @@ import { hideMapView, initMapView, showMapView } from "./map-view";
  * Products feature manages the results area, including sorting,
  * view toggles, saved deals, and the infinite scroll list.
  */
+
 export function initProducts(container: HTMLElement): () => void {
-	// 1. Initial State Area
-	const resultsBar = html`
-		<div
-			id="results-bar-container"
-			class="sticky top-0 z-10"
-			style="background:var(--bg)"
-		>
-			<div
-				class="flex items-center justify-between mb-2 p-2 gap-2.5 flex-wrap"
-				id="results-bar"
-				style="display: none"
-			>
-				<div
-					class="text-sm text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
-					id="results-meta"
-				></div>
-				<div class="flex items-center gap-1.75">
-					${Button({
-						title: t("exportBtn"),
-						content: frag`${Icons.download(12)} ${t("exportBtn")}`,
-						color: "blue",
-						onclick: handleExport,
-					})}
-					${Button({
-						title: t("telegramAlerts"),
-						content: frag`${Icons.bell(12)} ${t("alertMe")}`,
-						color: "yellow",
-						onclick: () => bus.emit(EVENTS.ALERTS_OPEN),
-					})}
-					${Button({
-						id: "saved-btn",
-						className: "hidden",
-						content: frag`${Icons.bookmark({ size: 12, fill: false })} ${t("saved")} <span id="saved-badge"></span>`,
-						onclick: handleSavedClick,
-					})}
-					${Select({
-						id: "sort-sel",
-						variant: "xs",
-						ariaLabel: t("sortBy"),
-						title: t("sortBy"),
-						options: [
-							{ value: "disc", label: t("sortDisc") },
-							{ value: "drops", label: t("sortDrops") },
-							{ value: "new", label: t("sortNew") },
-							{ value: "price-asc", label: t("sortPriceAsc") },
-							{ value: "price-desc", label: t("sortPriceDesc") },
-							{ value: "area", label: t("sortArea") },
-							{ value: "ppsm", label: t("sortPpsm") },
-						],
-					})}
-					${Button({
-						id: "vgrid",
-						variant: "square",
-						color: "indigo",
-						active: state.currentView === "grid",
-						title: t("gridView"),
-						content: Icons.grid(13),
-						onclick: () => setView("grid"),
-					})}
-					${Button({
-						id: "vlist",
-						variant: "square",
-						color: "indigo",
-						active: state.currentView === "list",
-						title: t("listView"),
-						content: Icons.list(13),
-						onclick: () => setView("list"),
-					})}
-					${Button({
-						id: "vmapview",
-						variant: "square",
-						color: "indigo",
-						active: state.currentView === "map",
-						title: t("mapView"),
-						content: Icons.mapPins(13),
-						onclick: () => setView("map"),
-					})}
-				</div>
-			</div>
-		</div>
-	`;
-	const loading = EmptyState({
-		id: "s-loading",
-		icon: Icons.spinner({
-			size: 26,
-			className: "animate-spin text-(--muted) opacity-40 mb-1",
-		}),
-		title: t("searching"),
-	});
-	const empty = EmptyState({
-		id: "s-empty",
-		icon: Icons.noResults({
-			size: 42,
-			strokeWidth: 1.4,
-			className: "text-(--muted) opacity-40 mb-1",
-		}),
-		title: t("noResults"),
-		subtitle: t("noResultsSub"),
-	});
-	const welcome = EmptyState({
-		id: "s-welcome",
-		icon: Icons.home({
-			size: 52,
-			strokeWidth: 1.1,
-			className: "text-(--muted) opacity-40 mb-1",
-		}),
-		title: t("welcome"),
-		subtitle: t("welcomeSub"),
-		hidden: false,
-		padTop: true,
-	});
-	// frag used (not html) so all 3 siblings reach the DOM
-	const cards = frag`
-    <div id="cards"></div>
-    <div id="scroll-sentinel"></div>
-    <div id="load-more" class="hidden">
-      <p class="text-xs text-(--muted) mt-2" id="load-info"></p>
-    </div>
-    <div
-      id="map-view-ct"
-      style="display:none;height:calc(100vh - 280px);min-height:420px"
-      class="rounded-(--r-lg) overflow-hidden border border-(--border)"
-    ></div>
-  `;
-
-	const nodes = frag`${resultsBar}${loading}${empty}${welcome}${cards}`;
-	container.appendChild(nodes);
-
-	const cleanupMapView = initMapView(ge("map-view-ct"));
-
-	// Back-to-top button
-	const backToTopBtn = html`<button
-		type="button"
-		id="back-to-top"
-		aria-label="${t("backToTop")}"
-		class="fixed bottom-5 right-5 z-40 w-9 h-9 rounded-full bg-(--surface-3) border border-(--border) text-(--muted) flex items-center justify-center shadow-lg transition-all duration-200 hover:text-(--text) hover:border-(--border-h) opacity-0 pointer-events-none"
-		style="font-size:14px"
-	>
-		↑
-	</button>`;
-	document.body.appendChild(backToTopBtn);
-	const onScroll = () => {
-		const show = window.scrollY > 450;
-		backToTopBtn.style.opacity = show ? "1" : "0";
-		backToTopBtn.style.pointerEvents = show ? "auto" : "none";
-		const bar = ge("results-bar");
-		if (bar) {
-			const stuck =
-				(ge("results-bar-container")?.getBoundingClientRect().top ?? 1) <= 0;
-			bar.classList.toggle("mb-2", !stuck);
-		}
-	};
-	window.addEventListener("scroll", onScroll, { passive: true });
-	backToTopBtn.addEventListener("click", () =>
-		window.scrollTo({ top: 0, behavior: "instant" }),
-	);
-
-	// Restore persisted sort
-	const savedSort = localStorage.getItem("re-sort");
-	if (savedSort) (ge("sort-sel") as HTMLSelectElement).value = savedSort;
-
-	// 3. Setup Callbacks
-	const cardCallbacks: CardCallbacks = {
-		onBM: toggleBM,
-		onHide: hideItem,
-		onGallery: openGallery,
-		onDetail: openPropertyDetail,
-	};
+	// --- 1. Pure Logic & State Helpers ---
 
 	function sortDeals(list: Property[], sortBy: string): Property[] {
 		return [...list].sort((a, b) => {
@@ -214,140 +47,6 @@ export function initProducts(container: HTMLElement): () => void {
 			if (sortBy === "ppsm") return a.price_per_sqm - b.price_per_sqm;
 			return 0;
 		});
-	}
-
-	function render(): void {
-		const ct = ge("cards");
-		if (!ct) return;
-
-		let list = state.showingSaved
-			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
-			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
-
-		const sortBy = (ge("sort-sel") as HTMLSelectElement)?.value || "disc";
-		const tierSel =
-			(document.querySelector("#tier-filter") as HTMLSelectElement)?.value ||
-			"";
-		if (tierSel) list = list.filter((p) => p.tier === tierSel);
-
-		// Map view handles its own rendering; update count and bail
-		if (state.currentView === "map") {
-			show("results-bar");
-			const showing = list.length;
-			ge("results-meta").innerHTML = trust(
-				state.showingSaved
-					? `<strong>${showing}</strong> ${showing !== 1 ? t("savedDeals") : t("savedDeal")}`
-					: `<strong>${showing}</strong> ${showing !== 1 ? t("results") : t("result")}${state.currentTotal > state.allResults.length ? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>` : ""}`,
-			) as string;
-			return;
-		}
-
-		ct.replaceChildren();
-
-		list = sortDeals(list, sortBy);
-
-		if (!list.length) {
-			hide("results-bar");
-			show("s-empty");
-			return;
-		}
-
-		show("results-bar");
-		hide("s-empty");
-
-		const wrap = html`<div
-			class="${
-				state.currentView === "grid"
-					? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
-					: "flex flex-col gap-2"
-			}"
-		></div>`;
-
-		let newCount = 0;
-		for (const property of list) {
-			const bookmarked = state.bookmarks.has(property.source_url);
-			const el = Product({
-				property,
-				bookmarked,
-				view: state.currentView as "grid" | "row",
-				callbacks: cardCallbacks,
-			});
-			if (state.renderedSet.has(property.source_url)) {
-				el.style.animation = "none";
-			} else {
-				el.style.animationDelay = `${Math.min(newCount, 15) * 22}ms`;
-				state.renderedSet.add(property.source_url);
-				newCount++;
-			}
-			wrap.appendChild(el);
-		}
-		ct.appendChild(wrap);
-
-		const showing = list.length;
-		const tierCounts = list.reduce<Record<string, number>>((acc, p) => {
-			acc[p.tier] = (acc[p.tier] ?? 0) + 1;
-			return acc;
-		}, {});
-		const tierBadges: { tier: string; color: string }[] = [
-			{ tier: "High Value Deal", color: "var(--green)" },
-			{ tier: "Good Deal", color: "var(--blue)" },
-			{ tier: "Fair Price", color: "var(--yellow)" },
-			{ tier: "Overpriced", color: "var(--red)" },
-		];
-		const distStr = tierBadges
-			.filter((tb) => tierCounts[tb.tier])
-			.map(
-				(tb) =>
-					`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`,
-			)
-			.join(' <span style="color:var(--border)">·</span> ');
-
-		ge("results-meta").innerHTML = trust(
-			state.showingSaved
-				? `<strong>${showing}</strong> ${showing !== 1 ? t("savedDeals") : t("savedDeal")}`
-				: `<strong>${showing}</strong> ${showing !== 1 ? t("results") : t("result")}${state.currentTotal > state.allResults.length ? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>` : ""}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
-		) as string;
-
-		if (!state.showingSaved && state.allResults.length < state.currentTotal) {
-			show("load-more");
-			ge("load-info").textContent =
-				`${t("showing")} ${state.allResults.length} ${t("of")} ${fmt(state.currentTotal)}`;
-			setupScrollObserver(() =>
-				bus.emit(EVENTS.SEARCH_STARTED, { more: true }),
-			);
-		} else {
-			hide("load-more");
-			if (state.scrollObserver) {
-				state.scrollObserver.disconnect();
-				state.scrollObserver = null;
-			}
-		}
-
-		if (state.bookmarks.size > 0) {
-			show("saved-btn", "inline-flex");
-			ge("saved-badge").textContent = String(state.bookmarks.size);
-		} else {
-			hide("saved-btn");
-		}
-	}
-
-	function setupScrollObserver(loadMoreFn: () => void): void {
-		if (state.scrollObserver) state.scrollObserver.disconnect();
-		const sentinel = ge("scroll-sentinel");
-		if (!sentinel) return;
-		state.scrollObserver = new IntersectionObserver(
-			(entries) => {
-				if (
-					entries[0]?.isIntersecting &&
-					!state.showingSaved &&
-					state.allResults.length < state.currentTotal
-				) {
-					loadMoreFn();
-				}
-			},
-			{ rootMargin: "600px" },
-		);
-		state.scrollObserver.observe(sentinel);
 	}
 
 	function persistBookmarkData(): void {
@@ -370,7 +69,7 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 		localStorage.setItem("re-bm", JSON.stringify([...state.bookmarks]));
 		persistBookmarkData();
-		render();
+		bus.emit(EVENTS.DEALS_UPDATED);
 	}
 
 	function hideItem(url: string): void {
@@ -381,11 +80,11 @@ export function initProducts(container: HTMLElement): () => void {
 		localStorage.setItem("re-hidden", JSON.stringify([...state.hidden]));
 		persistBookmarkData();
 		toast(t("toastHidden"));
-		render();
+		bus.emit(EVENTS.DEALS_UPDATED);
 	}
 
 	function handleExport(): void {
-		const sortBy = (ge("sort-sel") as HTMLSelectElement)?.value || "disc";
+		const sortBy = sortSel.value || "disc";
 		let list = state.showingSaved
 			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
 			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
@@ -445,7 +144,6 @@ export function initProducts(container: HTMLElement): () => void {
 				toast(t("exportCopied"));
 			})
 			.catch(() => {
-				// Fallback: trigger file download
 				const blob = new Blob([text], { type: "text/plain" });
 				const a = document.createElement("a");
 				a.href = URL.createObjectURL(blob);
@@ -453,6 +151,327 @@ export function initProducts(container: HTMLElement): () => void {
 				a.click();
 			});
 	}
+
+	// --- 2. UI Components & References ---
+
+	const resultsMeta = html`<div
+		class="text-sm text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
+	></div>`;
+
+	const savedBadge = html`<span></span>`;
+	const savedBtn = Button({
+		className: "hidden",
+		content: frag`${Icons.bookmark({ size: 12, fill: false })} ${t("saved")} ${savedBadge}`,
+		onclick: handleSavedClick,
+	});
+
+	const sortSel = Select({
+		variant: "xs",
+		ariaLabel: t("sortBy"),
+		title: t("sortBy"),
+		options: [
+			{ value: "disc", label: t("sortDisc") },
+			{ value: "drops", label: t("sortDrops") },
+			{ value: "new", label: t("sortNew") },
+			{ value: "price-asc", label: t("sortPriceAsc") },
+			{ value: "price-desc", label: t("sortPriceDesc") },
+			{ value: "area", label: t("sortArea") },
+			{ value: "ppsm", label: t("sortPpsm") },
+		],
+	});
+
+	const vgrid = Button({
+		variant: "square",
+		color: "indigo",
+		active: state.currentView === "grid",
+		title: t("gridView"),
+		content: Icons.grid(13),
+		onclick: () => setView("grid"),
+	});
+	const vlist = Button({
+		variant: "square",
+		color: "indigo",
+		active: state.currentView === "list",
+		title: t("listView"),
+		content: Icons.list(13),
+		onclick: () => setView("list"),
+	});
+	const vmapview = Button({
+		variant: "square",
+		color: "indigo",
+		active: state.currentView === "map",
+		title: t("mapView"),
+		content: Icons.mapPins(13),
+		onclick: () => setView("map"),
+	});
+
+	const resultsBarInner = html`
+		<div
+			class="flex items-center justify-between mb-2 p-2 gap-2.5 flex-wrap"
+			style="display: none"
+		>
+			${resultsMeta}
+			<div class="flex items-center gap-1.75">
+				${Button({
+					title: t("exportBtn"),
+					content: frag`${Icons.download(12)} ${t("exportBtn")}`,
+					color: "blue",
+					onclick: handleExport,
+				})}
+				${Button({
+					title: t("telegramAlerts"),
+					content: frag`${Icons.bell(12)} ${t("alertMe")}`,
+					color: "yellow",
+					onclick: () => bus.emit(EVENTS.ALERTS_OPEN),
+				})}
+				${savedBtn} ${sortSel} ${vgrid} ${vlist} ${vmapview}
+			</div>
+		</div>
+	`;
+
+	const resultsBarContainer = html`
+		<div class="sticky top-0 z-10" style="background:var(--bg)">
+			${resultsBarInner}
+		</div>
+	`;
+
+	const loading = EmptyState({
+		icon: Icons.spinner({
+			size: 26,
+			className: "animate-spin text-(--muted) opacity-40 mb-1",
+		}),
+		title: t("searching"),
+	});
+
+	const empty = EmptyState({
+		icon: Icons.noResults({
+			size: 42,
+			strokeWidth: 1.4,
+			className: "text-(--muted) opacity-40 mb-1",
+		}),
+		title: t("noResults"),
+		subtitle: t("noResultsSub"),
+	});
+
+	const welcome = EmptyState({
+		icon: Icons.home({
+			size: 52,
+			strokeWidth: 1.1,
+			className: "text-(--muted) opacity-40 mb-1",
+		}),
+		title: t("welcome"),
+		subtitle: t("welcomeSub"),
+		hidden: false,
+		padTop: true,
+	});
+
+	const cards = html`<div></div>`;
+	const sentinel = html`<div></div>`;
+	const loadInfo = html`<p class="text-xs text-(--muted) mt-2"></p>`;
+	const loadMore = html`<div class="hidden">${loadInfo}</div>`;
+	const mapViewCt = html`<div
+		style="display:none;height:calc(100vh - 280px);min-height:420px"
+		class="rounded-(--r-lg) overflow-hidden border border-(--border)"
+	></div>`;
+
+	// Populate global refs for other features (e.g. search)
+	state.refs.cards = cards;
+	state.refs.loading = loading;
+	state.refs.empty = empty;
+	state.refs.welcome = welcome;
+	state.refs.resultsBar = resultsBarInner;
+	state.refs.loadMore = loadMore;
+	state.refs.savedBtn = savedBtn;
+
+	container.appendChild(
+		frag`${resultsBarContainer}${loading}${empty}${welcome}${cards}${sentinel}${loadMore}${mapViewCt}`,
+	);
+
+	// --- 3. Initialization ---
+
+	const cleanupMapView = initMapView(mapViewCt);
+
+	const backToTopBtn = html`<button
+		type="button"
+		aria-label="${t("backToTop")}"
+		class="fixed bottom-5 right-5 z-40 w-9 h-9 rounded-full bg-(--surface-3) border border-(--border) text-(--muted) flex items-center justify-center shadow-lg transition-all duration-200 hover:text-(--text) hover:border-(--border-h) opacity-0 pointer-events-none"
+		style="font-size:14px"
+	>
+		↑
+	</button>`;
+	document.body.appendChild(backToTopBtn);
+
+	const onScroll = () => {
+		const isScrolled = window.scrollY > 450;
+		backToTopBtn.style.opacity = isScrolled ? "1" : "0";
+		backToTopBtn.style.pointerEvents = isScrolled ? "auto" : "none";
+		if (resultsBarInner) {
+			const stuck = resultsBarContainer.getBoundingClientRect().top <= 0;
+			resultsBarInner.classList.toggle("mb-2", !stuck);
+		}
+	};
+
+	window.addEventListener("scroll", onScroll, { passive: true });
+	backToTopBtn.addEventListener("click", () =>
+		window.scrollTo({ top: 0, behavior: "instant" }),
+	);
+
+	// Restore persisted sort
+	const savedSort = localStorage.getItem("re-sort");
+	if (savedSort) sortSel.value = savedSort;
+
+	const cardCallbacks: CardCallbacks = {
+		onBM: toggleBM,
+		onHide: hideItem,
+		onGallery: openGallery,
+		onDetail: openPropertyDetail,
+	};
+
+	// --- 4. Rendering Logic ---
+
+	function render(): void {
+		if (!cards) return;
+
+		let list = state.showingSaved
+			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
+			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
+
+		const sortBy = sortSel.value || "disc";
+		const tierSel =
+			(document.querySelector("#tier-filter") as HTMLSelectElement)?.value ||
+			"";
+		if (tierSel) list = list.filter((p) => p.tier === tierSel);
+
+		if (state.currentView === "map") {
+			show(resultsBarInner);
+			updateResultsMeta(list.length);
+			return;
+		}
+
+		list = sortDeals(list, sortBy);
+		if (!list.length) {
+			hide(resultsBarInner);
+			show(empty);
+			cards.replaceChildren();
+			return;
+		}
+
+		show(resultsBarInner);
+		hide(empty);
+		renderList(cards, list);
+		updateResultsMeta(list.length, list);
+		updatePagination();
+		updateSavedBadge();
+	}
+
+	function updateResultsMeta(count: number, list: Property[] = []): void {
+		const tierCounts = list.reduce<Record<string, number>>((acc, p) => {
+			acc[p.tier] = (acc[p.tier] ?? 0) + 1;
+			return acc;
+		}, {});
+
+		const tierBadges = [
+			{ tier: "High Value Deal", color: "var(--green)" },
+			{ tier: "Good Deal", color: "var(--blue)" },
+			{ tier: "Fair Price", color: "var(--yellow)" },
+			{ tier: "Overpriced", color: "var(--red)" },
+		];
+
+		const distStr = tierBadges
+			.filter((tb) => tierCounts[tb.tier])
+			.map(
+				(tb) =>
+					`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`,
+			)
+			.join(' <span style="color:var(--border)">·</span> ');
+
+		const totalStr =
+			state.currentTotal > state.allResults.length && !state.showingSaved
+				? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>`
+				: "";
+
+		resultsMeta.innerHTML = trust(
+			state.showingSaved
+				? `<strong>${count}</strong> ${count !== 1 ? t("savedDeals") : t("savedDeal")}`
+				: `<strong>${count}</strong> ${count !== 1 ? t("results") : t("result")}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
+		) as string;
+	}
+
+	function renderList(ct: HTMLElement, list: Property[]): void {
+		ct.replaceChildren();
+		const wrap = html`<div
+			class="${
+				state.currentView === "grid"
+					? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
+					: "flex flex-col gap-2"
+			}"
+		></div>`;
+
+		let newCount = 0;
+		for (const property of list) {
+			const el = Product({
+				property,
+				bookmarked: state.bookmarks.has(property.source_url),
+				view: state.currentView as "grid" | "row",
+				callbacks: cardCallbacks,
+			});
+
+			if (state.renderedSet.has(property.source_url)) {
+				el.style.animation = "none";
+			} else {
+				el.style.animationDelay = `${Math.min(newCount, 15) * 22}ms`;
+				state.renderedSet.add(property.source_url);
+				newCount++;
+			}
+			wrap.appendChild(el);
+		}
+		ct.appendChild(wrap);
+	}
+
+	function updatePagination(): void {
+		if (!state.showingSaved && state.allResults.length < state.currentTotal) {
+			show(loadMore);
+			loadInfo.textContent = `${t("showing")} ${state.allResults.length} ${t("of")} ${fmt(state.currentTotal)}`;
+			setupScrollObserver(() =>
+				bus.emit(EVENTS.SEARCH_STARTED, { more: true }),
+			);
+		} else {
+			hide(loadMore);
+			if (state.scrollObserver) {
+				state.scrollObserver.disconnect();
+				state.scrollObserver = null;
+			}
+		}
+	}
+
+	function updateSavedBadge(): void {
+		if (state.bookmarks.size > 0) {
+			show(savedBtn, "inline-flex");
+			savedBadge.textContent = String(state.bookmarks.size);
+		} else {
+			hide(savedBtn);
+		}
+	}
+
+	function setupScrollObserver(loadMoreFn: () => void): void {
+		if (state.scrollObserver) state.scrollObserver.disconnect();
+		if (!sentinel) return;
+		state.scrollObserver = new IntersectionObserver(
+			(entries) => {
+				if (
+					entries[0]?.isIntersecting &&
+					!state.showingSaved &&
+					state.allResults.length < state.currentTotal
+				) {
+					loadMoreFn();
+				}
+			},
+			{ rootMargin: "600px" },
+		);
+		state.scrollObserver.observe(sentinel);
+	}
+
+	// --- 5. Event Handlers ---
 
 	async function handleSavedClick(e: MouseEvent) {
 		const btn = e.currentTarget as HTMLElement;
@@ -466,14 +485,12 @@ export function initProducts(container: HTMLElement): () => void {
 			return;
 		}
 
-		// Show cached data immediately — no network needed
 		const cached = [...state.bookmarkData.values()].filter((p) =>
 			state.bookmarks.has(p.source_url),
 		);
 		state.savedOnlyResults = cached;
 		render();
 
-		// Refresh from backend for up-to-date prices
 		try {
 			const res = await fetch("/api/deals/by-urls", {
 				method: "POST",
@@ -491,53 +508,49 @@ export function initProducts(container: HTMLElement): () => void {
 				render();
 			}
 		} catch {
-			// Cached data already shown — silent fail is fine
+			// Silently fail, cached data is already shown
 		}
 	}
-
-	// 4. Event Handlers
-	const { add, cleanup: cleanupHandlers } = makeEventManager();
-
-	add(ge("sort-sel"), "change", () => {
-		localStorage.setItem(
-			"re-sort",
-			(ge("sort-sel") as HTMLSelectElement).value,
-		);
-		state.renderedSet.clear();
-		render();
-	});
 
 	const setView = (view: "grid" | "list" | "map") => {
 		const wasMap = state.currentView === "map";
 		state.currentView = view;
-		ge("vgrid").classList.toggle("on", view === "grid");
-		ge("vlist").classList.toggle("on", view === "list");
-		ge("vmapview").classList.toggle("on", view === "map");
+		vgrid.classList.toggle("on", view === "grid");
+		vlist.classList.toggle("on", view === "list");
+		vmapview.classList.toggle("on", view === "map");
 
 		if (view === "map") {
-			ge("cards").style.display = "none";
-			ge("scroll-sentinel").style.display = "none";
-			hide("load-more");
+			hide(cards);
+			hide(sentinel);
+			hide(loadMore);
 			render();
 			showMapView();
 		} else {
 			if (wasMap) {
 				hideMapView();
-				ge("cards").style.display = "";
-				ge("scroll-sentinel").style.display = "";
+				show(cards);
+				show(sentinel);
 			}
 			state.renderedSet.clear();
 			render();
 		}
 	};
 
+	const { add, cleanup: cleanupHandlers } = makeEventManager();
+
+	add(sortSel, "change", () => {
+		localStorage.setItem("re-sort", sortSel.value);
+		state.renderedSet.clear();
+		render();
+	});
+
 	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => render());
 
-	// Scroll restore: save position before detail opens, restore on close
 	let savedScrollY = 0;
 	const offPropOpen = bus.on(EVENTS.PROPERTY_OPEN, () => {
 		savedScrollY = window.scrollY;
 	});
+
 	const onDialogClose = (e: Event) => {
 		const el = e.target as HTMLElement;
 		if (el.id === "prop-detail-modal" && savedScrollY > 0) {
@@ -548,7 +561,6 @@ export function initProducts(container: HTMLElement): () => void {
 	};
 	document.addEventListener("close", onDialogClose, true);
 
-	// Detail modal bookmark / hide events (bubble up from the dialog)
 	const onPdBmark = (e: Event) => {
 		const p = (e as CustomEvent<Property>).detail;
 		if (p) toggleBM(p);
@@ -560,7 +572,8 @@ export function initProducts(container: HTMLElement): () => void {
 	document.addEventListener("pd:bmark", onPdBmark);
 	document.addEventListener("pd:hide", onPdHide);
 
-	// 5. Cleanup
+	// --- 6. Cleanup ---
+
 	return () => {
 		cleanupHandlers();
 		if (state.scrollObserver) {

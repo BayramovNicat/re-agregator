@@ -1,46 +1,60 @@
 import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
+import { state } from "../core/state";
 import type { TrendPoint } from "../core/types";
-import { fmt, ge, getLocale, hide, html, show, trust } from "../core/utils";
+import { fmt, getLocale, hide, html, show, trust } from "../core/utils";
 
 /**
  * Trend feature manages the property price trend chart above search results.
  */
 export function initTrend(container: HTMLElement): () => void {
-	container.appendChild(
-		html`<div id="trend-panel" class="hidden">
-      <div
-        class="bg-(--surface) border border-(--border) rounded-(--r) pt-4 px-5 pb-3 mb-4 animate-[fadeUp_0.2s_ease_both]"
-      >
-        <div class="flex items-start justify-between mb-3.5 gap-3">
-          <div>
-            <div class="text-xs text-(--muted) mb-1.25 tracking-[0.02em]">
-              ${t("avgTrend")} · <span id="trend-loc"></span>
-            </div>
-            <div class="flex items-baseline gap-2 flex-wrap">
-              <span class="text-[20px] font-bold tracking-[-0.5px]" id="trend-cur"></span>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full border" id="trend-chg"></span>
-            </div>
-          </div>
-          <div class="text-xs text-(--muted) text-right pt-0.5 whitespace-nowrap" id="trend-weeks"></div>
-        </div>
-        <div class="relative -mx-0.5" id="trend-chart">
-          <div
-            class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
-            id="trend-tip"
-          ></div>
-        </div>
-        <div class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5" id="trend-dates"></div>
-      </div>
-    </div>`,
-	);
+	const trendLoc = html`<span></span>`;
+	const trendCur = html`<span></span>`;
+	const trendChg = html`<span
+		class="text-xs font-semibold px-2 py-0.5 rounded-full border"
+	></span>`;
+	const trendWeeks = html`<div
+		class="text-xs text-(--muted) text-right pt-0.5 whitespace-nowrap"
+	></div>`;
+	const trendTip = html`<div
+		class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
+	></div>`;
+	const trendChart = html`<div class="relative -mx-0.5">${trendTip}</div>`;
+	const trendDates = html`<div
+		class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5"
+	></div>`;
+
+	const trendPanel = html`<div class="hidden">
+		<div
+			class="bg-(--surface) border border-(--border) rounded-(--r) pt-4 px-5 pb-3 mb-4 animate-[fadeUp_0.2s_ease_both]"
+		>
+			<div class="flex items-start justify-between mb-3.5 gap-3">
+				<div>
+					<div class="text-xs text-(--muted) mb-1.25 tracking-[0.02em]">
+						${t("avgTrend")} · ${trendLoc}
+					</div>
+					<div class="flex items-baseline gap-2 flex-wrap">
+						<span class="text-[20px] font-bold tracking-[-0.5px]"
+							>${trendCur}</span
+						>
+						${trendChg}
+					</div>
+				</div>
+				${trendWeeks}
+			</div>
+			${trendChart} ${trendDates}
+		</div>
+	</div>`;
+
+	state.refs.trendPanel = trendPanel;
+	container.appendChild(trendPanel);
 
 	const cache: Record<string, { data: TrendPoint[]; at: number }> = {};
 
 	async function fetchTrend(location: string): Promise<void> {
 		const hit = cache[location];
 		if (hit && Date.now() - hit.at < 30 * 60_000) {
-			show("trend-panel");
+			show(trendPanel);
 			renderTrend(hit.data, location);
 			return;
 		}
@@ -50,14 +64,14 @@ export function initTrend(container: HTMLElement): () => void {
 			);
 			const d = (await r.json()) as { data?: TrendPoint[] };
 			if (!d.data || d.data.length < 2) {
-				hide("trend-panel");
+				hide(trendPanel);
 				return;
 			}
 			cache[location] = { data: d.data, at: Date.now() };
-			show("trend-panel");
+			show(trendPanel);
 			renderTrend(d.data, location);
 		} catch {
-			hide("trend-panel");
+			hide(trendPanel);
 		}
 	}
 
@@ -69,42 +83,40 @@ export function initTrend(container: HTMLElement): () => void {
 		const up = changePct > 2;
 		const dn = changePct < -2;
 
-		ge("trend-loc").textContent = location;
-		ge("trend-cur").textContent = `₼ ${fmt(last, 0)}/m²`;
+		trendLoc.textContent = location;
+		trendCur.textContent = `₼ ${fmt(last, 0)}/m²`;
 
-		const chgEl = ge("trend-chg");
 		const sign = changePct >= 0 ? "+" : "";
-		chgEl.textContent = `${sign}${changePct.toFixed(1)}% vs ${data.length}${t("unitWeek")} ${t("ago")}`;
-		chgEl.style.color = up
+		trendChg.textContent = `${sign}${changePct.toFixed(1)}% vs ${data.length}${t("unitWeek")} ${t("ago")}`;
+		trendChg.style.color = up
 			? "var(--red)"
 			: dn
 				? "var(--green)"
 				: "var(--muted)";
-		chgEl.style.background = up
+		trendChg.style.background = up
 			? "var(--red-dim)"
 			: dn
 				? "var(--green-dim)"
 				: "var(--surface-3)";
-		chgEl.style.borderColor = up
+		trendChg.style.borderColor = up
 			? "var(--red-b)"
 			: dn
 				? "var(--green-b)"
 				: "var(--border)";
-		ge("trend-weeks").textContent = t(
+
+		trendWeeks.textContent = t(
 			data.length !== 1 ? "weeksOfData" : "weekOfData",
 			{ n: data.length },
 		);
 
-		ge("trend-dates").innerHTML = trust(
+		trendDates.innerHTML = trust(
 			`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
 		) as string;
 
-		const ct = ge("trend-chart");
-		const tip = ge("trend-tip");
-		const old = ct.querySelector("svg");
+		const old = trendChart.querySelector("svg");
 		if (old) old.remove();
 
-		const W = ct.clientWidth || 600,
+		const W = trendChart.clientWidth || 600,
 			H = 68,
 			PAD = 6;
 		const min = Math.min(...vals);
@@ -153,7 +165,7 @@ export function initTrend(container: HTMLElement): () => void {
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2"/>
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}"/>`) as string;
 
-		ct.insertBefore(svg, tip);
+		trendChart.insertBefore(svg, trendTip);
 
 		svg.addEventListener("mousemove", (e: MouseEvent) => {
 			const svgW = svg.clientWidth;
@@ -164,18 +176,18 @@ export function initTrend(container: HTMLElement): () => void {
 			);
 			const p = data[idx];
 			if (!p) return;
-			tip.innerHTML = trust(
+			trendTip.innerHTML = trust(
 				`<span style="font-size:10px;color:var(--muted);display:block;margin-bottom:1px">${dfmt(p.week)}</span><strong>₼ ${fmt(Number(p.avg_ppsm), 0)}/m²</strong><span style="font-size:10px;color:var(--muted);margin-left:5px">${p.listing_count} ${t(p.listing_count !== 1 ? "listings" : "listing")}</span>`,
 			) as string;
 
-			tip.style.display = "block";
-			const tipW = tip.offsetWidth || 160;
+			trendTip.style.display = "block";
+			const tipW = trendTip.offsetWidth || 160;
 			const left = Math.min(e.offsetX + 12, svgW - tipW - 4);
-			tip.style.left = `${left}px`;
-			tip.style.top = `${Math.max(4, e.offsetY - tip.offsetHeight - 8)}px`;
+			trendTip.style.left = `${left}px`;
+			trendTip.style.top = `${Math.max(4, e.offsetY - trendTip.offsetHeight - 8)}px`;
 		});
 		svg.addEventListener("mouseleave", () => {
-			tip.style.display = "none";
+			trendTip.style.display = "none";
 		});
 	}
 

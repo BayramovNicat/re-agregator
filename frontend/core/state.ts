@@ -28,4 +28,14 @@ export const state = {
 		JSON.parse(localStorage.getItem("re-hidden") || "[]") as string[],
 	),
 	PAGE: 50,
+	refs: {
+		cards: null as HTMLElement | null,
+		loading: null as HTMLElement | null,
+		empty: null as HTMLElement | null,
+		welcome: null as HTMLElement | null,
+		resultsBar: null as HTMLElement | null,
+		loadMore: null as HTMLElement | null,
+		savedBtn: null as HTMLElement | null,
+		trendPanel: null as HTMLElement | null,
+	},
 };

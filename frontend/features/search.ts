@@ -2,7 +2,7 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
-import { frag, ge, html, makeEventManager, toast } from "../core/utils";
+import { frag, html, makeEventManager, toast } from "../core/utils";
 import { openHeatmap } from "../dialogs/heatmap";
 import { Button, RawButton } from "../ui/button";
 import { Chip, CloseableChip } from "../ui/chip";
@@ -101,14 +101,14 @@ export function initSearch(container: HTMLElement): () => void {
 	// --- 1. References ---
 
 	const globalElements = {
-		resultsContainer: ge("cards"),
-		loadingIndicator: ge("s-loading"),
-		emptyState: ge("s-empty"),
-		welcomeState: ge("s-welcome"),
-		resultsBar: ge("results-bar"),
-		loadMoreButton: ge("load-more"),
-		trendPanel: ge("trend-panel"),
-		savedToggleBtn: ge("saved-btn"),
+		resultsContainer: state.refs.cards as HTMLElement,
+		loadingIndicator: state.refs.loading as HTMLElement,
+		emptyState: state.refs.empty as HTMLElement,
+		welcomeState: state.refs.welcome as HTMLElement,
+		resultsBar: state.refs.resultsBar as HTMLElement,
+		loadMoreButton: state.refs.loadMore as HTMLElement,
+		trendPanel: state.refs.trendPanel as HTMLElement,
+		savedToggleBtn: state.refs.savedBtn as HTMLElement,
 	};
 
 	const ui = {

@@ -87,16 +87,16 @@ export function ge(id: string): HTMLElement {
 	return document.getElementById(id) as HTMLElement;
 }
 
-export function show(id: string, d?: string): void {
-	const e = ge(id);
+export function show(target: string | HTMLElement, d?: string): void {
+	const e = typeof target === "string" ? ge(target) : target;
 	if (e) {
 		e.classList.remove("hidden");
 		e.style.display = d ?? "";
 	}
 }
 
-export function hide(id: string): void {
-	const e = ge(id);
+export function hide(target: string | HTMLElement): void {
+	const e = typeof target === "string" ? ge(target) : target;
 	if (e) e.style.display = "none";
 }
 
