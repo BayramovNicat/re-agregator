@@ -184,6 +184,7 @@ const translations = {
 		previewDocument: "Document",
 		previewUrgent: "Urgent",
 		previewNoActiveMortgage: "No active mortgage",
+		matchingFilters: "Matching filters",
 
 		// Trend
 		avgTrend: "Avg ₼/m² trend",
@@ -398,6 +399,7 @@ const translations = {
 		previewDocument: "Sənədli",
 		previewUrgent: "Təcili",
 		previewNoActiveMortgage: "Aktiv ipoteka yox",
+		matchingFilters: "Uyğun filtrlər",
 
 		avgTrend: "Ort ₼/m² trendi",
 
@@ -612,6 +614,7 @@ const translations = {
 		previewDocument: "Документ",
 		previewUrgent: "Срочно",
 		previewNoActiveMortgage: "Без акт. ипотеки",
+		matchingFilters: "Выбранные фильтры",
 
 		avgTrend: "Ср. ₼/м² динамика",
 

@@ -1,20 +1,163 @@
 import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
+import { state } from "../core/state";
 import type { Alert, AlertFilters } from "../core/types";
-import { ge, html, toast } from "../core/utils";
+import { html, toast } from "../core/utils";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
 import { Icons } from "../ui/icons";
 import { Field, Input } from "../ui/input";
-import type { MultiSelectElement } from "../ui/multi-select";
 
+/**
+ * Alerts Feature Module
+ * Manages Telegram notification subscriptions and user alert preferences.
+ */
 export function initAlerts(root: HTMLElement): () => void {
-	// 1. Create UI Elements
+	const state_local = {
+		isSaving: false,
+		isLoadingAlerts: false,
+	};
+
+	// --- 1. Core Logic ---
+
+	const fetchAlerts = async (chatId: string) => {
+		if (!chatId || !/^\d+$/.test(chatId)) {
+			updateAlertList([], ui.itemsEl, ui.listEl, handleDelete);
+			return;
+		}
+
+		state_local.isLoadingAlerts = true;
+		try {
+			const res = await fetch(
+				`/api/alerts?chat_id=${encodeURIComponent(chatId)}`,
+			);
+			const d = (await res.json()) as { alerts?: Alert[] };
+			updateAlertList(d.alerts ?? [], ui.itemsEl, ui.listEl, handleDelete);
+		} catch (e) {
+			console.error("[Alerts] fetchAlerts failed:", e);
+			updateAlertList([], ui.itemsEl, ui.listEl, handleDelete);
+		} finally {
+			state_local.isLoadingAlerts = false;
+		}
+	};
+
+	const handleOpen = () => {
+		const currentFilters = state.getFilters();
+		ui.previewEl.textContent = buildFilterPreview(currentFilters);
+
+		const savedChatId = localStorage.getItem("re-chatid") ?? "";
+		ui.chatIdInput.value = savedChatId;
+		ui.labelInput.value = "";
+
+		void fetchAlerts(savedChatId);
+		ui.modal.showModal();
+	};
+
+	const handleSave = async () => {
+		const chatId = ui.chatIdInput.value.trim();
+		if (!/^\d+$/.test(chatId)) {
+			toast(t("invalidChatId"), true);
+			return;
+		}
+
+		state_local.isSaving = true;
+		ui.saveBtn.disabled = true;
+
+		try {
+			const res = await fetch("/api/alerts", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					chat_id: chatId,
+					label: ui.labelInput.value.trim() || undefined,
+					filters: state.getFilters(),
+				}),
+			});
+
+			const d = (await res.json()) as { error?: string };
+			if (!res.ok || d.error) {
+				toast(d.error ?? t("failedAlert"), true);
+				return;
+			}
+
+			localStorage.setItem("re-chatid", chatId);
+			ui.modal.close();
+			toast(t("alertSaved"));
+		} catch (e) {
+			toast((e as Error).message, true);
+		} finally {
+			state_local.isSaving = false;
+			ui.saveBtn.disabled = false;
+		}
+	};
+
+	const handleDelete = async (token: string, rowEl: HTMLElement) => {
+		try {
+			const res = await fetch(`/api/alerts/${token}`, { method: "DELETE" });
+			if (!res.ok) throw new Error("Delete failed");
+
+			rowEl.remove();
+			if (ui.itemsEl.children.length === 0) {
+				ui.listEl.style.display = "none";
+			}
+			toast(t("alertDeleted"));
+		} catch (e) {
+			console.error("[Alerts] delete failed:", e);
+			toast(t("failedAlert"), true);
+		}
+	};
+
+	const handleChatIdChange = () => {
+		const chatId = ui.chatIdInput.value.trim();
+		if (/^\d+$/.test(chatId)) void fetchAlerts(chatId);
+	};
+
+	const ui = createUI({
+		onChatIdChange: () => handleChatIdChange(),
+		onSave: () => void handleSave(),
+		onCancel: () => ui.modal.close(),
+	});
+	root.appendChild(ui.modal);
+
+	// --- 2. Listeners ---
+
+	const cleanups: (() => void)[] = [];
+
+	// Activation via event bus (triggered from Products feature)
+	cleanups.push(bus.on(EVENTS.ALERTS_OPEN, handleOpen));
+
+	// Update preview if filters change while modal is open
+	cleanups.push(
+		bus.on(EVENTS.DEALS_UPDATED, () => {
+			if (ui.modal.open) {
+				ui.previewEl.textContent = buildFilterPreview(state.getFilters());
+			}
+		}),
+	);
+
+	return () => {
+		cleanups.forEach((fn) => {
+			fn();
+		});
+		ui.modal.remove();
+	};
+}
+
+/**
+ * Creates the UI shell for the Alerts feature.
+ * Encapsulates element creation and layout.
+ */
+function createUI(handlers: {
+	onChatIdChange: () => void;
+	onSave: () => void;
+	onCancel: () => void;
+}) {
 	const chatIdInput = Input({
 		id: "alert-chat-id",
 		placeholder: t("chatIdPlaceholder"),
 		className: "w-full",
 		inputMode: "numeric",
+		onchange: handlers.onChatIdChange,
 	});
 
 	const labelInput = Input({
@@ -24,179 +167,121 @@ export function initAlerts(root: HTMLElement): () => void {
 		maxLength: 80,
 	});
 
-	const previewEl = html`<div
-		class="text-xs text-(--muted) bg-(--surface-2) border border-(--border) rounded-sm px-2.5 py-2"
-	></div>`;
-	const listEl = html`<div class="mb-4 hidden"></div>`;
-	const itemsEl = html`<div class="flex flex-col gap-6"></div>`;
+	const previewEl = html`
+		<div
+			class="text-[11px] text-(--muted) bg-(--surface-2) border border-(--border) rounded-md px-3 py-2.5 leading-relaxed italic"
+		></div>
+	`;
 
-	listEl.append(
-		html`<div
-			class="text-xs font-semibold text-(--muted) uppercase tracking-[0.05em] mb-2"
+	const itemsEl = html`<div class="flex flex-col gap-2"></div>`;
+	const listEl = html`
+		<div
+			class="mb-6 hidden animate-in fade-in slide-in-from-top-2 duration-300"
 		>
-			${t("activeAlerts")}
-		</div>`,
-		itemsEl,
-		html`<div class="h-px bg-(--border) my-4"></div>`,
-	);
+			<div
+				class="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-3 opacity-70"
+			>
+				${t("activeAlerts")}
+			</div>
+			${itemsEl}
+			<div
+				class="h-px bg-linear-to-r from-(--border) to-transparent my-6"
+			></div>
+		</div>
+	`;
 
 	const cancelBtn = Button({
 		content: t("cancel"),
 		variant: "base",
 		color: "indigo",
+		className: "px-5",
+		onclick: handlers.onCancel,
 	});
 
 	const saveBtn = Button({
 		content: t("saveAlert"),
 		variant: "base",
 		color: "solid",
+		className: "px-6",
+		onclick: handlers.onSave,
 	});
 
 	const modal = Dialog({
-		id: "alert-modal",
 		maxWidth: "440px",
-		className: "p-6",
+		className: "p-0 overflow-hidden",
 		content: html`
-			<div>
-				<div class="text-base font-semibold text-(--text) mb-4">
-					${t("telegramAlerts")}
+			<div class="flex flex-col">
+				<div
+					class="p-6 pb-4 border-b border-(--border) bg-linear-to-br from-(--surface) to-(--surface-2)"
+				>
+					<div class="flex items-center gap-3 mb-1">
+						<div
+							class="size-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500"
+						>
+							${Icons.bell(18)}
+						</div>
+						<div class="text-lg font-bold text-(--text) tracking-tight">
+							${t("telegramAlerts")}
+						</div>
+					</div>
+					<p class="text-xs text-(--muted) leading-relaxed">
+						${t("botInstruction", {
+							bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue) font-semibold hover:underline">@BakuDealsBot</a>',
+							start:
+								'<code class="bg-(--surface-3) px-1.5 py-0.5 rounded text-[10px] font-mono">/start</code>',
+						})}
+					</p>
 				</div>
-				${listEl}
-				<div class="text-xs text-(--muted) leading-[1.6] mb-3.5">
-					${t("botInstruction", {
-						bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue)">@BakuDealsBot</a>',
-						start:
-							'<code class="bg-(--surface-3) px-1 py-0.5 rounded-sm">/start</code>',
-					})}
-				</div>
-				<div class="flex flex-col gap-3">
-					${Field({
-						htmlFor: "alert-chat-id",
-						label: t("chatIdLabel"),
-						input: chatIdInput,
-					})}
-					${Field({
-						htmlFor: "alert-label",
-						label: t("alertLabel"),
-						input: labelInput,
-					})}
-					${previewEl}
-					<div class="flex gap-2 justify-end mt-1">${cancelBtn} ${saveBtn}</div>
+
+				<div class="p-6">
+					${listEl}
+
+					<div class="flex flex-col gap-4">
+						${Field({
+							htmlFor: "alert-chat-id",
+							label: t("chatIdLabel"),
+							input: chatIdInput,
+						})}
+						${Field({
+							htmlFor: "alert-label",
+							label: t("alertLabel"),
+							input: labelInput,
+						})}
+
+						<div class="space-y-2 mt-1">
+							<div
+								class="text-[10px] font-bold text-(--muted) uppercase tracking-widest opacity-70"
+							>
+								${t("matchingFilters")}
+							</div>
+							${previewEl}
+						</div>
+
+						<div
+							class="flex gap-2 justify-end mt-4 pt-4 border-t border-(--border)/50"
+						>
+							${cancelBtn} ${saveBtn}
+						</div>
+					</div>
 				</div>
 			</div>
 		`,
 	});
 
-	root.appendChild(modal);
-
-	const trigger = ge("alert-btn");
-
-	// 2. Logic Handlers
-	const handleOpen = () => {
-		const filters = getCurrentFilters();
-		previewEl.textContent = buildFilterPreview(filters);
-
-		const savedChatId = localStorage.getItem("re-chatid") ?? "";
-		chatIdInput.value = savedChatId;
-		labelInput.value = "";
-
-		void fetchAlerts(savedChatId);
-		modal.showModal();
-	};
-
-	const handleChatIdChange = () => {
-		const chatId = chatIdInput.value.trim();
-		if (/^\d+$/.test(chatId)) void fetchAlerts(chatId);
-	};
-
-	const handleSave = async () => {
-		const chatId = chatIdInput.value.trim();
-		if (!/^\d+$/.test(chatId)) {
-			toast(t("invalidChatId"), true);
-			return;
-		}
-
-		saveBtn.disabled = true;
-		try {
-			const res = await fetch("/api/alerts", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					chat_id: chatId,
-					label: labelInput.value.trim() || undefined,
-					filters: getCurrentFilters(),
-				}),
-			});
-			const d = (await res.json()) as { error?: string };
-			if (!res.ok || d.error) {
-				toast(d.error ?? t("failedAlert"), true);
-				return;
-			}
-			localStorage.setItem("re-chatid", chatId);
-			modal.close();
-			toast(t("alertSaved"));
-		} catch (e) {
-			toast((e as Error).message, true);
-		} finally {
-			saveBtn.disabled = false;
-		}
-	};
-
-	const handleDelete = async (token: string, rowEl: HTMLElement) => {
-		try {
-			await fetch(`/api/alerts/${token}`, { method: "DELETE" });
-		} catch (e) {
-			console.error("[Alerts] delete failed:", e);
-			toast(t("failedAlert"), true);
-			return;
-		}
-		rowEl.remove();
-		if (itemsEl.children.length === 0) {
-			listEl.style.display = "none";
-		}
-		toast(t("alertDeleted"));
-	};
-
-	const fetchAlerts = async (chatId: string) => {
-		if (!chatId || !/^\d+$/.test(chatId)) {
-			updateAlertList([], itemsEl, listEl, handleDelete);
-			return;
-		}
-		try {
-			const res = await fetch(
-				`/api/alerts?chat_id=${encodeURIComponent(chatId)}`,
-			);
-			const d = (await res.json()) as { alerts?: Alert[] };
-			updateAlertList(d.alerts ?? [], itemsEl, listEl, handleDelete);
-		} catch (e) {
-			console.error("[Alerts] fetchAlerts failed:", e);
-			updateAlertList([], itemsEl, listEl, handleDelete);
-		}
-	};
-
-	// 3. Listeners
-	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => {
-		if (modal.open) {
-			previewEl.textContent = buildFilterPreview(getCurrentFilters());
-		}
-	});
-
-	trigger?.addEventListener("click", handleOpen);
-	chatIdInput.addEventListener("change", handleChatIdChange);
-	saveBtn.addEventListener("click", handleSave);
-	cancelBtn.addEventListener("click", () => modal.close());
-
-	return () => {
-		trigger?.removeEventListener("click", handleOpen);
-		chatIdInput.removeEventListener("change", handleChatIdChange);
-		saveBtn.removeEventListener("click", handleSave);
-		cancelBtn.removeEventListener("click", () => modal.close());
-		offDeals();
+	return {
+		modal,
+		chatIdInput,
+		labelInput,
+		previewEl,
+		itemsEl,
+		listEl,
+		cancelBtn,
+		saveBtn,
 	};
 }
 
 /**
- * Updates the alerts list in the modal using direct element references
+ * Updates the alerts list in the modal with a premium look.
  */
 function updateAlertList(
 	alerts: Alert[],
@@ -219,101 +304,69 @@ function updateAlertList(
 			threshold: a.filters?.threshold ?? 10,
 		});
 
-		const row = html`
-			<div
-				class="flex items-center gap-2 bg-(--surface-2) border border-(--border) rounded-md px-2.5 py-2 transition-all"
-			>
-				<div class="flex-1 min-w-0">
-					<div
-						class="text-[12px] font-semibold text-(--text) whitespace-nowrap overflow-hidden text-ellipsis"
-					>
-						${a.label ?? t("unnamed")}
-					</div>
-					<div
-						class="text-[11px] text-(--muted) mt-px whitespace-nowrap overflow-hidden text-ellipsis"
-					>
-						${preview}
-					</div>
-				</div>
-			</div>
-		`;
-
 		const delBtn = Button({
-			content: Icons.trash(12),
+			content: Icons.trash(14),
 			variant: "ghost",
 			color: "red",
 			title: t("deleteAlert"),
-			className: "shrink-0",
+			className:
+				"shrink-0 size-8 opacity-0 group-hover:opacity-100 transition-opacity",
+			onclick: (e) => {
+				const rowEl = (e.currentTarget as HTMLElement).closest(
+					".group",
+				) as HTMLElement;
+				onDelete(a.token, rowEl);
+			},
 		});
-		delBtn.addEventListener("click", () => onDelete(a.token, row));
-		row.appendChild(delBtn);
+
+		const row = html`
+			<div
+				class="group flex items-center gap-3 bg-(--surface-2) border border-(--border) rounded-xl px-3.5 py-3 transition-all hover:border-(--border-h) hover:shadow-sm"
+			>
+				<div class="flex-1 min-w-0">
+					<div class="text-sm font-bold text-(--text) truncate mb-0.5">
+						${a.label ?? t("unnamed")}
+					</div>
+					<div class="text-[11px] text-(--muted) truncate opacity-80">
+						${preview}
+					</div>
+				</div>
+				${delBtn}
+			</div>
+		`;
 
 		itemsEl.appendChild(row);
 	}
 }
 
 /**
- * Extracts current search filters from the DOM
- */
-function getCurrentFilters(): AlertFilters {
-	const v = (id: string) => (ge(id) as HTMLInputElement)?.value.trim() ?? "";
-	const cb = (id: string) => (ge(id) as HTMLInputElement)?.checked ?? false;
-
-	const filters: AlertFilters = {
-		location:
-			(ge("loc") as MultiSelectElement)?.getValue().join(",") || "__all__",
-		threshold: Number((ge("thresh") as HTMLInputElement)?.value ?? 10),
-	};
-
-	const numIds = [
-		"minPrice",
-		"maxPrice",
-		"minArea",
-		"maxArea",
-		"minRooms",
-		"maxRooms",
-		"minFloor",
-		"maxFloor",
-		"minTotalFloors",
-		"maxTotalFloors",
-	] as const;
-
-	for (const id of numIds) {
-		const val = v(id);
-		if (val) filters[id] = Number(val);
-	}
-
-	if (v("category")) filters.category = v("category");
-	if (cb("hasRepair")) filters.hasRepair = true;
-	if (cb("hasDocument")) filters.hasDocument = true;
-	if (cb("hasMortgage")) filters.hasMortgage = true;
-	if (cb("isUrgent")) filters.isUrgent = true;
-	if (cb("notLastFloor")) filters.notLastFloor = true;
-
-	const am = (ge("hasActiveMortgage") as HTMLSelectElement)?.value;
-	if (am === "true") filters.hasActiveMortgage = true;
-	else if (am === "false") filters.hasActiveMortgage = false;
-
-	return filters;
-}
-
-/**
- * Formats filters into a short preview string
+ * Formats filters into a short preview string with icons.
  */
 function buildFilterPreview(f: AlertFilters): string {
 	const parts = [
 		`📍 ${f.location === "__all__" ? t("allLocsPrev") : f.location}`,
 		`📉 ≥${f.threshold}% ${t("belowAvg")}`,
 	];
-	if (f.minPrice || f.maxPrice)
-		parts.push(`₼ ${f.minPrice ?? ""}-${f.maxPrice ?? ""}`);
-	if (f.minRooms || f.maxRooms)
-		parts.push(`${f.minRooms ?? ""}-${f.maxRooms ?? ""} ${t("previewRooms")}`);
-	if (f.minArea || f.maxArea)
-		parts.push(`${f.minArea ?? ""}-${f.maxArea ?? ""}${t("previewArea")}`);
-	if (f.hasRepair) parts.push(t("previewRepaired"));
-	if (f.hasDocument) parts.push(t("previewDocument"));
-	if (f.isUrgent) parts.push(t("previewUrgent"));
-	if (f.hasActiveMortgage === false) parts.push(t("previewNoActiveMortgage"));
+
+	if (f.minPrice || f.maxPrice) {
+		parts.push(`₼ ${f.minPrice ?? "0"}–${f.maxPrice ?? "∞"}`);
+	}
+	if (f.minRooms || f.maxRooms) {
+		parts.push(
+			`${f.minRooms ?? "1"}–${f.maxRooms ?? "5"}+ ${t("previewRooms")}`,
+		);
+	}
+	if (f.minArea || f.maxArea) {
+		parts.push(`${f.minArea ?? "0"}–${f.maxArea ?? "∞"} ${t("previewArea")}`);
+	}
+
+	const bools: string[] = [];
+	if (f.hasRepair) bools.push(t("previewRepaired"));
+	if (f.hasDocument) bools.push(t("previewDocument"));
+	if (f.isUrgent) bools.push(t("previewUrgent"));
+	if (f.hasActiveMortgage === false) bools.push(t("previewNoActiveMortgage"));
+
+	if (bools.length) parts.push(bools.join(", "));
+
 	return parts.join(" · ");
 }

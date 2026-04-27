@@ -42,4 +42,6 @@ export const state = {
 		resultsMeta: null as HTMLElement | null,
 		tierFilter: null as HTMLSelectElement | null,
 	},
+	/** Shared bridge to retrieve current search filters across features. */
+	getFilters: () => ({} as import("./types").AlertFilters),
 };

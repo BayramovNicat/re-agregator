@@ -257,6 +257,33 @@ export function initSearch(container: HTMLElement): () => void {
 		searchDebounceTimer = setTimeout(() => void executeSearch(false), 500);
 	};
 
+	state.getFilters = (): import("../core/types").AlertFilters => {
+		const locations = ui.locationSelect.getValue();
+		const filters: import("../core/types").AlertFilters = {
+			location: locations.join(",") || "__all__",
+			threshold: Number(ui.discountRange.value),
+		};
+
+		// Numeric filters
+		for (const config of getNumericFilters()) {
+			const val = getNumericValue(config.id);
+			if (val) (filters as any)[config.id] = Number(val);
+		}
+
+		// Boolean filters
+		for (const config of getBooleanFilters()) {
+			if (isFilterChecked(config.id)) (filters as any)[config.id] = true;
+		}
+
+		// Dropdowns & Custom
+		if (ui.categorySelect.value) filters.category = ui.categorySelect.value;
+		if (ui.mortgageSelect.value) {
+			filters.hasActiveMortgage = ui.mortgageSelect.value === "true";
+		}
+
+		return filters;
+	};
+
 	async function executeSearch(isPagination = false): Promise<void> {
 		if (state.loading) return;
 
@@ -303,29 +330,20 @@ export function initSearch(container: HTMLElement): () => void {
 		ui.searchTrigger.disabled = true;
 
 		try {
+			const currentFilters = state.getFilters();
 			const searchParams = new URLSearchParams({
-				location: locations.join(","),
-				threshold: ui.discountRange.value,
+				location: currentFilters.location,
+				threshold: String(currentFilters.threshold),
 				limit: String(state.PAGE),
 				offset: String(state.currentOffset),
 			});
 
-			// Numeric filters
-			for (const config of getNumericFilters()) {
-				const val = getNumericValue(config.id);
-				if (val) searchParams.set(config.id, val);
-			}
-
-			// Boolean filters
-			for (const config of getBooleanFilters()) {
-				if (isFilterChecked(config.id)) searchParams.set(config.id, "true");
-			}
-
-			// Dropdowns & Custom
-			if (ui.categorySelect.value)
-				searchParams.set("category", ui.categorySelect.value);
-			if (ui.mortgageSelect.value)
-				searchParams.set("hasActiveMortgage", ui.mortgageSelect.value);
+			// Add other filters to params
+			Object.entries(currentFilters).forEach(([key, val]) => {
+				if (key !== "location" && key !== "threshold" && val !== undefined) {
+					searchParams.set(key, String(val));
+				}
+			});
 
 			const descriptionQuery = ui.descriptionInput.value.trim();
 			if (descriptionQuery)
