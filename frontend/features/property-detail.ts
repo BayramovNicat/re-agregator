@@ -3,6 +3,7 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
 import { fmt, fmtFloor, getLocale, html, timeAgo, tTier } from "../core/utils";
+import { openGallery } from "../dialogs/gallery";
 import { Button } from "../ui/button";
 import { Tag } from "../ui/chip";
 import { Dialog } from "../ui/dialog";
@@ -11,7 +12,6 @@ import { Icons } from "../ui/icons";
 import { initLeaflet } from "../ui/map-base";
 import { StatBox } from "../ui/stat-box";
 import { ts } from "../ui/tier";
-import { openGallery } from "../dialogs/gallery";
 
 /**
  * Renders a price history sparkline using a declarative SVG template.
@@ -107,6 +107,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	let currentProperty: Property | null = null;
 	let lmap: ReturnType<typeof map> | null = null;
 	let lmark: ReturnType<typeof marker> | null = null;
+	let lastTriggerUrl: string | null = null;
 
 	// ── UI Components & Refs ───────────────────────────────────────────────────
 
@@ -294,6 +295,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	// ── Data Binding Logic ─────────────────────────────────────────────────────
 
 	function open(p: Property): void {
+		lastTriggerUrl = p.source_url;
 		currentProperty = p;
 		const tier = ts(p.tier);
 
@@ -411,6 +413,16 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	}
 
 	// ── Interaction Handlers ───────────────────────────────────────────────────
+
+	modal.addEventListener("close", () => {
+		if (lastTriggerUrl) {
+			const el = document.querySelector(
+				`.product-card[data-url="${lastTriggerUrl}"]`,
+			) as HTMLElement;
+			if (el) el.focus();
+			lastTriggerUrl = null;
+		}
+	});
 
 	const onKey = (e: KeyboardEvent) => {
 		if (e.key === "ArrowLeft") gallery.navigate(-1);

@@ -14,7 +14,7 @@ export function SkeletonList(count: number, view: "grid" | "row"): HTMLElement {
 function gridCard(): HTMLElement {
 	return html`
 		<article
-			class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-4 flex flex-col gap-3.5 animate-pulse"
+			class="re-skeleton bg-(--surface) border border-(--border) rounded-(--r-lg) p-4 flex flex-col gap-3.5 animate-pulse"
 		>
 			<div class="rounded-(--r) -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)"></div>
 			<div class="flex justify-between items-start gap-2">
@@ -44,7 +44,7 @@ function gridCard(): HTMLElement {
 function rowCard(): HTMLElement {
 	return html`
 		<div
-			class="bg-(--surface) border border-(--border) rounded-(--r) px-4 py-3 flex items-center gap-3.5 animate-pulse"
+			class="re-skeleton bg-(--surface) border border-(--border) rounded-(--r) px-4 py-3 flex items-center gap-3.5 animate-pulse"
 		>
 			<div class="h-10 w-10 rounded-(--r-sm) bg-(--surface-3) shrink-0"></div>
 			<div class="w-16 shrink-0 flex flex-col gap-1.5">

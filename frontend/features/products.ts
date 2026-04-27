@@ -14,13 +14,15 @@ import {
 	tTier,
 } from "../core/utils";
 import { openGallery } from "../dialogs/gallery";
-import { openPropertyDetail } from "./property-detail";
 import { Button, RawButton } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
 import { Product } from "../ui/product";
 import { Select } from "../ui/select";
 import { hideMapView, initMapView, showMapView } from "./map-view";
+import { openPropertyDetail } from "./property-detail";
+
+import { SkeletonList } from "../ui/skeleton";
 
 /**
  * Products feature manages the results area, including sorting,
@@ -398,12 +400,50 @@ export function initProducts(container: HTMLElement): () => void {
 	}
 
 	function renderList(ct: HTMLElement, list: Property[]): void {
-		ct.replaceChildren();
-		const wrap = html`<div
-			class="${state.currentView === "grid"
+		const wrap = ct.firstElementChild as HTMLElement;
+		const viewClass =
+			state.currentView === "grid"
 				? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
-				: "flex flex-col gap-2"}"
-		></div>`;
+				: "flex flex-col gap-2";
+
+		// Smart Append: If we have the same container, handle skeletons and add new items.
+		if (wrap && wrap.className === viewClass) {
+			const skeletons = wrap.querySelectorAll(".re-skeleton");
+			const realCount = wrap.children.length - skeletons.length;
+
+			if (list.length >= realCount) {
+				skeletons.forEach((s) => {
+					s.remove();
+				});
+				const newItems = list.slice(realCount);
+
+				if (newItems.length > 0) {
+					let newCount = 0;
+					for (const property of newItems) {
+						const el = Product({
+							property,
+							bookmarked: state.bookmarks.has(property.source_url),
+							view: state.currentView as "grid" | "row",
+							callbacks: cardCallbacks,
+						});
+
+						el.style.animationDelay = `${Math.min(newCount, 15) * 22}ms`;
+						state.renderedSet.add(property.source_url);
+						newCount++;
+						wrap.appendChild(el);
+					}
+				}
+				return;
+			}
+		}
+
+		// Full Refresh: Capture focus, replace all children, and restore focus.
+		const focusedUrl = (document.activeElement as HTMLElement)
+			?.closest(".product-card")
+			?.getAttribute("data-url");
+
+		ct.replaceChildren();
+		const newWrap = html`<div class="${viewClass}"></div>`;
 
 		let newCount = 0;
 		for (const property of list) {
@@ -421,9 +461,18 @@ export function initProducts(container: HTMLElement): () => void {
 				state.renderedSet.add(property.source_url);
 				newCount++;
 			}
-			wrap.appendChild(el);
+			newWrap.appendChild(el);
 		}
-		ct.appendChild(wrap);
+		ct.appendChild(newWrap);
+
+		if (focusedUrl) {
+			const elToFocus = ct.querySelector(
+				`.product-card[data-url="${focusedUrl}"]`,
+			) as HTMLElement;
+			if (elToFocus) {
+				elToFocus.focus({ preventScroll: true });
+			}
+		}
 	}
 
 	function updatePagination(): void {
@@ -534,7 +583,61 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 	};
 
+	const getColumnCount = () => {
+		const wrap = cards.firstElementChild as HTMLElement;
+		if (!wrap) return 1;
+		const style = getComputedStyle(wrap);
+		if (style.display !== "grid") return 1;
+		return style.gridTemplateColumns.split(" ").filter(Boolean).length || 1;
+	};
+
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
+
+	add(cards, "keydown", (e: KeyboardEvent) => {
+		if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
+			return;
+
+		const target = e.target as HTMLElement;
+		const currentCard = target.closest(".product-card") as HTMLElement;
+		if (!currentCard) return;
+
+		const allCards = Array.from(
+			cards.querySelectorAll(".product-card"),
+		) as HTMLElement[];
+		const currentIndex = allCards.indexOf(currentCard);
+		if (currentIndex === -1) return;
+
+		const cols = getColumnCount();
+		let nextIndex = currentIndex;
+
+		switch (e.key) {
+			case "ArrowLeft":
+				nextIndex = currentIndex - 1;
+				break;
+			case "ArrowRight":
+				nextIndex = currentIndex + 1;
+				break;
+			case "ArrowUp":
+				nextIndex = currentIndex - cols;
+				break;
+			case "ArrowDown":
+				nextIndex = currentIndex + cols;
+				break;
+		}
+
+		if (
+			nextIndex >= 0 &&
+			nextIndex < allCards.length &&
+			nextIndex !== currentIndex
+		) {
+			e.preventDefault();
+			allCards[nextIndex].focus();
+			allCards[nextIndex].scrollIntoView({
+				block: "nearest",
+				behavior: "instant",
+			});
+		}
+	});
 
 	add(sortSel, "change", () => {
 		localStorage.setItem("re-sort", sortSel.value);
@@ -543,6 +646,19 @@ export function initProducts(container: HTMLElement): () => void {
 	});
 
 	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => render());
+
+	const offSearchStart = bus.on(EVENTS.SEARCH_STARTED, (detail) => {
+		if (detail?.more) {
+			const wrap = cards.firstElementChild as HTMLElement;
+			if (wrap && !wrap.querySelector(".re-skeleton")) {
+				const skeletons = SkeletonList(3, state.currentView as "grid" | "row");
+				Array.from(skeletons.children).forEach((child) => {
+					wrap.appendChild(child);
+				});
+			}
+		}
+	});
+
 	const onPdBmark = (e: Event) => {
 		const p = (e as CustomEvent<Property>).detail;
 		if (p) toggleBM(p);
@@ -563,6 +679,7 @@ export function initProducts(container: HTMLElement): () => void {
 			state.scrollObserver = null;
 		}
 		offDeals();
+		offSearchStart();
 		document.removeEventListener("pd:bmark", onPdBmark);
 		document.removeEventListener("pd:hide", onPdHide);
 		window.removeEventListener("scroll", onScroll);

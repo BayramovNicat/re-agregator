@@ -156,7 +156,8 @@ export function Product({
 				: null;
 
 		element = html`<article
-			class="bg-(--surface)
+			data-url="${property.source_url}"
+			class="product-card bg-(--surface)
       border
       rounded-(--r-lg)
       p-4
@@ -305,7 +306,8 @@ export function Product({
 			: null;
 
 		element = html`<div
-			class="bg-(--surface)
+			data-url="${property.source_url}"
+			class="product-card bg-(--surface)
       border border-(--border)
       rounded-(--r)
       px-4 py-3
