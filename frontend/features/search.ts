@@ -2,7 +2,7 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
-import { frag, html, makeEventManager, toast } from "../core/utils";
+import { frag, html, makeEventManager, show, toast } from "../core/utils";
 import { openHeatmap } from "../dialogs/heatmap";
 import { Button, RawButton } from "../ui/button";
 import { Chip, CloseableChip } from "../ui/chip";
@@ -271,20 +271,20 @@ export function initSearch(container: HTMLElement): () => void {
 			state.currentTotal = 0;
 			state.showingSaved = false;
 			state.renderedSet.clear();
+			state.hasSearched = true;
 			globalElements.savedToggleBtn?.classList.remove("on");
 
 			if (globalElements.welcomeState)
 				globalElements.welcomeState.style.display = "none";
 			if (globalElements.emptyState)
 				globalElements.emptyState.style.display = "none";
-			if (globalElements.resultsBar)
-				globalElements.resultsBar.style.display = "none";
 			if (globalElements.loadMoreButton)
 				globalElements.loadMoreButton.style.display = "none";
 			if (globalElements.trendPanel)
 				globalElements.trendPanel.style.display = "none";
 
 			globalElements.resultsContainer.replaceChildren();
+			show(globalElements.resultsBar);
 
 			if (state.currentView === "map") {
 				if (globalElements.loadingIndicator)

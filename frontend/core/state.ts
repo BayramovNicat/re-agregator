@@ -28,6 +28,7 @@ export const state = {
 		JSON.parse(localStorage.getItem("re-hidden") || "[]") as string[],
 	),
 	PAGE: 50,
+	hasSearched: false,
 	refs: {
 		cards: null as HTMLElement | null,
 		loading: null as HTMLElement | null,

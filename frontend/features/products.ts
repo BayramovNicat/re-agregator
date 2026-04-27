@@ -350,7 +350,11 @@ export function initProducts(container: HTMLElement): () => void {
 
 		list = sortDeals(list, sortBy);
 		if (!list.length) {
-			hide(resultsBarInner);
+			if (!state.hasSearched) hide(resultsBarInner);
+			else {
+				show(resultsBarInner);
+				updateResultsMeta(0);
+			}
 			show(empty);
 			cards.replaceChildren();
 			return;
