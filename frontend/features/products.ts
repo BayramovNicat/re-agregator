@@ -402,7 +402,7 @@ export function initProducts(container: HTMLElement): () => void {
 		const wrap = ct.firstElementChild as HTMLElement;
 		const viewClass =
 			state.currentView === "grid"
-				? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
+				? "grid grid-cols-5 gap-3.5 max-[1600px]:grid-cols-4 max-[1250px]:grid-cols-3 max-[850px]:grid-cols-2 max-[580px]:grid-cols-1"
 				: "flex flex-col gap-2";
 
 		// Smart Append: If we have the same container, handle skeletons and add new items.

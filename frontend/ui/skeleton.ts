@@ -4,7 +4,7 @@ export function SkeletonList(count: number, view: "grid" | "row"): HTMLElement {
 	const wrap = document.createElement("div");
 	wrap.className =
 		view === "grid"
-			? "grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[580px]:grid-cols-1"
+			? "grid grid-cols-5 gap-3.5 max-[1600px]:grid-cols-4 max-[1250px]:grid-cols-3 max-[850px]:grid-cols-2 max-[580px]:grid-cols-1"
 			: "flex flex-col gap-2";
 	const card = view === "grid" ? gridCard : rowCard;
 	for (let i = 0; i < count; i++) wrap.appendChild(card());
