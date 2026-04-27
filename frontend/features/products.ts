@@ -162,6 +162,7 @@ export function initProducts(container: HTMLElement): () => void {
 	});
 
 	const sortSel = Select({
+		name: "sort-by",
 		variant: "xs",
 		ariaLabel: t("sortBy"),
 		title: t("sortBy"),

@@ -52,6 +52,7 @@ export function MultiSelect({
 	>`;
 
 	const search = RawInput({
+		name: "location-search",
 		type: "text",
 		placeholder: "Search...",
 		ariaLabel: "Search locations",
@@ -140,11 +141,9 @@ export function MultiSelect({
 					<div
 						role="option"
 						aria-selected="${isSelected}"
-						class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-(--r-xs) cursor-pointer transition-colors ${
-							isSelected
-								? "bg-(--accent-dim) text-(--accent)"
-								: "hover:bg-(--surface-2)"
-						}"
+						class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-(--r-xs) cursor-pointer transition-colors ${isSelected
+							? "bg-(--accent-dim) text-(--accent)"
+							: "hover:bg-(--surface-2)"}"
 						data-value="${opt.value}"
 					>
 						<span class="text-xs font-medium truncate">${opt.label}</span>
