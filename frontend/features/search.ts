@@ -395,6 +395,7 @@ export function initSearch(container: HTMLElement): () => void {
 	// --- 4. UI Definition ---
 
 	ui.locationSelect = MultiSelect({
+		id: "loc-trigger",
 		placeholder: t("chooseLocs"),
 		className: "w-full",
 		exclusiveValue: "__all__",
@@ -418,6 +419,7 @@ export function initSearch(container: HTMLElement): () => void {
 		>10%</span
 	>`;
 	const rangeWrapper = Range({
+		id: "discount-threshold",
 		min: 0,
 		max: 50,
 		value: 10,
@@ -580,7 +582,7 @@ export function initSearch(container: HTMLElement): () => void {
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<div class="flex items-center justify-between">
-						${Label({ text: t("discountThreshold"), htmlFor: "" })}
+						${Label({ text: t("discountThreshold"), htmlFor: "discount-threshold" })}
 						${ui.discountValueDisplay}
 					</div>
 					${rangeWrapper}

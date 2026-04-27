@@ -63,7 +63,10 @@ export function MultiSelect({
 		},
 	});
 
+	const { id, ...rest } = props;
+
 	const trigger = RawButton({
+		id,
 		role: "combobox",
 		ariaExpanded: "false",
 		ariaHasPopup: "listbox",
@@ -116,7 +119,7 @@ export function MultiSelect({
 		html`
 			<div class="${cn("relative", className)}">${trigger} ${dropdown}</div>
 		`,
-		props,
+		rest,
 	);
 
 	function updateUI() {
