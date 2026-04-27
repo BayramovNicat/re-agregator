@@ -16,7 +16,7 @@ import {
 
 import { openGallery } from "../dialogs/gallery";
 import { openPropertyDetail } from "../dialogs/property-detail";
-import { Button } from "../ui/button";
+import { Button, RawButton } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
 import { Product } from "../ui/product";
@@ -32,43 +32,39 @@ export function initProducts(container: HTMLElement): () => void {
 	// --- 1. Pure Logic & State Helpers ---
 
 	function sortDeals(list: Property[], sortBy: string): Property[] {
-		return [...list].sort((a, b) => {
-			if (sortBy === "disc") return b.discount_percent - a.discount_percent;
-			if (sortBy === "drops")
-				return (b.price_drop_count ?? 0) - (a.price_drop_count ?? 0);
-			if (sortBy === "new")
-				return (
-					new Date(b.posted_date ?? 0).getTime() -
-					new Date(a.posted_date ?? 0).getTime()
-				);
-			if (sortBy === "price-asc") return a.price - b.price;
-			if (sortBy === "price-desc") return b.price - a.price;
-			if (sortBy === "area") return b.area_sqm - a.area_sqm;
-			if (sortBy === "ppsm") return a.price_per_sqm - b.price_per_sqm;
-			return 0;
-		});
+		const Sorters: Record<string, (a: Property, b: Property) => number> = {
+			disc: (a, b) => b.discount_percent - a.discount_percent,
+			drops: (a, b) => (b.price_drop_count ?? 0) - (a.price_drop_count ?? 0),
+			new: (a, b) =>
+				new Date(b.posted_date ?? 0).getTime() -
+				new Date(a.posted_date ?? 0).getTime(),
+			"price-asc": (a, b) => a.price - b.price,
+			"price-desc": (a, b) => b.price - a.price,
+			area: (a, b) => b.area_sqm - a.area_sqm,
+			ppsm: (a, b) => a.price_per_sqm - b.price_per_sqm,
+		};
+		const sorter = Sorters[sortBy];
+		return sorter ? [...list].sort(sorter) : list;
 	}
 
-	function persistBookmarkData(): void {
-		const obj: Record<string, Property> = {};
-		for (const [url, prop] of state.bookmarkData) {
-			obj[url] = prop;
-		}
-		localStorage.setItem("re-bm-data", JSON.stringify(obj));
+	function syncStateToStorage(): void {
+		const bmDataObj = Object.fromEntries(state.bookmarkData);
+		localStorage.setItem("re-bm-data", JSON.stringify(bmDataObj));
+		localStorage.setItem("re-bm", JSON.stringify([...state.bookmarks]));
+		localStorage.setItem("re-hidden", JSON.stringify([...state.hidden]));
 	}
 
 	function toggleBM(p: Property): void {
-		if (state.bookmarks.has(p.source_url)) {
+		const isBM = state.bookmarks.has(p.source_url);
+		if (isBM) {
 			state.bookmarks.delete(p.source_url);
 			state.bookmarkData.delete(p.source_url);
-			toast(t("toastRemoved"));
 		} else {
 			state.bookmarks.add(p.source_url);
 			state.bookmarkData.set(p.source_url, p);
-			toast(t("toastSaved"));
 		}
-		localStorage.setItem("re-bm", JSON.stringify([...state.bookmarks]));
-		persistBookmarkData();
+		toast(t(isBM ? "toastRemoved" : "toastSaved"));
+		syncStateToStorage();
 		bus.emit(EVENTS.DEALS_UPDATED);
 	}
 
@@ -76,73 +72,72 @@ export function initProducts(container: HTMLElement): () => void {
 		state.hidden.add(url);
 		state.bookmarks.delete(url);
 		state.bookmarkData.delete(url);
-		localStorage.setItem("re-bm", JSON.stringify([...state.bookmarks]));
-		localStorage.setItem("re-hidden", JSON.stringify([...state.hidden]));
-		persistBookmarkData();
+		syncStateToStorage();
 		toast(t("toastHidden"));
 		bus.emit(EVENTS.DEALS_UPDATED);
 	}
 
+	function getPropertyTags(p: Property): string[] {
+		const tags: string[] = [];
+		if (p.is_urgent) tags.push("Urgent");
+		if (p.has_document) tags.push("Document");
+		if (p.has_repair) tags.push("Repaired");
+		if (p.has_mortgage) tags.push("Mortgage eligible");
+		if (p.has_active_mortgage) tags.push("Active mortgage");
+		if (p.price_drop_count && p.price_drop_count > 0)
+			tags.push(`Price dropped ${p.price_drop_count}×`);
+		return tags;
+	}
+
 	function handleExport(): void {
 		const sortBy = sortSel.value || "disc";
-		let list = state.showingSaved
-			? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
-			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
-
-		list = sortDeals(list, sortBy);
+		const list = sortDeals(
+			state.showingSaved
+				? state.savedOnlyResults.filter((p) => state.bookmarks.has(p.source_url))
+				: state.allResults.filter((p) => !state.hidden.has(p.source_url)),
+			sortBy,
+		);
 
 		if (!list.length) return;
 
 		const lines: string[] = [
 			`REDEAL PROPERTY EXPORT — ${list.length} listings`,
 			`Exported: ${new Date().toISOString()}`,
-			``,
+			"",
 		];
 
 		list.forEach((p, i) => {
-			const tags: string[] = [];
-			if (p.is_urgent) tags.push("Urgent");
-			if (p.has_document) tags.push("Document");
-			if (p.has_repair) tags.push("Repaired");
-			if (p.has_mortgage) tags.push("Mortgage eligible");
-			if (p.has_active_mortgage) tags.push("Active mortgage");
-			if (p.price_drop_count && p.price_drop_count > 0)
-				tags.push(`Price dropped ${p.price_drop_count}×`);
+			const tags = getPropertyTags(p);
+			const loc = `${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`;
+			const details = [
+				p.rooms !== undefined && `${p.rooms} rooms`,
+				p.floor !== undefined &&
+					`Floor ${p.floor}${p.total_floors ? `/${p.total_floors}` : ""}`,
+			]
+				.filter(Boolean)
+				.join(" | ");
 
 			lines.push(`--- [${i + 1}] ---`);
-			lines.push(
-				`Location: ${p.location_name ?? "Unknown"}${p.district && p.district !== p.location_name ? ` (${p.district})` : ""}`,
-			);
+			lines.push(`Location: ${loc}`);
 			lines.push(
 				`Price: ₼${fmt(p.price)} | Area: ${p.area_sqm}m² | ₼/m²: ${fmt(p.price_per_sqm)}`,
 			);
 			lines.push(
 				`Market avg ₼/m²: ${fmt(p.location_avg_price_per_sqm)} | Discount: ${Number(p.discount_percent).toFixed(1)}% (${p.tier})`,
 			);
-			if (p.rooms !== undefined || p.floor !== undefined) {
-				const parts: string[] = [];
-				if (p.rooms !== undefined) parts.push(`${p.rooms} rooms`);
-				if (p.floor !== undefined)
-					parts.push(
-						`Floor ${p.floor}${p.total_floors ? `/${p.total_floors}` : ""}`,
-					);
-				lines.push(`Details: ${parts.join(" | ")}`);
-			}
+			if (details) lines.push(`Details: ${details}`);
 			if (tags.length) lines.push(`Tags: ${tags.join(", ")}`);
 			if (p.posted_date)
 				lines.push(`Posted: ${new Date(p.posted_date).toLocaleDateString()}`);
 			if (p.description?.trim())
 				lines.push(`Description: ${p.description.trim()}`);
-			lines.push(`URL: ${p.source_url}`);
-			lines.push(``);
+			lines.push(`URL: ${p.source_url}`, "");
 		});
 
 		const text = lines.join("\n");
 		navigator.clipboard
 			.writeText(text)
-			.then(() => {
-				toast(t("exportCopied"));
-			})
+			.then(() => toast(t("exportCopied")))
 			.catch(() => {
 				const blob = new Blob([text], { type: "text/plain" });
 				const a = document.createElement("a");
@@ -292,14 +287,13 @@ export function initProducts(container: HTMLElement): () => void {
 
 	const cleanupMapView = initMapView(mapViewCt);
 
-	const backToTopBtn = html`<button
-		type="button"
-		aria-label="${t("backToTop")}"
-		class="fixed bottom-5 right-5 z-40 w-9 h-9 rounded-full bg-(--surface-3) border border-(--border) text-(--muted) flex items-center justify-center shadow-lg transition-all duration-200 hover:text-(--text) hover:border-(--border-h) opacity-0 pointer-events-none"
-		style="font-size:14px"
-	>
-		↑
-	</button>`;
+	const backToTopBtn = RawButton({
+		ariaLabel: t("backToTop"),
+		className:
+			"fixed bottom-5 right-5 z-40 w-9 h-9 rounded-full bg-(--surface-3) border border-(--border) text-(--muted) flex items-center justify-center shadow-lg transition-all duration-200 hover:text-(--text) hover:border-(--border-h) opacity-0 pointer-events-none text-[14px]",
+		content: "↑",
+		onclick: () => window.scrollTo({ top: 0, behavior: "instant" }),
+	});
 	document.body.appendChild(backToTopBtn);
 
 	const onScroll = () => {
@@ -313,9 +307,6 @@ export function initProducts(container: HTMLElement): () => void {
 	};
 
 	window.addEventListener("scroll", onScroll, { passive: true });
-	backToTopBtn.addEventListener("click", () =>
-		window.scrollTo({ top: 0, behavior: "instant" }),
-	);
 
 	// Restore persisted sort
 	const savedSort = localStorage.getItem("re-sort");
@@ -338,9 +329,7 @@ export function initProducts(container: HTMLElement): () => void {
 			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
 
 		const sortBy = sortSel.value || "disc";
-		const tierSel =
-			(document.querySelector("#tier-filter") as HTMLSelectElement)?.value ||
-			"";
+		const tierSel = state.refs.tierFilter?.value || "";
 		if (tierSel) list = list.filter((p) => p.tier === tierSel);
 
 		if (state.currentView === "map") {
@@ -375,18 +364,17 @@ export function initProducts(container: HTMLElement): () => void {
 			return acc;
 		}, {});
 
-		const tierBadges = [
-			{ tier: "High Value Deal", color: "var(--green)" },
-			{ tier: "Good Deal", color: "var(--blue)" },
-			{ tier: "Fair Price", color: "var(--yellow)" },
-			{ tier: "Overpriced", color: "var(--red)" },
+		const TIER_BADGES = [
+			{ t: "High Value Deal", c: "var(--green)" },
+			{ t: "Good Deal", c: "var(--blue)" },
+			{ t: "Fair Price", c: "var(--yellow)" },
+			{ t: "Overpriced", c: "var(--red)" },
 		];
 
-		const distStr = tierBadges
-			.filter((tb) => tierCounts[tb.tier])
+		const distStr = TIER_BADGES.filter((b) => tierCounts[b.t])
 			.map(
-				(tb) =>
-					`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`,
+				(b) =>
+					`<span style="color:${b.c}">${tierCounts[b.t]} ${tTier(b.t, true)}</span>`,
 			)
 			.join(' <span style="color:var(--border)">·</span> ');
 
@@ -395,10 +383,16 @@ export function initProducts(container: HTMLElement): () => void {
 				? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>`
 				: "";
 
+		const label = state.showingSaved
+			? count !== 1
+				? t("savedDeals")
+				: t("savedDeal")
+			: count !== 1
+				? t("results")
+				: t("result");
+
 		resultsMeta.innerHTML = trust(
-			state.showingSaved
-				? `<strong>${count}</strong> ${count !== 1 ? t("savedDeals") : t("savedDeal")}`
-				: `<strong>${count}</strong> ${count !== 1 ? t("results") : t("result")}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
+			`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
 		) as string;
 	}
 
@@ -506,7 +500,7 @@ export function initProducts(container: HTMLElement): () => void {
 				for (const p of json.data) {
 					state.bookmarkData.set(p.source_url, p);
 				}
-				persistBookmarkData();
+				syncStateToStorage();
 				state.renderedSet.clear();
 				render();
 			}
@@ -516,8 +510,10 @@ export function initProducts(container: HTMLElement): () => void {
 	}
 
 	const setView = (view: "grid" | "list" | "map") => {
+		if (state.currentView === view) return;
 		const wasMap = state.currentView === "map";
 		state.currentView = view;
+
 		vgrid.classList.toggle("on", view === "grid");
 		vlist.classList.toggle("on", view === "list");
 		vmapview.classList.toggle("on", view === "map");
@@ -548,22 +544,6 @@ export function initProducts(container: HTMLElement): () => void {
 	});
 
 	const offDeals = bus.on(EVENTS.DEALS_UPDATED, () => render());
-
-	let savedScrollY = 0;
-	const offPropOpen = bus.on(EVENTS.PROPERTY_OPEN, () => {
-		savedScrollY = window.scrollY;
-	});
-
-	const onDialogClose = (e: Event) => {
-		const el = e.target as HTMLElement;
-		if (el.id === "prop-detail-modal" && savedScrollY > 0) {
-			requestAnimationFrame(() =>
-				window.scrollTo({ top: savedScrollY, behavior: "instant" }),
-			);
-		}
-	};
-	document.addEventListener("close", onDialogClose, true);
-
 	const onPdBmark = (e: Event) => {
 		const p = (e as CustomEvent<Property>).detail;
 		if (p) toggleBM(p);
@@ -584,10 +564,8 @@ export function initProducts(container: HTMLElement): () => void {
 			state.scrollObserver = null;
 		}
 		offDeals();
-		offPropOpen();
 		document.removeEventListener("pd:bmark", onPdBmark);
 		document.removeEventListener("pd:hide", onPdHide);
-		document.removeEventListener("close", onDialogClose, true);
 		window.removeEventListener("scroll", onScroll);
 		backToTopBtn.remove();
 		cleanupMapView();

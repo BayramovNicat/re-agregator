@@ -592,6 +592,7 @@ export function initSearch(container: HTMLElement): () => void {
 			${ui.advancedToggle} ${ui.advancedPanel}
 		</div>
 	`;
+	state.refs.tierFilter = ui.tierSelect;
 	container.append(searchLayout, ui.activeChipsContainer);
 
 	// --- 6. Event Handlers ---
