@@ -11,7 +11,7 @@ import { Icons } from "../ui/icons";
 import { initLeaflet } from "../ui/map-base";
 import { StatBox } from "../ui/stat-box";
 import { ts } from "../ui/tier";
-import { openGallery } from "./gallery";
+import { openGallery } from "../dialogs/gallery";
 
 /**
  * Renders a price history sparkline using a declarative SVG template.

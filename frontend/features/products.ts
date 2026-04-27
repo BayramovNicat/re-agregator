@@ -14,7 +14,7 @@ import {
 	tTier,
 } from "../core/utils";
 import { openGallery } from "../dialogs/gallery";
-import { openPropertyDetail } from "../dialogs/property-detail";
+import { openPropertyDetail } from "./property-detail";
 import { Button, RawButton } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";

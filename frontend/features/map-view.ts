@@ -10,9 +10,9 @@ import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { MapPin, Property } from "../core/types";
 import { debounce, fmt, fmtFloor, toast, tTier } from "../core/utils";
-import { openPropertyDetail } from "../dialogs/property-detail";
 import { initLeaflet } from "../ui/map-base";
 import { ts } from "../ui/tier";
+import { openPropertyDetail } from "./property-detail";
 
 let lmap: ReturnType<typeof LeafletMap> | null = null;
 const pinGroup = featureGroup();

@@ -1,11 +1,11 @@
 import { ge, html, renderToastsContainer, trustScriptURL } from "./core/utils";
 import { initGallery } from "./dialogs/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
-import { initPropertyDetail } from "./dialogs/property-detail";
 import { initAlerts } from "./features/alerts";
 import { initDistrictStats } from "./features/district-stats";
 import { initHeader } from "./features/header";
 import { initProducts } from "./features/products";
+import { initPropertyDetail } from "./features/property-detail";
 import { initSearch } from "./features/search";
 import { initTrend } from "./features/trend";
 import { initTooltip } from "./ui/tooltip";
@@ -20,12 +20,12 @@ const root = document.getElementById("app") as HTMLElement;
 if (!root) throw new Error("Root element #app not found");
 
 root.appendChild(html`
-  <div class="max-w-290 mx-auto px-5 pt-0 pb-20">
-    <header id="header-area"></header>
-    <section id="search-area"></section>
-    <section id="trend-area"></section>
-    <main id="products-area"></main>
-  </div>
+	<div class="max-w-290 mx-auto px-5 pt-0 pb-20">
+		<header id="header-area"></header>
+		<section id="search-area"></section>
+		<section id="trend-area"></section>
+		<main id="products-area"></main>
+	</div>
 `);
 
 // 2. Feature Initialization
