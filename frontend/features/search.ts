@@ -2,9 +2,9 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
-import { frag, ge, hide, makeEventManager, show, toast } from "../core/utils";
+import { frag, ge, html, makeEventManager, toast } from "../core/utils";
 import { openHeatmap } from "../dialogs/heatmap";
-import { Button } from "../ui/button";
+import { Button, RawButton } from "../ui/button";
 import { Chip, CloseableChip } from "../ui/chip";
 import { Icons } from "../ui/icons";
 import { Field, Input } from "../ui/input";
@@ -14,7 +14,7 @@ import { Range, setRangeProgress } from "../ui/range";
 import { Select } from "../ui/select";
 import { SkeletonList } from "../ui/skeleton";
 
-const NUM_FILTERS = () => [
+const getNumericFilters = () => [
 	{
 		id: "minPrice",
 		label: t("minPrice"),
@@ -89,7 +89,7 @@ const NUM_FILTERS = () => [
 	},
 ];
 
-const CHECK_FILTERS = () => [
+const getBooleanFilters = () => [
 	{ id: "hasRepair", label: t("hasRepair") },
 	{ id: "hasDocument", label: t("hasDocument") },
 	{ id: "hasMortgage", label: t("hasMortgage") },
@@ -98,21 +98,58 @@ const CHECK_FILTERS = () => [
 ];
 
 export function initSearch(container: HTMLElement): () => void {
-	const v = (id: string) => (ge(id) as HTMLInputElement).value.trim();
-	const cb = (id: string) => (ge(id) as HTMLInputElement).checked;
+	// --- 1. References ---
 
-	function updateChips(): void {
-		const row = ge("chips-row");
-		const chips: HTMLElement[] = [];
+	const globalElements = {
+		resultsContainer: ge("cards"),
+		loadingIndicator: ge("s-loading"),
+		emptyState: ge("s-empty"),
+		welcomeState: ge("s-welcome"),
+		resultsBar: ge("results-bar"),
+		loadMoreButton: ge("load-more"),
+		trendPanel: ge("trend-panel"),
+		savedToggleBtn: ge("saved-btn"),
+	};
 
-		for (const f of CHECK_FILTERS()) {
-			if (cb(f.id)) {
-				chips.push(
+	const ui = {
+		locationSelect: null as unknown as MultiSelectElement,
+		discountRange: null as unknown as HTMLInputElement,
+		discountValueDisplay: null as unknown as HTMLElement,
+		searchTrigger: null as unknown as HTMLButtonElement,
+		advancedToggle: null as unknown as HTMLButtonElement,
+		advancedPanel: null as unknown as HTMLElement,
+		advancedCount: null as unknown as HTMLElement,
+		activeChipsContainer: null as unknown as HTMLElement,
+		clearAllBtn: null as unknown as HTMLButtonElement,
+		categorySelect: null as unknown as HTMLSelectElement,
+		mortgageSelect: null as unknown as HTMLSelectElement,
+		descriptionInput: null as unknown as HTMLInputElement,
+		tierSelect: null as unknown as HTMLSelectElement,
+		numericInputs: {} as Record<string, HTMLInputElement>,
+		booleanInputs: {} as Record<string, HTMLInputElement>,
+	};
+
+	// --- 2. State Accessors ---
+
+	const getNumericValue = (id: string) =>
+		ui.numericInputs[id]?.value.trim() || "";
+	const isFilterChecked = (id: string) =>
+		ui.booleanInputs[id]?.checked || false;
+
+	// --- 3. Core Logic ---
+
+	function refreshFilterChips(): void {
+		const activeChips: HTMLElement[] = [];
+
+		// Boolean Filters
+		for (const config of getBooleanFilters()) {
+			if (isFilterChecked(config.id)) {
+				activeChips.push(
 					CloseableChip({
-						label: f.label,
+						label: config.label,
 						onClose: () => {
-							(ge(f.id) as HTMLInputElement).checked = false;
-							updateChips();
+							ui.booleanInputs[config.id].checked = false;
+							refreshFilterChips();
 							debouncedSearch();
 						},
 					}),
@@ -120,15 +157,16 @@ export function initSearch(container: HTMLElement): () => void {
 			}
 		}
 
-		for (const f of NUM_FILTERS()) {
-			const val = v(f.id);
-			if (val) {
-				chips.push(
+		// Numeric Filters
+		for (const config of getNumericFilters()) {
+			const value = getNumericValue(config.id);
+			if (value) {
+				activeChips.push(
 					CloseableChip({
-						label: `${f.chipLabel}: ${val}`,
+						label: `${config.chipLabel}: ${value}`,
 						onClose: () => {
-							(ge(f.id) as HTMLInputElement).value = "";
-							updateChips();
+							ui.numericInputs[config.id].value = "";
+							refreshFilterChips();
 							debouncedSearch();
 						},
 					}),
@@ -136,461 +174,573 @@ export function initSearch(container: HTMLElement): () => void {
 			}
 		}
 
-		const cat = (ge("category") as HTMLSelectElement).value;
-		if (cat) {
-			chips.push(
+		// Dropdowns & Search
+		const currentCategory = ui.categorySelect.value;
+		if (currentCategory) {
+			activeChips.push(
 				CloseableChip({
-					label: `${t("chipCategory")}: ${cat}`,
+					label: `${t("chipCategory")}: ${currentCategory}`,
 					onClose: () => {
-						(ge("category") as HTMLSelectElement).value = "";
-						updateChips();
+						ui.categorySelect.value = "";
+						refreshFilterChips();
 						debouncedSearch();
 					},
 				}),
 			);
 		}
 
-		const am = (ge("hasActiveMortgage") as HTMLSelectElement).value;
-		if (am) {
-			chips.push(
+		const mortgageStatus = ui.mortgageSelect.value;
+		if (mortgageStatus) {
+			activeChips.push(
 				CloseableChip({
-					label: `${t("chipActiveMortgage")}: ${am === "true" ? t("yes") : t("no")}`,
+					label: `${t("chipActiveMortgage")}: ${mortgageStatus === "true" ? t("yes") : t("no")}`,
 					onClose: () => {
-						(ge("hasActiveMortgage") as HTMLSelectElement).value = "";
-						updateChips();
+						ui.mortgageSelect.value = "";
+						refreshFilterChips();
 						debouncedSearch();
 					},
 				}),
 			);
 		}
 
-		const desc = (ge("descriptionSearch") as HTMLInputElement).value.trim();
-		if (desc) {
-			chips.push(
+		const descriptionQuery = ui.descriptionInput.value.trim();
+		if (descriptionQuery) {
+			activeChips.push(
 				CloseableChip({
-					label: `${t("chipDescSearch")}: ${desc}`,
+					label: `${t("chipDescSearch")}: ${descriptionQuery}`,
 					onClose: () => {
-						(ge("descriptionSearch") as HTMLInputElement).value = "";
-						updateChips();
+						ui.descriptionInput.value = "";
+						refreshFilterChips();
 						debouncedSearch();
 					},
 				}),
 			);
 		}
 
-		const locs = (ge("loc") as MultiSelectElement).getValue() as string[];
-		if (locs.length > 0 && !locs.includes("__all__")) {
-			for (const l of locs) {
-				chips.push(
+		const selectedLocations = ui.locationSelect.getValue();
+		if (
+			selectedLocations.length > 0 &&
+			!selectedLocations.includes("__all__")
+		) {
+			for (const location of selectedLocations) {
+				activeChips.push(
 					CloseableChip({
-						label: l,
+						label: location,
 						onClose: () => {
-							const el = ge("loc") as MultiSelectElement;
-							const current = el.getValue();
-							el.setValue(current.filter((v: string) => v !== l));
-							updateChips();
-							void doSearch(false);
+							ui.locationSelect.setValue(
+								ui.locationSelect.getValue().filter((v) => v !== location),
+							);
+							refreshFilterChips();
+							void executeSearch(false);
 						},
 					}),
 				);
 			}
 		}
 
-		row.replaceChildren();
+		ui.activeChipsContainer.replaceChildren(...activeChips);
+		ui.activeChipsContainer.style.display = activeChips.length
+			? "flex"
+			: "none";
 
-		row.append(...chips);
-		row.style.display = chips.length ? "flex" : "none";
-		const cnt = ge("adv-cnt");
-		if (chips.length) {
-			cnt.textContent = String(chips.length);
-			cnt.style.display = "inline-block";
+		if (activeChips.length) {
+			ui.advancedCount.textContent = String(activeChips.length);
+			ui.advancedCount.style.display = "inline-block";
 		} else {
-			cnt.style.display = "none";
+			ui.advancedCount.style.display = "none";
 		}
 	}
 
-	let searchTimer: ReturnType<typeof setTimeout> | null = null;
+	let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 	const debouncedSearch = () => {
-		if (searchTimer) clearTimeout(searchTimer);
-		searchTimer = setTimeout(() => void doSearch(false), 500);
+		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+		searchDebounceTimer = setTimeout(() => void executeSearch(false), 500);
 	};
 
-	async function doSearch(more = false): Promise<void> {
-		const locs = (ge("loc") as MultiSelectElement).getValue();
-		if (locs.length === 0) {
-			(ge("loc-trigger") as HTMLButtonElement).focus();
+	async function executeSearch(isPagination = false): Promise<void> {
+		const locations = ui.locationSelect.getValue();
+		if (locations.length === 0) {
+			ui.locationSelect.querySelector("button")?.focus();
 			return;
 		}
-		const thresh = (ge("thresh") as HTMLInputElement).value;
 
-		if (!more) {
+		if (!isPagination) {
 			state.allResults = [];
 			state.savedOnlyResults = [];
 			state.currentOffset = 0;
 			state.currentTotal = 0;
 			state.showingSaved = false;
 			state.renderedSet.clear();
-			ge("saved-btn")?.classList.remove("on");
-			hide("s-welcome");
-			hide("s-empty");
-			hide("results-bar");
-			hide("load-more");
-			hide("trend-panel");
-			ge("cards").replaceChildren();
+			globalElements.savedToggleBtn?.classList.remove("on");
+
+			if (globalElements.welcomeState)
+				globalElements.welcomeState.style.display = "none";
+			if (globalElements.emptyState)
+				globalElements.emptyState.style.display = "none";
+			if (globalElements.resultsBar)
+				globalElements.resultsBar.style.display = "none";
+			if (globalElements.loadMoreButton)
+				globalElements.loadMoreButton.style.display = "none";
+			if (globalElements.trendPanel)
+				globalElements.trendPanel.style.display = "none";
+
+			globalElements.resultsContainer.replaceChildren();
 
 			if (state.currentView === "map") {
-				show("s-loading");
+				if (globalElements.loadingIndicator)
+					globalElements.loadingIndicator.style.display = "block";
 			} else {
-				ge("cards").appendChild(
+				globalElements.resultsContainer.appendChild(
 					SkeletonList(6, state.currentView as "grid" | "row"),
 				);
 			}
 		}
-		(ge("search-btn") as HTMLButtonElement).disabled = true;
+
+		ui.searchTrigger.disabled = true;
 
 		try {
-			const p = new URLSearchParams({
-				location: locs.join(","),
-				threshold: thresh,
+			const searchParams = new URLSearchParams({
+				location: locations.join(","),
+				threshold: ui.discountRange.value,
 				limit: String(state.PAGE),
 				offset: String(state.currentOffset),
 			});
 
-			for (const f of NUM_FILTERS()) {
-				const val = v(f.id);
-				if (val) p.set(f.id, val);
+			// Numeric filters
+			for (const config of getNumericFilters()) {
+				const val = getNumericValue(config.id);
+				if (val) searchParams.set(config.id, val);
 			}
-			const cat = v("category");
-			if (cat) p.set("category", cat);
-			if (cb("hasRepair")) p.set("hasRepair", "true");
-			if (cb("hasDocument")) p.set("hasDocument", "true");
-			if (cb("hasMortgage")) p.set("hasMortgage", "true");
-			if (cb("isUrgent")) p.set("isUrgent", "true");
-			if (cb("notLastFloor")) p.set("notLastFloor", "true");
 
-			const am = (ge("hasActiveMortgage") as HTMLSelectElement).value;
-			if (am) p.set("hasActiveMortgage", am);
+			// Boolean filters
+			for (const config of getBooleanFilters()) {
+				if (isFilterChecked(config.id)) searchParams.set(config.id, "true");
+			}
 
-			const desc = v("descriptionSearch");
-			if (desc) p.set("descriptionSearch", desc);
+			// Dropdowns & Custom
+			if (ui.categorySelect.value)
+				searchParams.set("category", ui.categorySelect.value);
+			if (ui.mortgageSelect.value)
+				searchParams.set("hasActiveMortgage", ui.mortgageSelect.value);
 
-			const res = await fetch(`/api/deals/undervalued?${p}`);
-			const d = (await res.json()) as {
+			const descriptionQuery = ui.descriptionInput.value.trim();
+			if (descriptionQuery)
+				searchParams.set("descriptionSearch", descriptionQuery);
+
+			const response = await fetch(`/api/deals/undervalued?${searchParams}`);
+			const searchResults = (await response.json()) as {
 				error?: string;
 				data: Property[];
 				total: number;
 			};
-			hide("s-loading");
 
-			if (d.error) {
-				toast(d.error, true);
+			if (globalElements.loadingIndicator)
+				globalElements.loadingIndicator.style.display = "none";
+
+			if (searchResults.error) {
+				toast(searchResults.error, true);
 				return;
 			}
 
-			state.allResults = [...state.allResults, ...d.data];
-			state.currentTotal = d.total;
-			state.currentOffset += d.data.length;
+			state.allResults = [...state.allResults, ...searchResults.data];
+			state.currentTotal = searchResults.total;
+			state.currentOffset += searchResults.data.length;
 
-			if (!more) updateChips();
+			if (!isPagination) refreshFilterChips();
 
-			const urlParams = new URLSearchParams(p);
-			urlParams.delete("limit");
-			urlParams.delete("offset");
+			// Sync URL
+			const persistParams = new URLSearchParams(searchParams);
+			persistParams.delete("limit");
+			persistParams.delete("offset");
 			window.history.replaceState(
 				null,
 				"",
-				`${window.location.pathname}?${urlParams.toString()}`,
+				`${window.location.pathname}?${persistParams.toString()}`,
 			);
 
-			if (!more && locs.length === 1 && locs[0] !== "__all__") {
-				bus.emit(EVENTS.LOCATION_CHANGED, locs[0]);
+			// Location broadcast
+			if (
+				!isPagination &&
+				locations.length === 1 &&
+				locations[0] !== "__all__"
+			) {
+				bus.emit(EVENTS.LOCATION_CHANGED, locations[0]);
 			}
 
-			if (!state.allResults.length) {
-				ge("cards").replaceChildren();
-				show("s-empty");
-				hide("results-bar");
+			// UI Update
+			if (state.allResults.length === 0) {
+				globalElements.resultsContainer.replaceChildren();
+				if (globalElements.emptyState)
+					globalElements.emptyState.style.display = "block";
+				if (globalElements.resultsBar)
+					globalElements.resultsBar.style.display = "none";
 			} else {
 				bus.emit(EVENTS.DEALS_UPDATED);
 			}
-		} catch (e) {
-			hide("s-loading");
-			ge("cards").replaceChildren();
-			toast((e as Error).message, true);
+		} catch (error) {
+			if (globalElements.loadingIndicator)
+				globalElements.loadingIndicator.style.display = "none";
+			globalElements.resultsContainer.replaceChildren();
+			toast((error as Error).message, true);
 		} finally {
-			(ge("search-btn") as HTMLButtonElement).disabled = false;
+			ui.searchTrigger.disabled = false;
 		}
 	}
 
-	// 1. Render Structure
-	const root = frag`
-		<div class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-5 mb-3.5">
-			<div class="grid grid-cols-[1fr_auto_260px_120px] gap-3 items-end max-[680px]:grid-cols-1">
-				${Field({
-					htmlFor: "loc-trigger",
-					label: t("location"),
-					input: MultiSelect({
-						id: "loc",
-						options: [],
-						placeholder: t("chooseLocs"),
+	// --- 4. UI Definition ---
+
+	ui.locationSelect = MultiSelect({
+		placeholder: t("chooseLocs"),
+		className: "w-full",
+		exclusiveValue: "__all__",
+		options: [],
+		onChange: () => {
+			refreshFilterChips();
+			void executeSearch(false);
+		},
+	});
+
+	const priceMapActionBtn = Button({
+		title: t("priceMapTitle"),
+		color: "indigo",
+		variant: "base",
+		ariaLabel: t("priceMap"),
+		content: frag`${Icons.globe(14)} ${t("priceMap")}`,
+	});
+
+	ui.discountValueDisplay = html`<span
+		class="text-xs font-bold text-(--accent) bg-(--accent-dim) px-2 py-0.5 rounded-full tracking-[0.02em]"
+		>10%</span
+	>`;
+	const rangeWrapper = Range({
+		min: 0,
+		max: 50,
+		value: 10,
+		ariaLabel: t("discountThreshold"),
+	});
+	ui.discountRange = rangeWrapper.querySelector("input") as HTMLInputElement;
+
+	ui.searchTrigger = html`
+		<button
+			type="button"
+			class="inline-flex items-center justify-center gap-1.5 bg-(--accent-solid) text-white border-none rounded-(--r) px-4 py-2.25 font-semibold text-sm h-10 transition-all hover:bg-(--accent-h) hover:shadow-[0_4px_12px_rgba(79,70,229,0.3)] active:scale-[0.97] disabled:opacity-45 disabled:cursor-not-allowed"
+		>
+			${Icons.search(14)} ${t("search")}
+		</button>
+	` as HTMLButtonElement;
+
+	ui.advancedCount = html`<span
+		class="bg-(--accent-solid) text-white rounded-full px-1.5 py-px text-xs font-semibold"
+		style="display:none"
+	></span>`;
+	ui.advancedToggle = html`
+		<button
+			type="button"
+			aria-expanded="false"
+			class="group inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-3 py-1.5 text-(--text-2) text-xs font-medium mt-3.5 transition-all hover:border-(--border-h) hover:text-(--text) hover:bg-(--surface-2) aria-expanded:text-(--accent) aria-expanded:border-[rgba(99,102,241,0.4)] aria-expanded:bg-(--accent-dim)"
+		>
+			${Icons.chevron(
+				12,
+				"transition-transform duration-200 group-aria-expanded:rotate-180",
+			)}
+			${t("advancedFilters")} ${ui.advancedCount}
+		</button>
+	` as HTMLButtonElement;
+
+	ui.categorySelect = Select({
+		id: "category",
+		className: "w-full",
+		options: [
+			{ value: "", label: t("any") },
+			{ value: "Yeni tikili", label: t("newBuild") },
+			{ value: "Köhnə tikili", label: t("secondary") },
+		],
+	});
+
+	ui.mortgageSelect = Select({
+		id: "hasActiveMortgage",
+		className: "w-full",
+		options: [
+			{ value: "", label: t("any") },
+			{ value: "false", label: t("no") },
+			{ value: "true", label: t("yes") },
+		],
+	});
+
+	ui.descriptionInput = Input({
+		id: "descriptionSearch",
+		type: "text",
+		placeholder: t("descriptionSearchPlaceholder"),
+		className: "w-full",
+	});
+
+	ui.tierSelect = Select({
+		id: "tier-filter",
+		className: "w-full",
+		options: [
+			{ value: "", label: t("tierFilterAll") },
+			{ value: "High Value Deal", label: t("tierHigh") },
+			{ value: "Good Deal", label: t("tierGood") },
+			{ value: "Fair Price", label: t("tierFair") },
+			{ value: "Overpriced", label: t("tierOverpriced") },
+		],
+	});
+
+	ui.clearAllBtn = RawButton({
+		className:
+			"inline-flex items-center gap-1 text-xs text-(--muted) hover:text-(--text) transition-colors border border-(--border) hover:border-(--border-h) rounded-(--r-sm) px-2.5 py-1.25",
+		content: t("clearFilters"),
+	});
+
+	ui.advancedPanel = html`
+		<div
+			class="overflow-hidden max-h-0 opacity-0 transition-all ease-in-out duration-300 [&.open]:max-h-150 [&.open]:opacity-100"
+		>
+			<div
+				class="grid grid-cols-4 gap-2.5 pt-4 border-t border-(--border) mt-3.5 max-[680px]:grid-cols-2"
+			>
+				${getNumericFilters().map((config) => {
+					ui.numericInputs[config.id] = Input({
+						id: config.id,
+						type: "number",
+						placeholder: config.placeholder,
 						className: "w-full",
-						exclusiveValue: "__all__",
-						onChange: () => {
-							updateChips();
-							void doSearch(false);
-						},
-					}),
+					});
+					return Field({
+						label: config.label,
+						htmlFor: config.id,
+						input: ui.numericInputs[config.id],
+					});
+				})}
+				${Field({
+					label: t("category"),
+					htmlFor: "category",
+					input: ui.categorySelect,
+				})}
+				${Field({
+					label: t("activeMortgage"),
+					htmlFor: "hasActiveMortgage",
+					input: ui.mortgageSelect,
+				})}
+				${Field({
+					label: t("descriptionSearch"),
+					htmlFor: "descriptionSearch",
+					input: ui.descriptionInput,
+				})}
+				${Field({
+					label: t("tierFilter"),
+					htmlFor: "tier-filter",
+					input: ui.tierSelect,
+				})}
+			</div>
+			<div class="flex flex-wrap gap-1.75 pt-3.5">
+				${getBooleanFilters().map((config) => {
+					const chipWrapper = Chip({ id: config.id, label: config.label });
+					ui.booleanInputs[config.id] = chipWrapper.querySelector(
+						"input",
+					) as HTMLInputElement;
+					return chipWrapper;
+				})}
+			</div>
+			<div class="flex justify-end pt-2.5">${ui.clearAllBtn}</div>
+		</div>
+	`;
+
+	ui.activeChipsContainer = html`<div
+		class="flex flex-wrap gap-1.5 mb-3.5"
+		style="display:none"
+	></div>`;
+
+	// --- 5. Assembly ---
+
+	const searchLayout = html`
+		<div
+			class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-5 mb-3.5"
+		>
+			<div
+				class="grid grid-cols-[1fr_auto_260px_120px] gap-3 items-end max-[680px]:grid-cols-1"
+			>
+				${Field({
+					label: t("location"),
+					htmlFor: "loc-trigger",
+					input: ui.locationSelect,
 				})}
 				<div class="flex flex-col gap-1.5">
-					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Map</span>
-					${Button({
-						id: "loc-map-btn",
-						title: t("priceMapTitle"),
-						color: "indigo",
-						variant: "base",
-						ariaLabel: t("priceMap"),
-						content: frag`${Icons.globe(14)} ${t("priceMap")}`,
-					})}
+					<span
+						class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible"
+						aria-hidden="true"
+						>Map</span
+					>
+					${priceMapActionBtn}
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<div class="flex items-center justify-between">
-						${Label({ htmlFor: "thresh", text: t("discountThreshold") })}
-						<span id="tval" class="text-xs font-bold text-(--accent) bg-(--accent-dim) px-2 py-0.5 rounded-full tracking-[0.02em]">10%</span>
+						${Label({ text: t("discountThreshold"), htmlFor: "" })}
+						${ui.discountValueDisplay}
 					</div>
-					${Range({ id: "thresh", min: 0, max: 50, value: 10, ariaLabel: t("discountThreshold") })}
+					${rangeWrapper}
 				</div>
 				<div class="flex flex-col gap-1.5">
-					<span class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible" aria-hidden="true">Go</span>
-					<button type="button" id="search-btn" class="inline-flex items-center justify-center gap-1.5 bg-(--accent-solid) text-white border-none rounded-(--r) px-4 py-2.25 font-semibold text-sm h-10 transition-all hover:bg-(--accent-h) hover:shadow-[0_4px_12px_rgba(79,70,229,0.3)] active:scale-[0.97] disabled:opacity-45 disabled:cursor-not-allowed">
-						${Icons.search(14)} ${t("search")}
-					</button>
+					<span
+						class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible"
+						aria-hidden="true"
+						>Go</span
+					>
+					${ui.searchTrigger}
 				</div>
 			</div>
-
-			<button type="button" id="adv-toggle" aria-expanded="false" class="group inline-flex items-center gap-1.25 bg-transparent border border-(--border) rounded-(--r-sm) px-3 py-1.5 text-(--text-2) text-xs font-medium mt-3.5 transition-all hover:border-(--border-h) hover:text-(--text) hover:bg-(--surface-2) aria-expanded:text-(--accent) aria-expanded:border-[rgba(99,102,241,0.4)] aria-expanded:bg-(--accent-dim)">
-				${Icons.chevron(12, "transition-transform duration-200 group-aria-expanded:rotate-180")}
-				${t("advancedFilters")}
-				<span id="adv-cnt" class="bg-(--accent-solid) text-white rounded-full px-1.5 py-px text-xs font-semibold" style="display:none"></span>
-			</button>
-
-			<div id="adv-panel" class="overflow-hidden max-h-0 opacity-0 transition-all ease-in-out duration-300 [&.open]:max-h-150 [&.open]:opacity-100">
-				<div class="grid grid-cols-4 gap-2.5 pt-4 border-t border-(--border) mt-3.5 max-[680px]:grid-cols-2">
-					${NUM_FILTERS().map((f) =>
-						Field({
-							htmlFor: f.id,
-							label: f.label,
-							input: Input({
-								id: f.id,
-								type: "number",
-								placeholder: f.placeholder,
-								className: "w-full",
-							}),
-						}),
-					)}
-					${Field({
-						htmlFor: "category",
-						label: t("category"),
-						input: Select({
-							id: "category",
-							className: "w-full",
-							options: [
-								{ value: "", label: t("any") },
-								{ value: "Yeni tikili", label: t("newBuild") },
-								{ value: "Köhnə tikili", label: t("secondary") },
-							],
-						}),
-					})}
-					${Field({
-						htmlFor: "hasActiveMortgage",
-						label: t("activeMortgage"),
-						input: Select({
-							id: "hasActiveMortgage",
-							className: "w-full",
-							options: [
-								{ value: "", label: t("any") },
-								{ value: "false", label: t("no") },
-								{ value: "true", label: t("yes") },
-							],
-						}),
-					})}
-					${Field({
-						htmlFor: "descriptionSearch",
-						label: t("descriptionSearch"),
-						input: Input({
-							id: "descriptionSearch",
-							type: "text",
-							placeholder: t("descriptionSearchPlaceholder"),
-							className: "w-full",
-						}),
-					})}
-					${Field({
-						htmlFor: "tier-filter",
-						label: t("tierFilter"),
-						input: Select({
-							id: "tier-filter",
-							className: "w-full",
-							options: [
-								{ value: "", label: t("tierFilterAll") },
-								{ value: "High Value Deal", label: t("tierHigh") },
-								{ value: "Good Deal", label: t("tierGood") },
-								{ value: "Fair Price", label: t("tierFair") },
-								{ value: "Overpriced", label: t("tierOverpriced") },
-							],
-						}),
-					})}
-				</div>
-				<div class="flex flex-wrap gap-1.75 pt-3.5">
-					${CHECK_FILTERS().map((f) => Chip({ id: f.id, label: f.label }))}
-				</div>
-				<div class="flex justify-end pt-2.5">
-					<button type="button" id="clear-filters-btn" class="inline-flex items-center gap-1 text-xs text-(--muted) hover:text-(--text) transition-colors border border-(--border) hover:border-(--border-h) rounded-(--r-sm) px-2.5 py-1.25">${t("clearFilters")}</button>
-				</div>
-			</div>
+			${ui.advancedToggle} ${ui.advancedPanel}
 		</div>
-		<div id="chips-row" class="flex flex-wrap gap-1.5 mb-3.5" style="display:none"></div>
 	`;
-	container.appendChild(root);
+	container.append(searchLayout, ui.activeChipsContainer);
 
-	// 2. State & Restoration
-	const params = new URLSearchParams(window.location.search);
-	const threshVal = params.get("threshold");
-	if (threshVal !== null) {
-		(ge("thresh") as HTMLInputElement).value = threshVal;
-		ge("tval").textContent = threshVal === "0" ? t("all") : `${threshVal}%`;
-		setRangeProgress(ge("thresh") as HTMLInputElement);
-	}
-	for (const f of NUM_FILTERS()) {
-		const val = params.get(f.id);
-		if (val && val !== "undefined" && val !== "null")
-			(ge(f.id) as HTMLInputElement).value = val;
-	}
-	const catVal = params.get("category");
-	if (catVal) (ge("category") as HTMLSelectElement).value = catVal;
-	const amVal = params.get("hasActiveMortgage");
-	if (amVal) (ge("hasActiveMortgage") as HTMLSelectElement).value = amVal;
-	const descVal = params.get("descriptionSearch");
-	if (descVal && descVal !== "undefined" && descVal !== "null")
-		(ge("descriptionSearch") as HTMLInputElement).value = descVal;
-	for (const f of CHECK_FILTERS()) {
-		if (params.get(f.id) === "true") {
-			(ge(f.id) as HTMLInputElement).checked = true;
-		}
-	}
+	// --- 6. Event Handlers ---
 
-	// 3. Events
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
 
-	add(ge("search-btn"), "click", () => void doSearch(false));
-	add(ge("loc-map-btn"), "click", () => {
-		const el = ge("loc") as MultiSelectElement;
-		const active = el ? el.getValue() : [];
-		openHeatmap(active, (locName, isToggle) => {
-			if (!el) return;
+	add(ui.searchTrigger, "click", () => void executeSearch(false));
+
+	add(priceMapActionBtn, "click", () => {
+		const activeLocations = ui.locationSelect.getValue();
+		openHeatmap(activeLocations, (locName, isToggle) => {
 			if (isToggle) {
-				const current = el.getValue();
+				const current = ui.locationSelect.getValue();
 				const idx = current.indexOf(locName);
-				if (idx > -1) el.setValue(current.filter((v) => v !== locName));
-				else el.setValue([...current, locName]);
+				if (idx > -1)
+					ui.locationSelect.setValue(current.filter((v) => v !== locName));
+				else ui.locationSelect.setValue([...current, locName]);
 			} else {
-				el.setValue([locName]);
+				ui.locationSelect.setValue([locName]);
 			}
 			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
 		});
 	});
-	let threshTimer: ReturnType<typeof setTimeout> | null = null;
-	add(ge("thresh"), "input", (e) => {
-		const val = (e.target as HTMLInputElement).value;
-		ge("tval").textContent = val === "0" ? t("all") : `${val}%`;
-		if (threshTimer) clearTimeout(threshTimer);
-		threshTimer = setTimeout(() => void doSearch(false), 500);
-	});
-	add(ge("adv-toggle"), "click", () => {
-		const panel = ge("adv-panel");
-		const open = panel.classList.toggle("open");
-		ge("adv-toggle").setAttribute("aria-expanded", String(open));
+
+	let rangeChangeDebounce: ReturnType<typeof setTimeout> | null = null;
+	add(ui.discountRange, "input", (e) => {
+		const value = (e.target as HTMLInputElement).value;
+		ui.discountValueDisplay.textContent =
+			value === "0" ? t("all") : `${value}%`;
+		if (rangeChangeDebounce) clearTimeout(rangeChangeDebounce);
+		rangeChangeDebounce = setTimeout(() => void executeSearch(false), 500);
 	});
 
-	// Bus listener for infinite scroll
-	const offSearch = bus.on(EVENTS.SEARCH_STARTED, (data) => {
-		void doSearch(data?.more ?? false);
+	add(ui.advancedToggle, "click", () => {
+		const isOpen = ui.advancedPanel.classList.toggle("open");
+		ui.advancedToggle.setAttribute("aria-expanded", String(isOpen));
 	});
 
-	// Filter change listeners
-	add(ge("hasActiveMortgage"), "change", () => {
-		updateChips();
+	// Dynamic updates
+	const onFilterChange = () => {
+		refreshFilterChips();
 		debouncedSearch();
-	});
-	add(ge("descriptionSearch"), "input", () => {
-		updateChips();
-		debouncedSearch();
-	});
-	for (const f of CHECK_FILTERS()) {
-		add(ge(f.id), "change", () => {
-			updateChips();
-			debouncedSearch();
-		});
+	};
+
+	add(ui.mortgageSelect, "change", onFilterChange);
+	add(ui.descriptionInput, "input", onFilterChange);
+	add(ui.categorySelect, "change", onFilterChange);
+	add(ui.tierSelect, "change", () => bus.emit(EVENTS.DEALS_UPDATED));
+
+	for (const config of getBooleanFilters()) {
+		add(ui.booleanInputs[config.id], "change", onFilterChange);
 	}
-	for (const f of NUM_FILTERS()) {
-		add(ge(f.id), "input", () => {
-			updateChips();
-			debouncedSearch();
-		});
-	}
-	add(ge("category"), "change", () => {
-		updateChips();
-		debouncedSearch();
-	});
-	add(ge("tier-filter"), "change", () => bus.emit(EVENTS.DEALS_UPDATED));
 
-	add(ge("clear-filters-btn"), "click", () => {
-		for (const f of NUM_FILTERS()) (ge(f.id) as HTMLInputElement).value = "";
-		for (const f of CHECK_FILTERS())
-			(ge(f.id) as HTMLInputElement).checked = false;
-		(ge("category") as HTMLSelectElement).value = "";
-		(ge("hasActiveMortgage") as HTMLSelectElement).value = "";
-		(ge("descriptionSearch") as HTMLInputElement).value = "";
-		updateChips();
-		void doSearch(false);
+	for (const config of getNumericFilters()) {
+		add(ui.numericInputs[config.id], "input", onFilterChange);
+	}
+
+	add(ui.clearAllBtn, "click", () => {
+		for (const config of getNumericFilters())
+			ui.numericInputs[config.id].value = "";
+		for (const config of getBooleanFilters())
+			ui.booleanInputs[config.id].checked = false;
+		ui.categorySelect.value = "";
+		ui.mortgageSelect.value = "";
+		ui.descriptionInput.value = "";
+		refreshFilterChips();
+		void executeSearch(false);
 	});
 
 	add(document, "keydown", (e: KeyboardEvent) => {
 		if (
 			e.key === "Enter" &&
 			!["BUTTON", "A", "SELECT"].includes((e.target as Element).tagName)
-		)
-			void doSearch(false);
+		) {
+			void executeSearch(false);
+		}
 	});
 
-	// 4. Initial chips
-	updateChips();
+	const offSearchBus = bus.on(EVENTS.SEARCH_STARTED, (data) => {
+		void executeSearch(data?.more ?? false);
+	});
 
-	// 5. Load Locations
+	// --- 7. Initialization & Sync ---
+
+	const urlParams = new URLSearchParams(window.location.search);
+
+	// Range sync
+	const initialThreshold = urlParams.get("threshold");
+	if (initialThreshold !== null) {
+		ui.discountRange.value = initialThreshold;
+		ui.discountValueDisplay.textContent =
+			initialThreshold === "0" ? t("all") : `${initialThreshold}%`;
+		setRangeProgress(ui.discountRange);
+	}
+
+	// Filter sync
+	for (const config of getNumericFilters()) {
+		const value = urlParams.get(config.id);
+		if (value && value !== "undefined" && value !== "null")
+			ui.numericInputs[config.id].value = value;
+	}
+
+	const categoryParam = urlParams.get("category");
+	if (categoryParam) ui.categorySelect.value = categoryParam;
+
+	const mortgageParam = urlParams.get("hasActiveMortgage");
+	if (mortgageParam) ui.mortgageSelect.value = mortgageParam;
+
+	const descriptionParam = urlParams.get("descriptionSearch");
+	if (
+		descriptionParam &&
+		descriptionParam !== "undefined" &&
+		descriptionParam !== "null"
+	) {
+		ui.descriptionInput.value = descriptionParam;
+	}
+
+	for (const config of getBooleanFilters()) {
+		if (urlParams.get(config.id) === "true")
+			ui.booleanInputs[config.id].checked = true;
+	}
+
+	refreshFilterChips();
+
+	// Initial Data Loading
 	(async () => {
-		const el = ge("loc") as MultiSelectElement;
 		try {
-			const r = await fetch("/api/deals/locations");
-			const d = (await r.json()) as { data: string[] };
-			const options = [
+			const response = await fetch("/api/deals/locations");
+			const locationData = (await response.json()) as { data: string[] };
+			const locationOptions = [
 				{ value: "__all__", label: t("allLocations") },
-				...d.data.map((l) => ({ value: l, label: l })),
+				...locationData.data.map((loc) => ({ value: loc, label: loc })),
 			];
-			el.setOptions(options);
+			ui.locationSelect.setOptions(locationOptions);
 
-			const locParam = params.get("location");
-			if (locParam) {
-				const vals = locParam.split(",").filter(Boolean);
-				el.setValue(vals);
+			const initialLocation = urlParams.get("location");
+			if (initialLocation) {
+				ui.locationSelect.setValue(initialLocation.split(",").filter(Boolean));
 			} else {
-				el.setValue(["__all__"]);
+				ui.locationSelect.setValue(["__all__"]);
 			}
-			void doSearch(false);
+			void executeSearch(false);
 		} catch {
-			el.setOptions([{ value: "", label: t("failedLocs") }]);
+			ui.locationSelect.setOptions([{ value: "", label: t("failedLocs") }]);
 		}
 	})();
 
 	return () => {
 		cleanupHandlers();
-		offSearch();
+		offSearchBus();
 	};
 }
