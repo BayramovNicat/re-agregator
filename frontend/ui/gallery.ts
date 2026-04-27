@@ -178,8 +178,13 @@ export function Gallery({
 		if (Math.abs(dx) > 40) _navigate(dx < 0 ? 1 : -1);
 	});
 	eventManager.add<KeyboardEvent>(rootElm, "keydown", (e) => {
-		if (e.key === "ArrowLeft") _navigate(-1);
-		if (e.key === "ArrowRight" || e.key === " ") _navigate(1);
+		if (e.key === "ArrowLeft") {
+			e.stopPropagation();
+			_navigate(-1);
+		} else if (e.key === "ArrowRight" || e.key === " ") {
+			e.stopPropagation();
+			_navigate(1);
+		}
 	});
 
 	const _createSlide = (_: string, i: number): HTMLElement => {
