@@ -81,10 +81,10 @@ export async function getHeatmapData(): Promise<HeatmapPoint[]> {
 			COUNT(*)::bigint                                                                  AS count,
 			AVG(latitude)::float8                                                            AS lat,
 			AVG(longitude)::float8                                                           AS lng,
-			ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '4 weeks'
+			ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '14 days'
 							THEN price_per_sqm END))::int                                        AS recent_avg,
-			ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '8 weeks'
-						   AND  COALESCE(posted_date, created_at) <  NOW() - INTERVAL '4 weeks'
+			ROUND(AVG(CASE WHEN COALESCE(posted_date, created_at) >= NOW() - INTERVAL '28 days'
+						   AND  COALESCE(posted_date, created_at) <  NOW() - INTERVAL '14 days'
 							THEN price_per_sqm END))::int                                        AS prior_avg
 		FROM "Property"
 		WHERE location_name IS NOT NULL
