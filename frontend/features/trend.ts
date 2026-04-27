@@ -2,7 +2,15 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { TrendPoint } from "../core/types";
-import { fmt, getLocale, hide, html, show, trust, makeEventManager, frag } from "../core/utils";
+import {
+	fmt,
+	frag,
+	getLocale,
+	hide,
+	html,
+	makeEventManager,
+	show,
+} from "../core/utils";
 
 /**
  * Trend feature manages the property price trend chart above search results.
@@ -111,7 +119,7 @@ export function initTrend(container: HTMLElement): () => void {
 		);
 
 		trendDates.replaceChildren(
-			frag`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`
+			frag`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
 		);
 
 		const old = trendChart.querySelector("svg");
@@ -150,17 +158,33 @@ export function initTrend(container: HTMLElement): () => void {
 		const areaD = `${lineD} L ${lastPt[0]},${H} L ${firstPt[0]},${H} Z`;
 		const lp = lastPt;
 
-		const svg = html`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block;cursor:crosshair" xmlns="http://www.w3.org/2000/svg">
+		const svg = html`<svg
+			viewBox="0 0 ${W} ${H}"
+			style="width:100%;height:${H}px;display:block;cursor:crosshair"
+			xmlns="http://www.w3.org/2000/svg"
+		>
 			<defs>
 				<linearGradient id="spark-g" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="${color}" stop-opacity="0.28"/>
-					<stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+					<stop offset="0%" stop-color="${color}" stop-opacity="0.28" />
+					<stop offset="100%" stop-color="${color}" stop-opacity="0" />
 				</linearGradient>
 			</defs>
-			<path d="${areaD}" fill="url(#spark-g)" vector-effect="non-scaling-stroke"/>
-			<path d="${lineD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2"/>
-			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}"/>
+			<path
+				d="${areaD}"
+				fill="url(#spark-g)"
+				vector-effect="non-scaling-stroke"
+			/>
+			<path
+				d="${lineD}"
+				fill="none"
+				stroke="${color}"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				vector-effect="non-scaling-stroke"
+			/>
+			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2" />
+			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}" />
 		</svg>`;
 
 		trendChart.insertBefore(svg, trendTip);
@@ -175,7 +199,9 @@ export function initTrend(container: HTMLElement): () => void {
 			);
 			const p = data[idx];
 			if (!p) return;
-			trendTip.replaceChildren(frag`<span style="font-size:10px;color:var(--muted);display:block;margin-bottom:1px">${dfmt(p.week)}</span><strong>₼ ${fmt(Number(p.avg_ppsm), 0)}/m²</strong><span style="font-size:10px;color:var(--muted);margin-left:5px">${p.listing_count} ${t(p.listing_count !== 1 ? "listings" : "listing")}</span>`);
+			trendTip.replaceChildren(
+				frag`<span style="font-size:10px;color:var(--muted);display:block;margin-bottom:1px">${dfmt(p.week)}</span><strong>₼ ${fmt(Number(p.avg_ppsm), 0)}/m²</strong><span style="font-size:10px;color:var(--muted);margin-left:5px">${p.listing_count} ${t(p.listing_count !== 1 ? "listings" : "listing")}</span>`,
+			);
 
 			trendTip.style.display = "block";
 			const tipW = trendTip.offsetWidth || 160;

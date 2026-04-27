@@ -10,7 +10,6 @@ import {
 	makeEventManager,
 	show,
 	toast,
-	trust,
 	tTier,
 } from "../core/utils";
 import { Button, RawButton } from "../ui/button";
@@ -394,7 +393,9 @@ export function initProducts(container: HTMLElement): () => void {
 				? t("results")
 				: t("result");
 
-		resultsMeta.replaceChildren(frag`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`);
+		resultsMeta.replaceChildren(
+			frag`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
+		);
 	}
 
 	function renderList(ct: HTMLElement, list: Property[]): void {

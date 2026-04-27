@@ -1,4 +1,4 @@
-import { ce, cn, html, frag } from "../core/utils";
+import { ce, cn, frag, html } from "../core/utils";
 import { RawButton } from "./button";
 import { Icons } from "./icons";
 import { RawInput } from "./input";
@@ -131,7 +131,9 @@ export function MultiSelect({
 
 		optionsList.replaceChildren();
 		if (filtered.length === 0) {
-			optionsList.replaceChildren(frag`<div class="p-4 text-center text-xs text-(--muted)">No results found</div>`);
+			optionsList.replaceChildren(
+				frag`<div class="p-4 text-center text-xs text-(--muted)">No results found</div>`,
+			);
 		} else {
 			for (const opt of filtered) {
 				const isSelected = selectedValues.includes(opt.value);

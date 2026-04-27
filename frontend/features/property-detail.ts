@@ -2,7 +2,15 @@ import { divIcon, type map, marker } from "leaflet";
 import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
-import { fmt, fmtFloor, getLocale, html, timeAgo, tTier, makeEventManager } from "../core/utils";
+import {
+	fmt,
+	fmtFloor,
+	getLocale,
+	html,
+	makeEventManager,
+	timeAgo,
+	tTier,
+} from "../core/utils";
 import { Button } from "../ui/button";
 import { Tag } from "../ui/chip";
 import { Dialog } from "../ui/dialog";
