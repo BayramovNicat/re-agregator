@@ -129,6 +129,9 @@ Real estate deal aggregator for the Baku market (bina.az). Bun + TypeScript + Po
 - Hourly cron scrape runs automatically on server start (40 pages, 800ms delay).
 - Telegram alert system: `src/services/telegram.service.ts` + `src/services/alert.service.ts`.
 
+### Frontend Coding Style
+- All AI assistants must adhere to the rules defined in `.cursorrules` when editing the frontend. This includes using pure Vanilla TS, the `html` custom tag, and proper feature cleanup patterns.
+
 ### Frontend views
 
 Three property views: **Grid** (card grid), **List** (compact rows), **Map** (interactive pins on SVG Baku map). Map view uses `/api/deals/map-pins` — fetches all visible properties with lat/lng. Hover shows tooltip, click opens property-detail dialog.

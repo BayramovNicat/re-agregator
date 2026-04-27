@@ -1,0 +1,95 @@
+# Redeal Frontend Coding Style & Guidelines
+
+This document outlines the architectural conventions, coding style, and best practices derived from the existing frontend codebase. Any new code written in the `frontend/` directory must adhere to these rules.
+
+## 1. General Architecture & File Structure
+The project uses **pure Vanilla TypeScript**—no frameworks like React, Vue, or Angular.
+
+The structure is strictly divided into three layers:
+- **`core/`**: The foundation. Contains global state (`state.ts`), cross-module events (`events.ts`), translations (`i18n.ts`), shared types (`types.ts`), and global helper utilities (`utils.ts`).
+- **`ui/`**: Pure, mostly stateless functional UI elements (e.g., `button.ts`, `input.ts`, `select.ts`).
+- **`features/`**: Stateful, complex logic containers (e.g., `products.ts`, `search.ts`). These control their own layout, state, and rendering loop.
+
+## 2. DOM Manipulation & Templates
+We eschew heavy VDOMs for direct DOM manipulation using custom utilities.
+
+- **`html` Tagged Literal**: Use the `html` utility to create single root HTMLElements. It safely handles variable injection, including nesting real `Node` objects.
+  ```typescript
+  const badge = html`<span class="badge">New</span>`;
+  const container = html`<div>${badge} Hello</div>`; 
+  ```
+- **`frag` Tagged Literal**: Use `frag` when returning multiple sibling elements (DocumentFragment) without a wrapper.
+- **Direct Element References**: Keep DOM queries to an absolute minimum. Cache elements in variables at the top of your function scope instead of repeatedly querying the DOM.
+- **Helper Utilities**: Use `ce` (Create Element) to wrap an HTML string and pass props directly. Use `show(element)` and `hide(element)` instead of manually manipulating `style.display`.
+
+## 3. Creating UI Components (`ui/`)
+UI components are functions that take a props object and return an `HTMLElement`.
+
+- **Naming**: Use `PascalCase` for the function and `PascalCaseProps` for the types.
+- **Signatures**: Always define a `Props` type. Extend standard HTML attributes (`Partial<HTMLButtonElement>`) to support attribute forwarding.
+- **Content over Children**: Use a `content` property (accepting `unknown` or `HTMLElement | string | DocumentFragment`) instead of a `children` array.
+- **Styling**: Merge incoming `className` with internal base classes using `cn(...)`.
+
+```typescript
+// Example of a proper UI component
+export type BadgeProps = {
+	content: unknown;
+	color?: "green" | "red";
+} & Partial<HTMLSpanElement>;
+
+export function Badge({ content, color = "green", className, ...props }: BadgeProps): HTMLSpanElement {
+	return ce(
+		html`<span>${content}</span>`,
+		{ className: cn("rounded px-2 text-xs", color === "green" ? "bg-green-100" : "bg-red-100", className), ...props }
+	);
+}
+```
+
+## 4. Building Feature Modules (`features/`)
+Features manage independent sections of the app.
+
+- **Initialization**: Export an `initFeatureName(container: HTMLElement)` function.
+- **Cleanup (Crucial)**: The `init` function **must return a cleanup function**. This is critical to prevent memory leaks during SPA-like navigations or hot-reloads.
+- **Event Management**: Use the `makeEventManager()` utility from `core/utils.ts` for all DOM event listeners. It tracks listeners and makes cleanup trivial.
+
+```typescript
+export function initMyFeature(container: HTMLElement): () => void {
+    const { add, cleanup } = makeEventManager();
+    const btn = Button({ content: "Click" });
+    container.appendChild(btn);
+
+    add(btn, "click", () => console.log("Clicked!"));
+
+    return () => {
+        cleanup(); // Removes all listeners registered via `add`
+        btn.remove();
+    };
+}
+```
+
+## 5. Styling & Tailwind CSS
+The project uses **Tailwind CSS v4** combined with native CSS variables.
+
+- **Design Tokens**: Standard colors, radiuses, and surface tokens are defined as CSS variables in `styles.css` (e.g., `--surface-2`, `--text`, `--r`).
+- **Arbitrary Values**: Use Tailwind's arbitrary value syntax to reference these variables directly in classes: `bg-(--surface-2)`, `text-(--text-2)`, `border-(--border)`.
+- **Dynamic Classes**: Use the `cn` utility (a wrapper around `clsx` and `twMerge`) to safely construct conditional class strings without conflict.
+- **Avoid Inline Styles**: Only use `.style.property` for highly dynamic properties like `transform`, `opacity` during scroll, or staggered `animation-delay`.
+
+## 6. State Management & Reactivity
+- **Global State**: Read and modify variables directly in the exported `state` object from `core/state.ts`.
+- **Decoupling Features**: Features should NEVER import each other directly to call functions. 
+- **Event Bus**: Use the global `bus` (from `core/events.ts`) to communicate between features. Emit typed events (`bus.emit(EVENTS.ALERTS_OPEN)`) and listen to them (`bus.on(...)`). 
+
+## 7. Internationalization (i18n)
+**No hardcoded strings in the UI.**
+- Wrap all user-facing text in the translation helper `t('key')` from `core/i18n.ts`. 
+- For numbers, use the locale-aware `fmt(number)` utility.
+
+## 8. Summary Checklist
+- [ ] Did I use `html` and `ce` instead of `innerHTML`?
+- [ ] Is my UI component returning a typed `HTMLElement`?
+- [ ] Did I use `t('myKey')` for text?
+- [ ] Did I use `cn()` to construct dynamic class names?
+- [ ] Did my feature return a cleanup function?
+- [ ] Are all my DOM events registered with `makeEventManager`?
+- [ ] Is cross-feature communication handled via `bus.emit`?
