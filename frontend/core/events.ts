@@ -5,6 +5,7 @@ export const EVENTS = {
 	GALLERY_OPEN: "gallery_open",
 	PROPERTY_OPEN: "property_open",
 	ALERTS_OPEN: "alerts_open",
+	HEATMAP_OPEN: "heatmap_open",
 } as const;
 
 export type EventPayloads = {
@@ -14,6 +15,10 @@ export type EventPayloads = {
 	[EVENTS.GALLERY_OPEN]: { urls: string[]; index?: number };
 	[EVENTS.PROPERTY_OPEN]: import("./types").Property;
 	[EVENTS.ALERTS_OPEN]: undefined;
+	[EVENTS.HEATMAP_OPEN]: {
+		activeLocations: string[];
+		onAction: (name: string, isToggle: boolean) => void;
+	};
 };
 
 type Callback<T> = (data: T) => void;

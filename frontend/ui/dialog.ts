@@ -55,7 +55,7 @@ export function Dialog({
 				variant: "ghost",
 				color: "muted",
 				className:
-					"absolute top-5 right-5 size-8 flex items-center justify-center rounded-full hover:bg-(--surface-3) transition-colors z-10",
+					"absolute top-5 right-5 size-8 flex items-center justify-center rounded-full hover:bg-(--surface-3) transition-colors z-[1001]",
 				onclick: (e) => {
 					const d = (e.currentTarget as HTMLElement).closest(
 						"dialog",

@@ -1,6 +1,6 @@
 import { ge, html, renderToastsContainer, trustScriptURL } from "./core/utils";
 import { initGallery } from "./features/gallery";
-import { renderHeatmapModal } from "./dialogs/heatmap";
+import { initHeatmap } from "./features/heatmap";
 import { initAlerts } from "./features/alerts";
 import { initDistrictStats } from "./features/district-stats";
 import { initHeader } from "./features/header";
@@ -39,10 +39,10 @@ const cleanups: (() => void)[] = [
 	initGallery(root),
 	initTooltip(root),
 	initPropertyDetail(root),
+	initHeatmap(root),
 ];
 
 // 3. Global Static Modals & Utilities
-renderHeatmapModal(root);
 cleanups.push(initDistrictStats(root));
 renderToastsContainer(root);
 

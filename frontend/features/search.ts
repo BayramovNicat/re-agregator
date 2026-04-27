@@ -3,7 +3,7 @@ import { t } from "../core/i18n";
 import { state } from "../core/state";
 import type { Property } from "../core/types";
 import { frag, html, makeEventManager, show, toast } from "../core/utils";
-import { openHeatmap } from "../dialogs/heatmap";
+import { openHeatmap } from "./heatmap";
 import { Button, RawButton } from "../ui/button";
 import { Chip, CloseableChip } from "../ui/chip";
 import { Icons } from "../ui/icons";
