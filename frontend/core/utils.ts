@@ -289,10 +289,9 @@ export const frag = (
  * Tracks all added listeners and provides a single cleanup method.
  */
 export function makeEventManager() {
-	const handlers: [HTMLElement | Document | Window, string, EventListener][] =
-		[];
+	const handlers: [Element | Document | Window, string, EventListener][] = [];
 	const add = <T extends Event>(
-		el: HTMLElement | Document | Window,
+		el: Element | Document | Window,
 		ev: string,
 		fn: (e: T) => void,
 	) => {

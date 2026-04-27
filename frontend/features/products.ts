@@ -407,7 +407,9 @@ export function initProducts(container: HTMLElement): () => void {
 
 		// Smart Append: If we have the same container, handle skeletons and add new items.
 		if (wrap && wrap.className === viewClass) {
-			const skeletons = wrap.querySelectorAll(".re-skeleton");
+			const skeletons = Array.from(wrap.children).filter((c) =>
+				c.classList.contains("re-skeleton"),
+			);
 			const realCount = wrap.children.length - skeletons.length;
 
 			if (list.length >= realCount) {
@@ -491,7 +493,7 @@ export function initProducts(container: HTMLElement): () => void {
 					!state.showingSaved &&
 					!state.loading &&
 					state.allResults.length < state.currentTotal &&
-					!document.querySelector("dialog[open]")
+					!document.body.hasAttribute("data-dialog-open")
 				) {
 					loadMoreFn();
 				}
@@ -584,8 +586,8 @@ export function initProducts(container: HTMLElement): () => void {
 		const currentCard = target.closest(".product-card") as HTMLElement;
 		if (!currentCard) return;
 
-		const allCards = Array.from(
-			cards.querySelectorAll(".product-card"),
+		const allCards = Array.from(cards.firstElementChild?.children || []).filter(
+			(c) => c.classList.contains("product-card"),
 		) as HTMLElement[];
 		const currentIndex = allCards.indexOf(currentCard);
 		if (currentIndex === -1) return;
@@ -633,7 +635,12 @@ export function initProducts(container: HTMLElement): () => void {
 	const offSearchStart = bus.on(EVENTS.SEARCH_STARTED, (detail) => {
 		if (detail?.more) {
 			const wrap = cards.firstElementChild as HTMLElement;
-			if (wrap && !wrap.querySelector(".re-skeleton")) {
+			if (
+				wrap &&
+				!Array.from(wrap.children).some((c) =>
+					c.classList.contains("re-skeleton"),
+				)
+			) {
 				const skeletons = SkeletonList(3, state.currentView as "grid" | "row");
 				Array.from(skeletons.children).forEach((child) => {
 					wrap.appendChild(child);

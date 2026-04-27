@@ -5,6 +5,7 @@ import type { PriceHistoryEntry, Property } from "../core/types";
 import {
 	fmt,
 	fmtFloor,
+	frag,
 	getLocale,
 	html,
 	makeEventManager,
@@ -115,7 +116,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	let currentProperty: Property | null = null;
 	let lmap: ReturnType<typeof map> | null = null;
 	let lmark: ReturnType<typeof marker> | null = null;
-	let lastTriggerUrl: string | null = null;
 
 	// ── UI Components & Refs ───────────────────────────────────────────────────
 
@@ -191,15 +191,16 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		${t("viewListing")} ${Icons.external(10)}
 	</a>` as HTMLAnchorElement;
 
+	const shareTextEl = html`<span>${t("btnShare")}</span>`;
 	const shareBtn = Button({
-		content: html`${Icons.external(10)} <span>${t("btnShare")}</span>`,
+		content: frag`${Icons.external(10)} ${shareTextEl}`,
 		variant: "padded",
 		color: "indigo",
 		onclick: () => {
 			if (!currentProperty) return;
 			const url = currentProperty.source_url;
 			const flash = (msg: string) => {
-				const span = shareBtn.querySelector("span");
+				const span = shareTextEl;
 				if (!span) return;
 				const prev = span.textContent;
 				span.textContent = msg;
@@ -305,7 +306,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	// ── Data Binding Logic ─────────────────────────────────────────────────────
 
 	function open(p: Property): void {
-		lastTriggerUrl = p.source_url;
 		currentProperty = p;
 		const tier = ts(p.tier);
 
@@ -423,16 +423,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	}
 
 	// ── Interaction Handlers ───────────────────────────────────────────────────
-
-	add(modal, "close", () => {
-		if (lastTriggerUrl) {
-			const el = document.querySelector(
-				`.product-card[data-url="${lastTriggerUrl}"]`,
-			) as HTMLElement;
-			if (el) el.focus({ preventScroll: true });
-			lastTriggerUrl = null;
-		}
-	});
 
 	const onKey = (e: KeyboardEvent) => {
 		if (e.key === "ArrowLeft") gallery.navigate(-1);

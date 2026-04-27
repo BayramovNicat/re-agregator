@@ -29,6 +29,7 @@ export function initTrend(container: HTMLElement): () => void {
 		class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
 	></div>`;
 	const trendChart = html`<div class="relative -mx-0.5">${trendTip}</div>`;
+	let currentSvg: SVGElement | null = null;
 	const trendDates = html`<div
 		class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5"
 	></div>`;
@@ -122,8 +123,10 @@ export function initTrend(container: HTMLElement): () => void {
 			frag`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
 		);
 
-		const old = trendChart.querySelector("svg");
-		if (old) old.remove();
+		if (currentSvg) {
+			currentSvg.remove();
+			currentSvg = null;
+		}
 
 		const W = trendChart.clientWidth || 600,
 			H = 68,
@@ -185,9 +188,10 @@ export function initTrend(container: HTMLElement): () => void {
 			/>
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="6" fill="${color}" opacity="0.2" />
 			<circle cx="${lp[0]}" cy="${lp[1]}" r="3.5" fill="${color}" />
-		</svg>`;
+		</svg>` as unknown as SVGElement;
 
 		trendChart.insertBefore(svg, trendTip);
+		currentSvg = svg;
 
 		add(svg, "mousemove", (e: Event) => {
 			const evt = e as MouseEvent;

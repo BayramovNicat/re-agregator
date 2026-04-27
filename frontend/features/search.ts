@@ -298,7 +298,7 @@ export function initSearch(container: HTMLElement): () => void {
 
 		const locations = ui.locationSelect.getValue();
 		if (locations.length === 0) {
-			ui.locationSelect.querySelector("button")?.focus({ preventScroll: true });
+			ui.locationSelect.focus({ preventScroll: true });
 			return;
 		}
 
@@ -452,7 +452,7 @@ export function initSearch(container: HTMLElement): () => void {
 		value: 10,
 		ariaLabel: t("discountThreshold"),
 	});
-	ui.discountRange = rangeWrapper.querySelector("input") as HTMLInputElement;
+	ui.discountRange = rangeWrapper.inputElement;
 
 	ui.searchTrigger = html`
 		<button
@@ -570,9 +570,7 @@ export function initSearch(container: HTMLElement): () => void {
 			<div class="flex flex-wrap gap-1.75 pt-3.5">
 				${getBooleanFilters().map((config) => {
 					const chipWrapper = Chip({ id: config.id, label: config.label });
-					ui.booleanInputs[config.id] = chipWrapper.querySelector(
-						"input",
-					) as HTMLInputElement;
+					ui.booleanInputs[config.id] = chipWrapper.inputElement;
 					return chipWrapper;
 				})}
 			</div>

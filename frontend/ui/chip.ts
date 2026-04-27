@@ -41,6 +41,10 @@ export type ChipProps = {
 	label: string;
 } & Partial<HTMLInputElement>;
 
+export interface ChipElement extends HTMLLabelElement {
+	inputElement: HTMLInputElement;
+}
+
 /**
  * An interactive filter pill with a checkbox state.
  *
@@ -51,7 +55,7 @@ export function Chip({
 	label,
 	className = "",
 	...props
-}: ChipProps): HTMLLabelElement {
+}: ChipProps): ChipElement {
 	const input = ce<HTMLInputElement>(
 		html`<input type="checkbox" class="peer absolute opacity-0 w-0 h-0" />`,
 		props,
@@ -63,7 +67,8 @@ export function Chip({
 			${input}
 			<span class="${cn(CHIP_SHARED, className)}">${label}</span>
 		</label>
-	` as HTMLLabelElement;
+	` as ChipElement;
+	el.inputElement = input;
 	return el;
 }
 

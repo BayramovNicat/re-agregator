@@ -30,6 +30,8 @@ export type DialogProps = {
 	content: unknown;
 } & Partial<HTMLDialogElement>;
 
+let openDialogsCount = 0;
+
 /**
  * A stylized dialog component with standardized branding and backdrop logic.
  *
@@ -104,6 +106,22 @@ export function Dialog({
 
 	el.addEventListener("click", (e) => {
 		if (e.target === e.currentTarget) el.close();
+	});
+
+	const originalShowModal = el.showModal.bind(el);
+	el.showModal = () => {
+		if (!el.open) {
+			openDialogsCount++;
+			document.body.setAttribute("data-dialog-open", "true");
+		}
+		originalShowModal();
+	};
+
+	el.addEventListener("close", () => {
+		openDialogsCount = Math.max(0, openDialogsCount - 1);
+		if (openDialogsCount === 0) {
+			document.body.removeAttribute("data-dialog-open");
+		}
 	});
 
 	return el;

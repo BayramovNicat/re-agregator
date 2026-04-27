@@ -70,6 +70,10 @@ export type RangeProps = {
 	className?: string;
 } & RawRangeProps;
 
+export interface RangeElement extends HTMLDivElement {
+	inputElement: HTMLInputElement;
+}
+
 /**
  * A stylized range input component with standardized branding.
  *
@@ -84,10 +88,7 @@ export type RangeProps = {
  * container.appendChild(range);
  * ```
  */
-export function Range({
-	className = "",
-	...props
-}: RangeProps): HTMLDivElement {
+export function Range({ className = "", ...props }: RangeProps): RangeElement {
 	const input = RawRange(props);
 
 	// Initialize progress
@@ -96,8 +97,10 @@ export function Range({
 	// Automatically update progress on input
 	input.addEventListener("input", () => setRangeProgress(input));
 
-	return ce(
+	const el = ce<RangeElement>(
 		html` <div class="${cn(CONTAINER_CLS, className)}">${input}</div> `,
 		{},
 	);
+	el.inputElement = input;
+	return el;
 }
