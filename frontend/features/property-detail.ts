@@ -3,7 +3,6 @@ import { bus, EVENTS } from "../core/events";
 import { t } from "../core/i18n";
 import type { PriceHistoryEntry, Property } from "../core/types";
 import { fmt, fmtFloor, getLocale, html, timeAgo, tTier } from "../core/utils";
-import { openGallery } from "../dialogs/gallery";
 import { Button } from "../ui/button";
 import { Tag } from "../ui/chip";
 import { Dialog } from "../ui/dialog";
@@ -12,6 +11,7 @@ import { Icons } from "../ui/icons";
 import { initLeaflet } from "../ui/map-base";
 import { StatBox } from "../ui/stat-box";
 import { ts } from "../ui/tier";
+import { openGallery } from "./gallery";
 
 /**
  * Renders a price history sparkline using a declarative SVG template.

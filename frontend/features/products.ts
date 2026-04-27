@@ -13,16 +13,15 @@ import {
 	trust,
 	tTier,
 } from "../core/utils";
-import { openGallery } from "../dialogs/gallery";
 import { Button, RawButton } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { Icons } from "../ui/icons";
 import { Product } from "../ui/product";
 import { Select } from "../ui/select";
+import { SkeletonList } from "../ui/skeleton";
+import { openGallery } from "./gallery";
 import { hideMapView, initMapView, showMapView } from "./map-view";
 import { openPropertyDetail } from "./property-detail";
-
-import { SkeletonList } from "../ui/skeleton";
 
 /**
  * Products feature manages the results area, including sorting,

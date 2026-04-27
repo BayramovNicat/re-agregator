@@ -1,5 +1,5 @@
 import { ge, html, renderToastsContainer, trustScriptURL } from "./core/utils";
-import { initGallery } from "./dialogs/gallery";
+import { initGallery } from "./features/gallery";
 import { renderHeatmapModal } from "./dialogs/heatmap";
 import { initAlerts } from "./features/alerts";
 import { initDistrictStats } from "./features/district-stats";
