@@ -149,7 +149,7 @@ async function fetchAndRender(): Promise<void> {
 			lmap.fitBounds(group.getBounds().pad(0.12));
 		}
 
-		const meta = document.getElementById("results-meta");
+		const meta = state.refs.resultsMeta;
 		if (meta && d.data?.length) {
 			const total = d.data.length;
 			const tierCounts = d.data.reduce<Record<string, number>>((acc, p) => {
@@ -205,7 +205,7 @@ export function showMapView(): void {
 	mapContainer.style.display = "";
 
 	if (!lmap) {
-		lmap = initLeaflet(mapContainer.id);
+		lmap = initLeaflet(mapContainer);
 		lmap.setView([40.38, 49.87], 12);
 	} else {
 		lmap.invalidateSize();

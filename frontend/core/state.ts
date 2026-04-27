@@ -38,5 +38,6 @@ export const state = {
 		loadMore: null as HTMLElement | null,
 		savedBtn: null as HTMLElement | null,
 		trendPanel: null as HTMLElement | null,
+		resultsMeta: null as HTMLElement | null,
 	},
 };

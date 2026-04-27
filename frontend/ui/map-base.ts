@@ -7,8 +7,10 @@ export const MAP_MODAL_MAXWIDTH = "860px";
 /**
  * Initializes a Leaflet map with standard dark-mode settings.
  */
-export function initLeaflet(containerId: string): ReturnType<typeof map> {
-	const lmap = map(containerId, {
+export function initLeaflet(
+	target: string | HTMLElement,
+): ReturnType<typeof map> {
+	const lmap = map(target, {
 		zoomControl: true,
 		attributionControl: false,
 	});

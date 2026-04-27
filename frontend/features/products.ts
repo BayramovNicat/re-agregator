@@ -280,6 +280,7 @@ export function initProducts(container: HTMLElement): () => void {
 	state.refs.empty = empty;
 	state.refs.welcome = welcome;
 	state.refs.resultsBar = resultsBarInner;
+	state.refs.resultsMeta = resultsMeta;
 	state.refs.loadMore = loadMore;
 	state.refs.savedBtn = savedBtn;
 
