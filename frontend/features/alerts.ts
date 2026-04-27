@@ -24,12 +24,18 @@ export function initAlerts(root: HTMLElement): () => void {
 		maxLength: 80,
 	});
 
-	const previewEl = html`<div class="text-xs text-(--muted) bg-(--surface-2) border border-(--border) rounded-sm px-2.5 py-2"></div>`;
+	const previewEl = html`<div
+		class="text-xs text-(--muted) bg-(--surface-2) border border-(--border) rounded-sm px-2.5 py-2"
+	></div>`;
 	const listEl = html`<div class="mb-4 hidden"></div>`;
 	const itemsEl = html`<div class="flex flex-col gap-6"></div>`;
 
 	listEl.append(
-		html`<div class="text-xs font-semibold text-(--muted) uppercase tracking-[0.05em] mb-2">${t("activeAlerts")}</div>`,
+		html`<div
+			class="text-xs font-semibold text-(--muted) uppercase tracking-[0.05em] mb-2"
+		>
+			${t("activeAlerts")}
+		</div>`,
 		itemsEl,
 		html`<div class="h-px bg-(--border) my-4"></div>`,
 	);
@@ -51,27 +57,34 @@ export function initAlerts(root: HTMLElement): () => void {
 		maxWidth: "440px",
 		className: "p-6",
 		content: html`
-      <div>
-        <div class="text-base font-semibold text-(--text) mb-4">${t("telegramAlerts")}</div>
-        ${listEl}
-        <div class="text-xs text-(--muted) leading-[1.6] mb-3.5">
-          ${t("botInstruction", {
+			<div>
+				<div class="text-base font-semibold text-(--text) mb-4">
+					${t("telegramAlerts")}
+				</div>
+				${listEl}
+				<div class="text-xs text-(--muted) leading-[1.6] mb-3.5">
+					${t("botInstruction", {
 						bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue)">@BakuDealsBot</a>',
 						start:
 							'<code class="bg-(--surface-3) px-1 py-0.5 rounded-sm">/start</code>',
 					})}
-        </div>
-        <div class="flex flex-col gap-3">
-          ${Field({ htmlFor: "alert-chat-id", label: t("chatIdLabel"), input: chatIdInput })}
-          ${Field({ htmlFor: "alert-label", label: t("alertLabel"), input: labelInput })}
-          ${previewEl}
-          <div class="flex gap-2 justify-end mt-1">
-            ${cancelBtn}
-            ${saveBtn}
-          </div>
-        </div>
-      </div>
-    `,
+				</div>
+				<div class="flex flex-col gap-3">
+					${Field({
+						htmlFor: "alert-chat-id",
+						label: t("chatIdLabel"),
+						input: chatIdInput,
+					})}
+					${Field({
+						htmlFor: "alert-label",
+						label: t("alertLabel"),
+						input: labelInput,
+					})}
+					${previewEl}
+					<div class="flex gap-2 justify-end mt-1">${cancelBtn} ${saveBtn}</div>
+				</div>
+			</div>
+		`,
 	});
 
 	root.appendChild(modal);
@@ -207,17 +220,23 @@ function updateAlertList(
 		});
 
 		const row = html`
-      <div class="flex items-center gap-2 bg-(--surface-2) border border-(--border) rounded-md px-2.5 py-2 transition-all">
-        <div class="flex-1 min-w-0">
-          <div class="text-[12px] font-semibold text-(--text) whitespace-nowrap overflow-hidden text-ellipsis">
-            ${a.label ?? t("unnamed")}
-          </div>
-          <div class="text-[11px] text-(--muted) mt-px whitespace-nowrap overflow-hidden text-ellipsis">
-            ${preview}
-          </div>
-        </div>
-      </div>
-    `;
+			<div
+				class="flex items-center gap-2 bg-(--surface-2) border border-(--border) rounded-md px-2.5 py-2 transition-all"
+			>
+				<div class="flex-1 min-w-0">
+					<div
+						class="text-[12px] font-semibold text-(--text) whitespace-nowrap overflow-hidden text-ellipsis"
+					>
+						${a.label ?? t("unnamed")}
+					</div>
+					<div
+						class="text-[11px] text-(--muted) mt-px whitespace-nowrap overflow-hidden text-ellipsis"
+					>
+						${preview}
+					</div>
+				</div>
+			</div>
+		`;
 
 		const delBtn = Button({
 			content: Icons.trash(12),
