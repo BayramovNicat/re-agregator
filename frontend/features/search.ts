@@ -777,6 +777,8 @@ export function initSearch(container: HTMLElement): () => void {
 	})();
 
 	return () => {
+		if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+		if (rangeChangeDebounce) clearTimeout(rangeChangeDebounce);
 		cleanupHandlers();
 		offSearchBus();
 	};

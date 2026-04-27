@@ -16,7 +16,7 @@ import {
  * Trend feature manages the property price trend chart above search results.
  */
 export function initTrend(container: HTMLElement): () => void {
-	const { add, cleanup } = makeEventManager();
+	const { cleanup } = makeEventManager();
 	const trendLoc = html`<span></span>`;
 	const trendCur = html`<span></span>`;
 	const trendChg = html`<span
@@ -78,6 +78,8 @@ export function initTrend(container: HTMLElement): () => void {
 				return;
 			}
 			cache[location] = { data: d.data, at: Date.now() };
+			const keys = Object.keys(cache);
+			if (keys.length > 20) delete cache[keys[0] as string];
 			show(trendPanel);
 			renderTrend(d.data, location);
 		} catch {
@@ -193,8 +195,7 @@ export function initTrend(container: HTMLElement): () => void {
 		trendChart.insertBefore(svg, trendTip);
 		currentSvg = svg;
 
-		add(svg, "mousemove", (e: Event) => {
-			const evt = e as MouseEvent;
+		svg.onmousemove = (evt: MouseEvent) => {
 			const svgW = svg.clientWidth;
 			const normX = evt.offsetX / svgW;
 			const idx = Math.max(
@@ -212,10 +213,10 @@ export function initTrend(container: HTMLElement): () => void {
 			const left = Math.min(evt.offsetX + 12, svgW - tipW - 4);
 			trendTip.style.left = `${left}px`;
 			trendTip.style.top = `${Math.max(4, evt.offsetY - trendTip.offsetHeight - 8)}px`;
-		});
-		add(svg, "mouseleave", () => {
+		};
+		svg.onmouseleave = () => {
 			trendTip.style.display = "none";
-		});
+		};
 	}
 
 	function dfmt(s: string): string {

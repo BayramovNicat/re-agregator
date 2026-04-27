@@ -303,6 +303,7 @@ export function makeEventManager() {
 		handlers.forEach(([el, ev, fn]) => {
 			el.removeEventListener(ev, fn);
 		});
+		handlers.length = 0;
 	};
 	return { add, cleanup };
 }
