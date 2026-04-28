@@ -50,7 +50,8 @@ async function getVersionedHtml(publicDir: string): Promise<string> {
 	const version = IS_DEV ? Date.now().toString() : assetVersion;
 	const html = raw
 		.replace('href="/styles.css"', `href="/styles.css?v=${version}"`)
-		.replace('src="/main.js"', `src="/main.js?v=${version}"`);
+		.replace('src="/main.js"', `src="/main.js?v=${version}"`)
+		.replace('href="/main.js"', `href="/main.js?v=${version}"`);
 	if (!IS_DEV) cachedVersionedHtml = html;
 	return html;
 }
