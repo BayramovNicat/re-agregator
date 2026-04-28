@@ -44,7 +44,10 @@ Bun.serve({
 			);
 
 			return new Response(injectedHtml, {
-				headers: { "Content-Type": "text/html" },
+				headers: {
+					"Content-Type": "text/html",
+					"Cache-Control": "public, no-cache, must-revalidate",
+				},
 			});
 		}),
 	},

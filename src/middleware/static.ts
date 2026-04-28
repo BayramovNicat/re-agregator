@@ -71,8 +71,9 @@ const IMMUTABLE_EXTS = new Set([
 	".json",
 ]);
 
-const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
-const CACHE_REVALIDATE = "no-cache";
+const CACHE_IMMUTABLE = "public, max-age=31536000, s-maxage=31536000, immutable";
+const CACHE_REVALIDATE = "public, no-cache, must-revalidate";
+const CACHE_DEFAULT = "public, max-age=86400";
 
 export async function serveStatic(
 	req: Request,
@@ -99,6 +100,7 @@ export async function serveStatic(
 	if (await file.exists()) {
 		const headers: Record<string, string> = {
 			"Content-Security-Policy": CSP,
+			"Content-Type": file.type,
 		};
 
 		if (IS_DEV) {
@@ -111,7 +113,11 @@ export async function serveStatic(
 				const ext = pathname.slice(dotIndex).toLowerCase();
 				if (IMMUTABLE_EXTS.has(ext)) {
 					headers["Cache-Control"] = CACHE_IMMUTABLE;
+				} else {
+					headers["Cache-Control"] = CACHE_DEFAULT;
 				}
+			} else {
+				headers["Cache-Control"] = CACHE_DEFAULT;
 			}
 		}
 
@@ -126,4 +132,5 @@ export async function serveStatic(
 		},
 	});
 }
+
 
