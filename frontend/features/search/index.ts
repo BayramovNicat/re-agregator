@@ -5,7 +5,7 @@ import type { Property } from "../../core/types";
 import { hide, makeEventManager, show, toast } from "../../core/utils";
 import type { MultiSelectElement } from "../../ui/multi-select";
 import { SkeletonList } from "../../ui/skeleton";
-import { openHeatmap } from "../heatmap";
+import { openHeatmap } from "../heatmap/index";
 import { refreshFilterChips } from "./chips";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import { renderSearchFilters } from "./filters";
