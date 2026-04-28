@@ -1,11 +1,11 @@
-import { ge, html, renderToastsContainer, trustScriptURL } from "./core/utils";
+import { html, renderToastsContainer, trustScriptURL } from "./core/utils";
 import { initAlerts } from "./features/alerts";
 import { initDistrictStats } from "./features/district-stats";
 import { initGallery } from "./features/gallery";
 import { initHeader } from "./features/header";
 import { initHeatmap } from "./features/heatmap";
-import { initProducts } from "./features/products";
-import { initPropertyDetail } from "./features/property-detail";
+import { initProducts } from "./features/products/index";
+import { initPropertyDetail } from "./features/property-detail/index";
 import { initSearch } from "./features/search";
 import { initTrend } from "./features/trend";
 import { initTooltip } from "./ui/tooltip";
@@ -19,22 +19,27 @@ import { initTooltip } from "./ui/tooltip";
 const root = document.getElementById("app") as HTMLElement;
 if (!root) throw new Error("Root element #app not found");
 
+const headerArea = html`<header></header>`;
+const searchArea = html`<section></section>`;
+const trendArea = html`<section></section>`;
+const productsArea = html`<main></main>`;
+
 root.appendChild(html`
 	<div class="w-full px-5 pt-0 pb-20">
-		<header id="header-area"></header>
-		<section id="search-area"></section>
-		<section id="trend-area"></section>
-		<main id="products-area"></main>
+		${headerArea}
+		${searchArea}
+		${trendArea}
+		${productsArea}
 	</div>
 `);
 
 // 2. Feature Initialization
 // Each feature returns a cleanup function for its lifecycle management.
 const cleanups: (() => void)[] = [
-	initProducts(ge("products-area")),
-	initTrend(ge("trend-area")),
-	initSearch(ge("search-area")),
-	initHeader(ge("header-area")),
+	initProducts(productsArea),
+	initTrend(trendArea),
+	initSearch(searchArea),
+	initHeader(headerArea),
 	initAlerts(root),
 	initGallery(root),
 	initTooltip(root),
