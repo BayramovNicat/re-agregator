@@ -72,7 +72,8 @@ const IMMUTABLE_EXTS = new Set([
 	".json",
 ]);
 
-const CACHE_IMMUTABLE = "public, max-age=31536000, s-maxage=31536000, immutable";
+const CACHE_IMMUTABLE =
+	"public, max-age=31536000, s-maxage=31536000, immutable";
 const CACHE_REVALIDATE = "public, no-cache, must-revalidate";
 const CACHE_DEFAULT = "public, max-age=86400";
 
@@ -91,7 +92,7 @@ export async function serveStatic(
 				"Content-Type": asset.contentType,
 				"Content-Encoding": "br",
 				"Cache-Control": CACHE_IMMUTABLE,
-				"Vary": "Accept-Encoding",
+				Vary: "Accept-Encoding",
 				"Content-Security-Policy": CSP,
 			},
 		});
@@ -133,5 +134,3 @@ export async function serveStatic(
 		},
 	});
 }
-
-

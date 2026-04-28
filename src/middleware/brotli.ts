@@ -9,7 +9,7 @@ export function br(handler: Handler): Handler {
 	return async (req) => {
 		const res = await handler(req);
 		// If the client accepts br but response is already compressed, skip double compression
-		if (res.headers.get('Content-Encoding')?.includes('br')) return res;
+		if (res.headers.get("Content-Encoding")?.includes("br")) return res;
 		if (!(req.headers.get("Accept-Encoding") ?? "").includes("br")) return res;
 		const body = await res.arrayBuffer();
 		const compressed = await compress(Buffer.from(body), {
@@ -22,4 +22,3 @@ export function br(handler: Handler): Handler {
 		return new Response(compressed, { status: res.status, headers });
 	};
 }
-

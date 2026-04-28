@@ -93,7 +93,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	});
 
 	root.appendChild(layout);
-	initMap(ui);
 
 	const onKey = (e: KeyboardEvent) => {
 		if (e.key === "ArrowLeft") ui.gallery.navigate(-1);
@@ -101,12 +100,13 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	};
 	add(ui.modal, "keydown", onKey);
 
-	const open = (p: Property) => {
+	const open = async (p: Property) => {
 		bindPropertyData(ui, p);
 		ui.modal.showModal();
 		// Reset scroll position after showModal
 		const body = ui.modal.querySelector(".overflow-y-auto");
 		if (body) setTimeout(() => (body.scrollTop = 0), 0);
+		await initMap(ui);
 	};
 
 	const offOpen = bus.on(EVENTS.PROPERTY_OPEN, (p) => open(p));

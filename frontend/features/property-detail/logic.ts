@@ -86,15 +86,8 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 		});
 
 	if (p.latitude && p.longitude) {
-		const { latitude: lat, longitude: lng } = p;
 		ui.mapSecEl.classList.remove("hidden");
-		requestAnimationFrame(() => {
-			if (ui.lmap && ui.lmark) {
-				ui.lmap.invalidateSize();
-				ui.lmark.setLatLng([lat, lng]);
-				ui.lmap.setView([lat, lng], 15, { animate: false });
-			}
-		});
+		requestAnimationFrame(() => updateMap(ui, p));
 	} else {
 		ui.mapSecEl.classList.add("hidden");
 	}
@@ -122,9 +115,14 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
  * Initializes the Leaflet map and marker.
  */
 export async function initMap(ui: PropertyDetailUI): Promise<void> {
-	// Eagerly init map (Leaflet requires the container to be in DOM)
+	if (ui.lmap) return;
+
+	// Map requires its container to be in the DOM and visible to size correctly.
+	// We temporarily unhide it, let Leaflet init, then restore visibility.
+	const wasHidden = ui.mapSecEl.classList.contains("hidden");
 	ui.mapSecEl.classList.remove("hidden");
 	ui.mapSecEl.style.visibility = "hidden";
+
 	ui.lmap = await initLeaflet(ui.mapCtEl);
 	const { divIcon, marker } = await import("leaflet");
 	const mapIcon = divIcon({
@@ -134,6 +132,25 @@ export async function initMap(ui: PropertyDetailUI): Promise<void> {
 		iconAnchor: [6, 6],
 	});
 	if (ui.lmap) ui.lmark = marker([0, 0], { icon: mapIcon }).addTo(ui.lmap);
-	ui.mapSecEl.classList.add("hidden");
+
 	ui.mapSecEl.style.visibility = "";
+	if (wasHidden) ui.mapSecEl.classList.add("hidden");
+
+	// If we already have a property, update map immediately
+	if (ui.currentProperty) updateMap(ui, ui.currentProperty);
+}
+
+/**
+ * Updates the map view and marker position.
+ */
+function updateMap(ui: PropertyDetailUI, p: Property): void {
+	if (p.latitude && p.longitude && ui.lmap && ui.lmark) {
+		const { latitude: lat, longitude: lng } = p;
+		ui.mapSecEl.classList.remove("hidden");
+		ui.lmap.invalidateSize();
+		ui.lmark.setLatLng([lat, lng]);
+		ui.lmap.setView([lat, lng], 15, { animate: false });
+	} else if (!p.latitude || !p.longitude) {
+		ui.mapSecEl.classList.add("hidden");
+	}
 }
