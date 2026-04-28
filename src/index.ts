@@ -39,8 +39,8 @@ Bun.serve({
 			};
 
 			const injectedHtml = indexHtml.replace(
-				"</head>",
-				`<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)};</script></head>`,
+				"</body>",
+				`<script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)};</script></body>`,
 			);
 
 			return new Response(injectedHtml, {
