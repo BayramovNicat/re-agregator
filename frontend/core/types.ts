@@ -100,24 +100,8 @@ export interface CardCallbacks {
 	onDetail: (p: Property) => void;
 }
 
-export interface InitialData {
-	locations: string[];
-	undervalued?: {
-		total: number;
-		data: Property[];
-	};
-	health: {
-		properties: number;
-	};
-	params: {
-		location: string;
-		threshold: number;
-	};
-}
-
 declare global {
 	interface Window {
-		__INITIAL_DATA__?: InitialData;
 		__ICONS?: Record<string, import("../ui/icons").IconComponent>;
 		__renderDeals?: () => void;
 		__updateChips?: () => void;
