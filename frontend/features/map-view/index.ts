@@ -74,7 +74,7 @@ export function showMapView(): void {
 
 	if (!state.lmap) {
 		state.lmap = initLeaflet(mapContainer);
-		state.lmap.setView([40.38, 49.87], 12);
+		state.lmap.setView([40.396698, 49.8664491], 13);
 		state.pinGroup.addTo(state.lmap);
 	} else {
 		state.lmap.invalidateSize();

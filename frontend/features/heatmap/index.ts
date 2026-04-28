@@ -4,7 +4,6 @@ import {
 	type FeatureGroup,
 	featureGroup,
 	type Map as LMap,
-	latLngBounds,
 } from "leaflet";
 import { bus, EVENTS } from "../../core/events";
 import type { HeatmapPoint } from "../../core/types";
@@ -87,10 +86,6 @@ export function initHeatmap(root: HTMLElement): () => void {
 		}
 
 		lmap.invalidateSize();
-		if (cachedData.length > 0) {
-			const b = latLngBounds(cachedData.map((d) => [d.lat, d.lng]));
-			lmap.fitBounds(b, { padding: [20, 20] });
-		}
 	};
 
 	const offOpen = bus.on(EVENTS.HEATMAP_OPEN, (payload) => {
@@ -148,7 +143,6 @@ function renderPoints(
 	}
 
 	if (data.length > 0) {
-		const b = latLngBounds(data.map((d) => [d.lat, d.lng]));
-		lmap.fitBounds(b, { padding: [20, 20] });
+		lmap.setView([40.396698, 49.8664491], 12);
 	}
 }
