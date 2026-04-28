@@ -17,7 +17,7 @@ export async function initStatic(publicDir: string): Promise<void> {
 async function computeAssetHash(publicDir: string): Promise<string> {
 	try {
 		const [js, css] = await Promise.all([
-			Bun.file(`${publicDir}/app.js`).arrayBuffer(),
+			Bun.file(`${publicDir}/main.js`).arrayBuffer(),
 			Bun.file(`${publicDir}/styles.css`).arrayBuffer(),
 		]);
 		const hasher = new Bun.CryptoHasher("md5");
@@ -31,7 +31,7 @@ async function computeAssetHash(publicDir: string): Promise<string> {
 
 async function precompressStatic(dir: string): Promise<void> {
 	const entries: Array<{ file: string; mime: string }> = [
-		{ file: "app.js", mime: "application/javascript; charset=utf-8" },
+		{ file: "main.js", mime: "application/javascript; charset=utf-8" },
 		{ file: "styles.css", mime: "text/css; charset=utf-8" },
 	];
 	await Promise.all(
@@ -50,7 +50,7 @@ async function getVersionedHtml(publicDir: string): Promise<string> {
 	const version = IS_DEV ? Date.now().toString() : assetVersion;
 	const html = raw
 		.replace('href="/styles.css"', `href="/styles.css?v=${version}"`)
-		.replace('src="/app.js"', `src="/app.js?v=${version}"`);
+		.replace('src="/main.js"', `src="/main.js?v=${version}"`);
 	if (!IS_DEV) cachedVersionedHtml = html;
 	return html;
 }
@@ -78,12 +78,29 @@ export async function serveStatic(
 
 	const file = Bun.file(`${publicDir}${pathname}`);
 	if (await file.exists()) {
-		return new Response(file, {
-			headers: {
-				"Content-Security-Policy": CSP,
-				...(IS_DEV ? { "Cache-Control": "no-store" } : {}),
-			},
-		});
+		const headers: Record<string, string> = {
+			"Content-Security-Policy": CSP,
+		};
+
+		if (IS_DEV) {
+			headers["Cache-Control"] = "no-store";
+		} else if (pathname === "/sw.js") {
+			headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+		} else if (
+			pathname.endsWith(".js") ||
+			pathname.endsWith(".css") ||
+			pathname.endsWith(".png") ||
+			pathname.endsWith(".jpg") ||
+			pathname.endsWith(".jpeg") ||
+			pathname.endsWith(".webp") ||
+			pathname.endsWith(".svg") ||
+			pathname.endsWith(".ico") ||
+			pathname.endsWith(".webmanifest")
+		) {
+			headers["Cache-Control"] = "public, max-age=31536000, immutable";
+		}
+
+		return new Response(file, { headers });
 	}
 
 	return new Response(await getVersionedHtml(publicDir), {

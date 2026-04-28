@@ -6,7 +6,7 @@ const CACHE_NAME = "re-finder-v1";
 const ASSETS_TO_CACHE = [
 	"/",
 	"/index.html",
-	"/app.js",
+	"/main.js",
 	"/styles.css",
 	"/manifest.json",
 	"/icons/icon-192.png",
