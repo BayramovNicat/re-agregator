@@ -22,7 +22,7 @@ if (!root) throw new Error("Root element #app not found");
 const headerArea = html`<header></header>`;
 const searchArea = html`<section></section>`;
 const trendArea = html`<section></section>`;
-const productsArea = html`<main></main>`;
+const productsArea = html`<main id="products-area"></main>`;
 
 root.appendChild(html`
 	<div class="w-full px-5 pt-0 pb-20">
