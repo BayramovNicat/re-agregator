@@ -1,14 +1,14 @@
-import { html, renderToastsContainer, trustScriptURL } from "./core/utils";
-import { initAlerts } from "./features/alerts/index";
-import { initDistrictStats } from "./features/district-stats/index";
-import { initGallery } from "./features/gallery";
-import { initHeader } from "./features/header";
-import { initHeatmap } from "./features/heatmap/index";
-import { initProducts } from "./features/products/index";
-import { initPropertyDetail } from "./features/property-detail/index";
-import { initSearch } from "./features/search";
-import { initTrend } from "./features/trend/index";
-import { initTooltip } from "./ui/tooltip";
+import { html, renderToastsContainer, trustScriptURL } from "@/core/utils";
+import { initAlerts } from "@/features/alerts/index";
+import { initDistrictStats } from "@/features/district-stats/index";
+import { initGallery } from "@/features/gallery";
+import { initHeader } from "@/features/header";
+import { initHeatmap } from "@/features/heatmap/index";
+import { initProducts } from "@/features/products/index";
+import { initPropertyDetail } from "@/features/property-detail/index";
+import { initSearch } from "@/features/search";
+import { initTrend } from "@/features/trend/index";
+import { initTooltip } from "@/ui/tooltip";
 
 /**
  * Main application entry point.

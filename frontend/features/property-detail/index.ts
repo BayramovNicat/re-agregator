@@ -1,11 +1,11 @@
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import type { Property } from "../../core/types";
-import { makeEventManager } from "../../core/utils";
-import { openGallery } from "../gallery";
-import { bindPropertyData, initMap } from "./logic";
-import type { PropertyDetailUI } from "./types";
-import { renderPropertyDetailLayout } from "./ui";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import type { Property } from "@/core/types";
+import { makeEventManager } from "@/core/utils";
+import { openGallery } from "@/features/gallery";
+import { bindPropertyData, initMap } from "@/features/property-detail/logic";
+import type { PropertyDetailUI } from "@/features/property-detail/types";
+import { renderPropertyDetailLayout } from "@/features/property-detail/ui";
 
 export function initPropertyDetail(root: HTMLElement): () => void {
 	const ui: PropertyDetailUI = {

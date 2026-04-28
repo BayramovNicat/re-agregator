@@ -1,6 +1,6 @@
 import type { map, marker } from "leaflet";
-import type { Property } from "../../core/types";
-import type { GalleryElement } from "../../ui/gallery";
+import type { Property } from "@/core/types";
+import type { GalleryElement } from "@/ui/gallery";
 
 export interface PropertyDetailUI {
 	modal: HTMLElement & { showModal: () => void; close: () => void };
@@ -12,6 +12,7 @@ export interface PropertyDetailUI {
 	statsEl: HTMLElement;
 	mktAvgEl: HTMLElement;
 	discPctEl: HTMLElement;
+	discBarEl: HTMLElement;
 	tagsEl: HTMLElement;
 	historyChartEl: HTMLElement;
 	historySecEl: HTMLElement;

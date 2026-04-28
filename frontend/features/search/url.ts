@@ -1,5 +1,5 @@
-import { t } from "../../core/i18n";
-import { setRangeProgress } from "../../ui/range";
+import { t } from "@/core/i18n";
+import { setRangeProgress } from "@/ui/range";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import type { SearchUI } from "./types";
 

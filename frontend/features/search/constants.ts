@@ -1,4 +1,4 @@
-import { t } from "../../core/i18n";
+import { t } from "@/core/i18n";
 
 export const getNumericFilters = () =>
 	[

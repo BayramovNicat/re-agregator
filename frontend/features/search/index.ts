@@ -1,10 +1,10 @@
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import { state } from "../../core/state";
-import type { Property } from "../../core/types";
-import { hide, makeEventManager, show, toast } from "../../core/utils";
-import type { MultiSelectElement } from "../../ui/multi-select";
-import { SkeletonList } from "../../ui/skeleton";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import { state } from "@/core/state";
+import type { Property } from "@/core/types";
+import { hide, makeEventManager, show, toast } from "@/core/utils";
+import type { MultiSelectElement } from "@/ui/multi-select";
+import { SkeletonList } from "@/ui/skeleton";
 import { openHeatmap } from "../heatmap/index";
 import { refreshFilterChips } from "./chips";
 import { getBooleanFilters, getNumericFilters } from "./constants";
@@ -48,9 +48,9 @@ export function initSearch(container: HTMLElement): () => void {
 	// --- 2. State & Core Logic ---
 
 	// Assign filter bridge immediately to avoid TDZ for other modules
-	state.getFilters = (): import("../../core/types").AlertFilters => {
+	state.getFilters = (): import("@/core/types").AlertFilters => {
 		const locations = ui.locationSelect?.getValue() || [];
-		const filters: import("../../core/types").AlertFilters = {
+		const filters: import("@/core/types").AlertFilters = {
 			location: locations.join(",") || "__all__",
 			threshold: ui.discountRange ? Number(ui.discountRange.value) : 10,
 		};
@@ -106,7 +106,7 @@ export function initSearch(container: HTMLElement): () => void {
 	}
 
 	function buildSearchParams(
-		currentFilters: import("../../core/types").AlertFilters,
+		currentFilters: import("@/core/types").AlertFilters,
 	) {
 		const searchParams = new URLSearchParams({
 			location: currentFilters.location,

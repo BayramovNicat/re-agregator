@@ -1,13 +1,13 @@
-import { t } from "../../core/i18n";
-import { frag, hide, html } from "../../core/utils";
-import { Button, RawButton } from "../../ui/button";
-import { Chip } from "../../ui/chip";
-import { Icons } from "../../ui/icons";
-import { Field, Input } from "../../ui/input";
-import { Label } from "../../ui/label";
-import { MultiSelect } from "../../ui/multi-select";
-import { Range } from "../../ui/range";
-import { Select } from "../../ui/select";
+import { t } from "@/core/i18n";
+import { frag, hide, html } from "@/core/utils";
+import { Button, RawButton } from "@/ui/button";
+import { Chip } from "@/ui/chip";
+import { Icons } from "@/ui/icons";
+import { Field, Input } from "@/ui/input";
+import { Label } from "@/ui/label";
+import { MultiSelect } from "@/ui/multi-select";
+import { Range } from "@/ui/range";
+import { Select } from "@/ui/select";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import type { SearchCallbacks, SearchUI } from "./types";
 

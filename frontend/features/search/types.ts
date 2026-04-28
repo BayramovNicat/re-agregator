@@ -1,4 +1,4 @@
-import type { MultiSelectElement } from "../../ui/multi-select";
+import type { MultiSelectElement } from "@/ui/multi-select";
 
 export interface SearchUI {
 	locationSelect: MultiSelectElement;

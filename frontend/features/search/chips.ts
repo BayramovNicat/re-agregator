@@ -1,6 +1,6 @@
-import { t } from "../../core/i18n";
-import { hide, show } from "../../core/utils";
-import { CloseableChip } from "../../ui/chip";
+import { t } from "@/core/i18n";
+import { hide, show } from "@/core/utils";
+import { CloseableChip } from "@/ui/chip";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import type { SearchUI } from "./types";
 

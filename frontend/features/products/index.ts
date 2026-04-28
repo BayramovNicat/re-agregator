@@ -1,7 +1,7 @@
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import { state } from "../../core/state";
-import type { CardCallbacks, Property } from "../../core/types";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import { state } from "@/core/state";
+import type { CardCallbacks, Property } from "@/core/types";
 import {
 	fmt,
 	frag,
@@ -10,13 +10,17 @@ import {
 	makeEventManager,
 	show,
 	tTier,
-} from "../../core/utils";
-import { RawButton } from "../../ui/button";
-import { EmptyState } from "../../ui/empty-state";
-import { Icons } from "../../ui/icons";
-import { openGallery } from "../gallery";
-import { hideMapView, initMapView, showMapView } from "../map-view/index";
-import { openPropertyDetail } from "../property-detail";
+} from "@/core/utils";
+import { openGallery } from "@/features/gallery";
+import {
+	hideMapView,
+	initMapView,
+	showMapView,
+} from "@/features/map-view/index";
+import { openPropertyDetail } from "@/features/property-detail";
+import { RawButton } from "@/ui/button";
+import { EmptyState } from "@/ui/empty-state";
+import { Icons } from "@/ui/icons";
 import { renderProductsBar } from "./bar";
 import { appendSkeletons, renderList, updatePagination } from "./list";
 import {

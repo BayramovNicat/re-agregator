@@ -6,11 +6,12 @@
 		"lib": ["DOM", "DOM.Iterable", "ES2022"],
 		"types": [],
 		"baseUrl": ".",
-		"paths": { "@/*": ["./src/*"] },
+		"paths": {
+			"@/*": ["./*"]
+		},
 		"strict": true,
 		"noImplicitAny": true,
 		"strictNullChecks": true
 	},
-	"include": ["frontend/**/*"],
-	"exclude": ["frontend/sw.ts"]
+	"include": ["**/*"]
 }
