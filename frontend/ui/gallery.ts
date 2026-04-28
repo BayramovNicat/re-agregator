@@ -8,7 +8,8 @@ export type GalleryProps = {
 	fullscreen?: boolean;
 	onExpand?: () => void;
 	onIndexChange?: (index: number) => void;
-} & Partial<HTMLDivElement>;
+	style?: string | Partial<CSSStyleDeclaration>;
+} & Omit<Partial<HTMLDivElement>, "style">;
 
 /** Extended element returned by {@link Gallery}. */
 export interface GalleryElement extends HTMLDivElement {

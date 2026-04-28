@@ -50,8 +50,6 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 	ui.mktAvgEl.textContent = `₼${fmt(p.location_avg_price_per_sqm, 0)}/m²`;
 	ui.discPctEl.textContent = `${p.discount_percent >= 0 ? "-" : "+"}${Math.abs(p.discount_percent)}%`;
 	ui.discPctEl.style.color = tier.c;
-	ui.discBarEl.style.width = `${Math.min(100, Math.max(2, p.discount_percent * 2.5))}%`;
-	ui.discBarEl.style.background = tier.hex;
 
 	// 4. Feature Tags
 	ui.tagsEl.replaceChildren();

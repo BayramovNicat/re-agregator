@@ -12,7 +12,6 @@ export interface PropertyDetailUI {
 	statsEl: HTMLElement;
 	mktAvgEl: HTMLElement;
 	discPctEl: HTMLElement;
-	discBarEl: HTMLElement;
 	tagsEl: HTMLElement;
 	historyChartEl: HTMLElement;
 	historySecEl: HTMLElement;

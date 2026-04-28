@@ -1,5 +1,5 @@
 import { t } from "../../core/i18n";
-import { frag, html } from "../../core/utils";
+import { html } from "../../core/utils";
 import { Button } from "../../ui/button";
 import { Dialog } from "../../ui/dialog";
 import { Gallery } from "../../ui/gallery";
@@ -20,7 +20,7 @@ export function renderPropertyDetailLayout(
 ): HTMLElement {
 	const { onExpand, onShare, onBookmark, onHide } = callbacks;
 
-	ui.gallery = Gallery({ onExpand });
+	ui.gallery = Gallery({ onExpand, style: "height:460px" });
 
 	// Header elements
 	ui.locationEl = html`<div class="text-xs text-(--muted) truncate"></div>`;
@@ -34,10 +34,6 @@ export function renderPropertyDetailLayout(
 	ui.statsEl = html`<div class="grid grid-cols-4 gap-2 mb-3"></div>`;
 	ui.mktAvgEl = html`<span class="text-(--text-2) font-medium"></span>`;
 	ui.discPctEl = html`<span class="text-sm font-bold"></span>`;
-	ui.discBarEl = html`<div
-		class="h-full rounded-full transition-[width] duration-500 ease-out"
-		style="width:0%"
-	></div>`;
 	ui.tagsEl = html`<div
 		class="flex flex-wrap gap-1.25 mt-3 empty:hidden"
 	></div>`;
@@ -45,32 +41,23 @@ export function renderPropertyDetailLayout(
 	// Content Sections
 	ui.historyChartEl = html`<div></div>`;
 	ui.historySecEl = html`
-		<div class="px-5 py-4 border-b border-(--border) hidden">
-			<div
-				class="text-xs font-semibold text-(--muted) uppercase tracking-wider mb-2.5"
-			>
+		<div class="pt-6 border-t border-(--border)/60 hidden">
+			<div class="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-3">
 				${t("priceHistory")}
 			</div>
 			${ui.historyChartEl}
 		</div>
 	`;
 
-	ui.descBodyEl = html`<p
-		class="text-sm text-(--text-2) leading-[1.75] whitespace-pre-wrap"
-	></p>`;
+	ui.descBodyEl = html`<p class="text-sm text-(--text-2) leading-relaxed whitespace-pre-wrap"></p>`;
 	ui.descSecEl = html`
-		<div class="px-5 py-4 border-b border-(--border) hidden">
-			<div
-				class="text-xs font-semibold text-(--muted) uppercase tracking-wider mb-2"
-			>
-				${t("btnDescription")}
-			</div>
+		<div class="pt-6 border-t border-(--border)/60 hidden">
 			${ui.descBodyEl}
 		</div>
 	`;
 
-	ui.mapCtEl = html`<div class="w-full h-65"></div>`;
-	ui.mapSecEl = html`<div class="border-b border-(--border) hidden">
+	ui.mapCtEl = html`<div class="w-full h-90 bg-(--surface-3)"></div>`;
+	ui.mapSecEl = html`<div class="hidden border-t border-(--border)">
 		${ui.mapCtEl}
 	</div>`;
 
@@ -79,76 +66,108 @@ export function renderPropertyDetailLayout(
 		href="#"
 		target="_blank"
 		rel="noopener"
-		class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors hover:text-(--text)"
+		class="w-full h-12.5 flex items-center justify-center gap-2.5 bg-(--accent-solid) text-white rounded-(--r) font-bold text-sm transition-all hover:bg-(--accent-h) hover:shadow-[0_8px_20px_rgba(79,70,229,0.25)] active:scale-[0.98]"
 	>
-		${t("viewListing")} ${Icons.external(10)}
+		${t("viewListing")} ${Icons.external(14)}
 	</a>` as HTMLAnchorElement;
 
 	ui.shareTextEl = html`<span>${t("btnShare")}</span>`;
 	ui.shareBtn = Button({
-		content: frag`${Icons.external(10)} ${ui.shareTextEl}`,
+		content: Icons.external(16),
 		variant: "padded",
 		color: "indigo",
+		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",
 		onclick: onShare,
+		title: t("btnShare"),
 	}) as HTMLButtonElement;
 
 	ui.bmarkBtn = Button({
-		content: html`${Icons.bookmark({ size: 12, fill: false })}
-			<span>${t("btnSave")}</span>`,
+		content: Icons.bookmark({ size: 18, fill: false }),
 		variant: "padded",
 		color: "indigo",
+		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",
 		onclick: onBookmark,
+		title: t("btnSave"),
 	}) as HTMLButtonElement;
 
 	ui.hideBtn = Button({
-		content: html`${Icons.hide(12)} <span>${t("btnHide")}</span>`,
+		content: Icons.hide(16),
 		variant: "padded",
 		color: "red",
+		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",
 		onclick: onHide,
+		title: t("btnHide"),
 	}) as HTMLButtonElement;
 
-	const bodyEl = html`
-		<div class="overflow-y-auto flex-1 min-h-0">
+	const leftCol = html`
+		<div class="flex-1 min-w-0 overflow-y-auto bg-(--surface) flex flex-col">
 			${ui.gallery}
-			<div class="px-5 pt-4 pb-3 border-b border-(--border)">
-				<div class="flex items-center justify-between gap-3 mb-1">
-					${ui.locationEl} ${ui.postedEl}
+			${ui.mapSecEl}
+		</div>
+	`;
+
+	const rightCol = html`
+		<div class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-l border-(--border)">
+			<div class="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+				<!-- Core Info -->
+				<div class="space-y-5">
+					<div class="space-y-3">
+						<div>${ui.tierEl}</div>
+						<div class="space-y-1.5 min-w-0">
+							${ui.priceEl}
+							<div class="flex items-center gap-2 text-xs text-(--muted)">
+								${ui.locationEl}
+								<span class="opacity-30">•</span>
+								${ui.postedEl}
+							</div>
+						</div>
+					</div>
+
+					<!-- Market Context Banner -->
+					<div class="flex items-center justify-between p-4 bg-(--surface) border border-(--border) rounded-(--r)">
+						<div class="space-y-1">
+							<div class="text-[10px] font-bold text-(--muted) uppercase tracking-wider">${t("propMarketAvg")}</div>
+							<div class="text-sm font-semibold">${ui.mktAvgEl}</div>
+						</div>
+						<div class="text-right space-y-1">
+							<div class="text-[10px] font-bold text-(--muted) uppercase tracking-wider">${t("propDiscount")}</div>
+							<div class="text-sm font-bold">${ui.discPctEl}</div>
+						</div>
+					</div>
 				</div>
-				<div class="flex items-center gap-2.5">${ui.priceEl} ${ui.tierEl}</div>
+
+				<!-- Stats & Tags -->
+				<div class="space-y-4">
+					${ui.statsEl}
+					${ui.tagsEl}
+				</div>
+
+				<!-- Conditional Sections -->
+				${ui.historySecEl}
+				${ui.descSecEl}
 			</div>
-			<div class="px-5 py-4 border-b border-(--border)">
-				${ui.statsEl}
-				<div class="flex items-center justify-between mb-1.5">
-					<span class="text-xs text-(--muted)"
-						>${t("propMarketAvg")} ${ui.mktAvgEl}</span
-					>
-					${ui.discPctEl}
+
+			<!-- Sticky Actions -->
+			<div class="p-6 border-t border-(--border) bg-(--surface) space-y-4 shrink-0">
+				${ui.linkEl}
+				<div class="flex items-center justify-center gap-3">
+					${ui.bmarkBtn}
+					${ui.shareBtn}
+					${ui.hideBtn}
 				</div>
-				<div class="h-1 bg-(--surface-3) rounded-full overflow-hidden">
-					${ui.discBarEl}
-				</div>
-				${ui.tagsEl}
 			</div>
-			${ui.historySecEl} ${ui.descSecEl} ${ui.mapSecEl}
 		</div>
 	`;
 
 	ui.modal = Dialog({
 		id: "prop-detail-modal",
-		maxWidth: "900px",
+		maxWidth: "1150px",
 		showClose: true,
-		className: "text-(--text)",
+		className: "text-(--text) flex-1 min-h-0",
 		content: html`
-			<div class="flex flex-col h-full min-h-0">
-				${bodyEl}
-				<div
-					class="px-5 py-3 flex items-center justify-between gap-3 border-t border-(--border) bg-(--surface) shrink-0"
-				>
-					${ui.linkEl}
-					<div class="flex items-center gap-1.5">
-						${ui.shareBtn} ${ui.bmarkBtn} ${ui.hideBtn}
-					</div>
-				</div>
+			<div class="flex flex-col md:flex-row h-full min-h-0">
+				${leftCol}
+				${rightCol}
 			</div>
 		`,
 	}) as HTMLElement & { showModal: () => void; close: () => void };

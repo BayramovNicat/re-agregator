@@ -7,22 +7,24 @@ import { html, makeEventManager } from "../core/utils";
 
 let el: HTMLElement | null = null;
 let activeTarget: HTMLElement | null = null;
+let rootEl: HTMLElement | null = null;
 
 /**
  * Initializes the tooltip system by attaching global event listeners.
  */
 export function initTooltip(root: HTMLElement = document.body): () => void {
 	if (el) return () => {};
+	rootEl = root;
 	const { add, cleanup } = makeEventManager();
 
 	el = html`
-    <div
-      id="tooltip"
-      class="fixed top-0 left-0 z-50 px-2.5 py-1.5 bg-(--surface-3) text-(--text) border border-(--border-h) rounded-(--r-sm) text-xs font-medium pointer-events-none shadow-xl backdrop-blur-md opacity-0 transition-opacity duration-150"
-      role="tooltip"
-      aria-hidden="true"
-    ></div>
-  `;
+		<div
+			id="tooltip"
+			class="fixed top-0 left-0 z-10001 px-2.5 py-1.5 bg-(--surface-3) text-(--text) border border-(--border-h) rounded-(--r-sm) text-xs font-medium pointer-events-none shadow-xl backdrop-blur-md opacity-0 transition-opacity duration-150"
+			role="tooltip"
+			aria-hidden="true"
+		></div>
+	`;
 	root.appendChild(el);
 
 	const onMouseOver = (e: MouseEvent) => {
@@ -72,6 +74,14 @@ function show(target: HTMLElement) {
 	activeTarget = target;
 	const text = target.getAttribute("data-tip");
 	if (!text) return;
+
+	// Handle top-layer (dialog) visibility
+	const dialog = target.closest("dialog");
+	if (dialog && el.parentElement !== dialog) {
+		dialog.appendChild(el);
+	} else if (!dialog && rootEl && el.parentElement !== rootEl) {
+		rootEl.appendChild(el);
+	}
 
 	el.textContent = text;
 	el.setAttribute("aria-label", text);

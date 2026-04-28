@@ -317,10 +317,18 @@ export function makeEventManager() {
  */
 export function ce<T extends HTMLElement>(
 	el: T,
-	props: Partial<T> & { dataset?: Record<string, string | undefined> },
+	props: Omit<Partial<T>, "style"> & {
+		dataset?: Record<string, string | undefined>;
+		style?: string | Partial<CSSStyleDeclaration>;
+	},
 ): T {
-	const { dataset, ...rest } = props;
+	const { dataset, style, ...rest } = props;
 	if (dataset) Object.assign(el.dataset, dataset);
+	if (typeof style === "string") {
+		el.style.cssText = style;
+	} else if (style) {
+		Object.assign(el.style, style);
+	}
 	Object.assign(el, rest);
 	return el;
 }
