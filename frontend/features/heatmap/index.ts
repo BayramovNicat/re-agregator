@@ -1,18 +1,16 @@
 import {
+	type Circle,
 	circle,
-	DomEvent,
 	type FeatureGroup,
 	featureGroup,
-	type LeafletMouseEvent,
 	type Map as LMap,
 	latLngBounds,
 } from "leaflet";
 import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
 import type { HeatmapPoint } from "../../core/types";
-import { fmt, html, toast } from "../../core/utils";
 import { initLeaflet, MapDialog } from "../../ui/map-base";
 import { fetchHeatmapData } from "./api";
+import { setupCircleEvents } from "./events";
 import { getPriceColor } from "./logic";
 
 export function initHeatmap(root: HTMLElement): () => void {
@@ -21,6 +19,8 @@ export function initHeatmap(root: HTMLElement): () => void {
 	let lmap: LMap | null = null;
 	let currentOnAction: ((name: string, isToggle: boolean) => void) | null =
 		null;
+	let cachedData: HeatmapPoint[] = [];
+	let latestActiveLocations: string[] = [];
 
 	const containerId = "heatmap-map-container";
 	const modal = MapDialog({
@@ -30,10 +30,28 @@ export function initHeatmap(root: HTMLElement): () => void {
 
 	root.appendChild(modal);
 
+	const updateCircleStyles = () => {
+		overlay.eachLayer((layer) => {
+			if ("setStyle" in layer) {
+				const circle = layer as Circle & { _heatmapData?: HeatmapPoint };
+				const d = circle._heatmapData;
+				if (!d) return;
+				const isActive = latestActiveLocations.includes(d.location_name);
+				circle.setStyle({
+					color: isActive ? "white" : "transparent",
+					weight: isActive ? 2 : 1,
+					opacity: isActive ? 1 : 0.3,
+					fillOpacity: 0.65,
+				});
+			}
+		});
+	};
+
 	const onOpen = async (
-		_activeLocations: string[],
+		activeLocations: string[],
 		onAction: (name: string, isToggle: boolean) => void,
 	) => {
+		latestActiveLocations = activeLocations;
 		currentOnAction = onAction;
 		modal.showModal();
 
@@ -45,16 +63,34 @@ export function initHeatmap(root: HTMLElement): () => void {
 
 		if (isFirstOpen) {
 			isFirstOpen = false;
-			const data = await fetchHeatmapData();
-			if (data.length > 0 && lmap) {
-				renderPoints(lmap, data, overlay, (name, isToggle) => {
-					if (currentOnAction) currentOnAction(name, isToggle);
-					modal.close();
-				});
+			cachedData = await fetchHeatmapData();
+			if (cachedData.length > 0 && lmap) {
+				renderPoints(
+					lmap,
+					cachedData,
+					overlay,
+					() => latestActiveLocations,
+					(name, isToggle) => {
+						if (currentOnAction) currentOnAction(name, isToggle);
+						if (!isToggle) modal.close();
+						else {
+							const idx = latestActiveLocations.indexOf(name);
+							if (idx > -1) latestActiveLocations.splice(idx, 1);
+							else latestActiveLocations.push(name);
+							updateCircleStyles();
+						}
+					},
+				);
 			}
+		} else {
+			updateCircleStyles();
 		}
 
 		lmap.invalidateSize();
+		if (cachedData.length > 0) {
+			const b = latLngBounds(cachedData.map((d) => [d.lat, d.lng]));
+			lmap.fitBounds(b, { padding: [20, 20] });
+		}
 	};
 
 	const offOpen = bus.on(EVENTS.HEATMAP_OPEN, (payload) => {
@@ -83,6 +119,7 @@ function renderPoints(
 	lmap: LMap,
 	data: HeatmapPoint[],
 	group: FeatureGroup,
+	getActiveLocations: () => string[],
 	onSelect: (name: string, isToggle: boolean) => void,
 ): void {
 	const ppsms = data.map((d) => d.avg_price_per_sqm);
@@ -90,43 +127,22 @@ function renderPoints(
 	const max = Math.max(...ppsms);
 
 	for (const d of data) {
+		const isActive = getActiveLocations().includes(d.location_name);
 		const color = getPriceColor(d.avg_price_per_sqm, min, max);
 		const c = circle([d.lat, d.lng], {
-			radius: 400,
+			radius: 150 + Math.sqrt(d.count) * 15,
 			fillColor: color,
 			fillOpacity: 0.65,
 			stroke: true,
-			color: "white",
-			weight: 1,
-			opacity: 0.3,
-		});
+			color: isActive ? "white" : "transparent",
+			weight: isActive ? 2 : 1,
+			opacity: isActive ? 1 : 0.3,
+		}) as Circle & { _heatmapData?: HeatmapPoint };
 
-		c.on("mouseover", (_e: LeafletMouseEvent) => {
-			c.setStyle({ fillOpacity: 0.9, weight: 2, opacity: 1 });
-			const popup = html`
-				<div class="p-1 min-w-32">
-					<div class="text-[10px] uppercase tracking-wider text-(--muted) font-bold mb-1">${d.location_name}</div>
-					<div class="text-sm font-bold">₼ ${fmt(d.avg_price_per_sqm, 0)} <span class="text-xs font-normal opacity-70">/ m²</span></div>
-					<div class="text-[11px] text-(--muted) mt-1">${d.count} ${t(d.count !== 1 ? "listings" : "listing")}</div>
-				</div>
-			`;
-			c.bindPopup(popup, {
-				closeButton: false,
-				offset: [0, -2],
-				className: "re-popup",
-			}).openPopup();
-		});
+		// Attach data for style updates
+		c._heatmapData = d;
 
-		c.on("mouseout", () => {
-			c.setStyle({ fillOpacity: 0.65, weight: 1, opacity: 0.3 });
-			c.closePopup();
-		});
-
-		c.on("click", (e: LeafletMouseEvent) => {
-			DomEvent.stopPropagation(e);
-			onSelect(d.location_name, e.originalEvent.shiftKey);
-			toast(d.location_name);
-		});
+		setupCircleEvents(c, d, getActiveLocations, onSelect);
 
 		c.addTo(group);
 	}
