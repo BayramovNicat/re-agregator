@@ -1,26 +1,20 @@
-import { featureGroup, latLngBounds, tooltip as leafletTooltip } from "leaflet";
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import { state as globalState } from "../../core/state";
-import type { MapPin } from "../../core/types";
-import { debounce, fmt, frag, tTier } from "../../core/utils";
-import { initLeaflet } from "../../ui/map-base";
+import type { FeatureGroup, Tooltip } from "leaflet";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import { state as globalState } from "@/core/state";
+import type { MapPin } from "@/core/types";
+import { debounce, fmt, frag, tTier } from "@/core/utils";
+import { initLeaflet } from "@/ui/map-base";
 import { fetchMapPins } from "./api";
 import { createPinMarker } from "./pins";
 import type { MapViewState } from "./types";
 
 const state: MapViewState = {
 	lmap: null,
-	pinGroup: featureGroup(),
+	pinGroup: null as unknown as FeatureGroup,
 	fitDone: false,
 	abortController: null,
-	sharedTooltip: leafletTooltip({
-		sticky: false,
-		direction: "top",
-		opacity: 1,
-		className:
-			"!bg-(--surface-3) !border-(--border-h) !rounded-(--r-sm) !shadow-[0_8px_24px_rgba(0,0,0,0.5)] !p-0 [&::before]:!hidden",
-	}),
+	sharedTooltip: null as unknown as Tooltip,
 };
 
 let mapContainer: HTMLElement | null = null;
@@ -38,6 +32,7 @@ const debouncedFetch = debounce(async () => {
 
 	if (pins.length > 0 && !state.fitDone && state.lmap) {
 		state.fitDone = true;
+		const { latLngBounds } = await import("leaflet");
 		const b = latLngBounds(pins.map((p) => [p.lat, p.lng]));
 		state.lmap.fitBounds(b.pad(0.12));
 	}
@@ -58,8 +53,8 @@ export function initMapView(container: HTMLElement): () => void {
 	return () => {
 		offDeals();
 		state.abortController?.abort();
-		state.pinGroup.clearLayers();
-		state.sharedTooltip.remove();
+		state.pinGroup?.clearLayers();
+		state.sharedTooltip?.remove();
 		if (state.lmap) {
 			state.lmap.remove();
 			state.lmap = null;
@@ -68,12 +63,22 @@ export function initMapView(container: HTMLElement): () => void {
 	};
 }
 
-export function showMapView(): void {
+export async function showMapView(): Promise<void> {
 	if (!mapContainer) return;
 	mapContainer.style.display = "";
 
 	if (!state.lmap) {
-		state.lmap = initLeaflet(mapContainer);
+		const { featureGroup, tooltip: leafletTooltip } = await import("leaflet");
+		state.pinGroup = featureGroup();
+		state.sharedTooltip = leafletTooltip({
+			sticky: false,
+			direction: "top",
+			opacity: 1,
+			className:
+				"!bg-(--surface-3) !border-(--border-h) !rounded-(--r-sm) !shadow-[0_8px_24px_rgba(0,0,0,0.5)] !p-0 [&::before]:!hidden",
+		});
+
+		state.lmap = await initLeaflet(mapContainer);
 		state.lmap.setView([40.396698, 49.8664491], 13);
 		state.pinGroup.addTo(state.lmap);
 	} else {

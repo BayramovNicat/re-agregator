@@ -1,7 +1,7 @@
-import { bus, EVENTS } from "../core/events";
-import { html, makeEventManager } from "../core/utils";
-import { Dialog } from "../ui/dialog";
-import { Gallery } from "../ui/gallery";
+import { bus, EVENTS } from "@/core/events";
+import { html, makeEventManager } from "@/core/utils";
+import { Dialog } from "@/ui/dialog";
+import { Gallery } from "@/ui/gallery";
 
 /**
  * Gallery feature controller.

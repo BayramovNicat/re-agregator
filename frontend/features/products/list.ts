@@ -1,9 +1,9 @@
-import { bus, EVENTS } from "../../core/events";
-import { state } from "../../core/state";
-import type { CardCallbacks, Property } from "../../core/types";
-import { html } from "../../core/utils";
-import { Product } from "../../ui/product";
-import { SkeletonList } from "../../ui/skeleton";
+import { bus, EVENTS } from "@/core/events";
+import { state } from "@/core/state";
+import type { CardCallbacks, Property } from "@/core/types";
+import { html } from "@/core/utils";
+import { Product } from "@/ui/product";
+import { SkeletonList } from "@/ui/skeleton";
 import type { ProductsUI } from "./types";
 
 /**

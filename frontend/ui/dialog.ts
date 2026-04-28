@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 import { Button } from "./button";
 import { Icons } from "./icons";
 

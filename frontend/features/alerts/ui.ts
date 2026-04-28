@@ -1,9 +1,9 @@
-import { t } from "../../core/i18n";
-import type { AlertFilters } from "../../core/types";
-import { html } from "../../core/utils";
-import { Button } from "../../ui/button";
-import { Dialog } from "../../ui/dialog";
-import { Field, Input } from "../../ui/input";
+import { t } from "@/core/i18n";
+import type { AlertFilters } from "@/core/types";
+import { html } from "@/core/utils";
+import { Button } from "@/ui/button";
+import { Dialog } from "@/ui/dialog";
+import { Field, Input } from "@/ui/input";
 import type { AlertsCallbacks, AlertsUI } from "./types";
 
 /**

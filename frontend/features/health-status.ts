@@ -1,5 +1,5 @@
-import { t } from "../core/i18n";
-import { ce, cn, html } from "../core/utils";
+import { t } from "@/core/i18n";
+import { ce, cn, html } from "@/core/utils";
 
 /** Props accepted by {@link HealthStatus}. */
 export type HealthStatusProps = Partial<HTMLDivElement>;

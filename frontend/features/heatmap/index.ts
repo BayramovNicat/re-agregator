@@ -1,21 +1,15 @@
-import {
-	type Circle,
-	circle,
-	type FeatureGroup,
-	featureGroup,
-	type Map as LMap,
-} from "leaflet";
-import { bus, EVENTS } from "../../core/events";
-import type { HeatmapPoint } from "../../core/types";
-import { initLeaflet, MapDialog } from "../../ui/map-base";
+import type { Circle, FeatureGroup, Map as LMap } from "leaflet";
+import { bus, EVENTS } from "@/core/events";
+import type { HeatmapPoint } from "@/core/types";
+import { initLeaflet, MapDialog } from "@/ui/map-base";
 import { fetchHeatmapData } from "./api";
 import { setupCircleEvents } from "./events";
 import { getPriceColor } from "./logic";
 
 export function initHeatmap(root: HTMLElement): () => void {
-	const overlay = featureGroup();
 	let isFirstOpen = true;
 	let lmap: LMap | null = null;
+	let overlay: FeatureGroup | null = null;
 	let currentOnAction: ((name: string, isToggle: boolean) => void) | null =
 		null;
 	let cachedData: HeatmapPoint[] = [];
@@ -30,6 +24,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 	root.appendChild(modal);
 
 	const updateCircleStyles = () => {
+		if (!overlay) return;
 		overlay.eachLayer((layer) => {
 			if ("setStyle" in layer) {
 				const circle = layer as Circle & { _heatmapData?: HeatmapPoint };
@@ -55,16 +50,18 @@ export function initHeatmap(root: HTMLElement): () => void {
 		modal.showModal();
 
 		if (!lmap) {
+			const { featureGroup } = await import("leaflet");
+			overlay = featureGroup();
 			const ct = modal.querySelector(`#${containerId}`) as HTMLElement;
-			lmap = initLeaflet(ct);
+			lmap = await initLeaflet(ct);
 			overlay.addTo(lmap);
 		}
 
 		if (isFirstOpen) {
 			isFirstOpen = false;
 			cachedData = await fetchHeatmapData();
-			if (cachedData.length > 0 && lmap) {
-				renderPoints(
+			if (cachedData.length > 0 && lmap && overlay) {
+				await renderPoints(
 					lmap,
 					cachedData,
 					overlay,
@@ -95,8 +92,8 @@ export function initHeatmap(root: HTMLElement): () => void {
 	return () => {
 		offOpen();
 		modal.remove();
-		overlay.remove();
-		lmap?.remove();
+		if (overlay) overlay.remove();
+		if (lmap) lmap.remove();
 	};
 }
 
@@ -110,13 +107,14 @@ export function openHeatmap(
 	bus.emit(EVENTS.HEATMAP_OPEN, { activeLocations, onAction });
 }
 
-function renderPoints(
+async function renderPoints(
 	lmap: LMap,
 	data: HeatmapPoint[],
 	group: FeatureGroup,
 	getActiveLocations: () => string[],
 	onSelect: (name: string, isToggle: boolean) => void,
-): void {
+): Promise<void> {
+	const { circle } = await import("leaflet");
 	const ppsms = data.map((d) => d.avg_price_per_sqm);
 	const min = Math.min(...ppsms);
 	const max = Math.max(...ppsms);

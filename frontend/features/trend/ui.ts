@@ -1,5 +1,5 @@
-import { t } from "../../core/i18n";
-import { html } from "../../core/utils";
+import { t } from "@/core/i18n";
+import { html } from "@/core/utils";
 import type { TrendUI } from "./types";
 
 /**

@@ -1,4 +1,4 @@
-import type { TrendPoint } from "../../core/types";
+import type { TrendPoint } from "@/core/types";
 import type { TrendState } from "./types";
 
 /**

@@ -1,8 +1,8 @@
-import { t } from "../../core/i18n";
-import type { Alert } from "../../core/types";
-import { html } from "../../core/utils";
-import { Button } from "../../ui/button";
-import { Icons } from "../../ui/icons";
+import { t } from "@/core/i18n";
+import type { Alert } from "@/core/types";
+import { html } from "@/core/utils";
+import { Button } from "@/ui/button";
+import { Icons } from "@/ui/icons";
 import { buildFilterPreview } from "./ui";
 
 /**

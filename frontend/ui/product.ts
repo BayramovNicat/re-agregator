@@ -1,5 +1,5 @@
-import { t } from "../core/i18n";
-import type { CardCallbacks, Property } from "../core/types";
+import { t } from "@/core/i18n";
+import type { CardCallbacks, Property } from "@/core/types";
 import {
 	fmt,
 	fmtFloor,
@@ -341,9 +341,8 @@ export function Product({
 					</span>
 				</div>
 				<div class="mt-0.5 text-xs text-(--muted) truncate">
-					${fmt(property.area_sqm, 1)} · ${property.rooms ?? "—"}
-					${t("rooms_")} · ${t("floor_")} ${floorStr} ·
-					₼${fmt(property.price_per_sqm, 0)}/m²
+					${fmt(property.area_sqm, 1)} · ${property.rooms ?? "—"} ${t("rooms_")}
+					· ${t("floor_")} ${floorStr} · ₼${fmt(property.price_per_sqm, 0)}/m²
 				</div>
 				${rowTagsEl}
 			</div>

@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 
 const CONTAINER_CLS = `
   flex items-center h-10 px-3.5 

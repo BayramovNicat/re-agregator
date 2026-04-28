@@ -1,9 +1,9 @@
-import { t } from "../../core/i18n";
-import { html } from "../../core/utils";
-import { Button } from "../../ui/button";
-import { Dialog } from "../../ui/dialog";
-import { Gallery } from "../../ui/gallery";
-import { Icons } from "../../ui/icons";
+import { t } from "@/core/i18n";
+import { html } from "@/core/utils";
+import { Button } from "@/ui/button";
+import { Dialog } from "@/ui/dialog";
+import { Gallery } from "@/ui/gallery";
+import { Icons } from "@/ui/icons";
 import type { PropertyDetailUI } from "./types";
 
 /**
@@ -42,14 +42,18 @@ export function renderPropertyDetailLayout(
 	ui.historyChartEl = html`<div></div>`;
 	ui.historySecEl = html`
 		<div class="pt-6 border-t border-(--border)/60 hidden">
-			<div class="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-3">
+			<div
+				class="text-[10px] font-bold text-(--muted) uppercase tracking-widest mb-3"
+			>
 				${t("priceHistory")}
 			</div>
 			${ui.historyChartEl}
 		</div>
 	`;
 
-	ui.descBodyEl = html`<p class="text-sm text-(--text-2) leading-relaxed whitespace-pre-wrap"></p>`;
+	ui.descBodyEl = html`<p
+		class="text-sm text-(--text-2) leading-relaxed whitespace-pre-wrap"
+	></p>`;
 	ui.descSecEl = html`
 		<div class="pt-6 border-t border-(--border)/60 hidden">
 			${ui.descBodyEl}
@@ -101,13 +105,14 @@ export function renderPropertyDetailLayout(
 
 	const leftCol = html`
 		<div class="flex-1 min-w-0 overflow-y-auto bg-(--surface) flex flex-col">
-			${ui.gallery}
-			${ui.mapSecEl}
+			${ui.gallery} ${ui.mapSecEl}
 		</div>
 	`;
 
 	const rightCol = html`
-		<div class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-l border-(--border)">
+		<div
+			class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-l border-(--border)"
+		>
 			<div class="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
 				<!-- Core Info -->
 				<div class="space-y-5">
@@ -124,36 +129,42 @@ export function renderPropertyDetailLayout(
 					</div>
 
 					<!-- Market Context Banner -->
-					<div class="flex items-center justify-between p-4 bg-(--surface) border border-(--border) rounded-(--r)">
+					<div
+						class="flex items-center justify-between p-4 bg-(--surface) border border-(--border) rounded-(--r)"
+					>
 						<div class="space-y-1">
-							<div class="text-[10px] font-bold text-(--muted) uppercase tracking-wider">${t("propMarketAvg")}</div>
+							<div
+								class="text-[10px] font-bold text-(--muted) uppercase tracking-wider"
+							>
+								${t("propMarketAvg")}
+							</div>
 							<div class="text-sm font-semibold">${ui.mktAvgEl}</div>
 						</div>
 						<div class="text-right space-y-1">
-							<div class="text-[10px] font-bold text-(--muted) uppercase tracking-wider">${t("propDiscount")}</div>
+							<div
+								class="text-[10px] font-bold text-(--muted) uppercase tracking-wider"
+							>
+								${t("propDiscount")}
+							</div>
 							<div class="text-sm font-bold">${ui.discPctEl}</div>
 						</div>
 					</div>
 				</div>
 
 				<!-- Stats & Tags -->
-				<div class="space-y-4">
-					${ui.statsEl}
-					${ui.tagsEl}
-				</div>
+				<div class="space-y-4">${ui.statsEl} ${ui.tagsEl}</div>
 
 				<!-- Conditional Sections -->
-				${ui.historySecEl}
-				${ui.descSecEl}
+				${ui.historySecEl} ${ui.descSecEl}
 			</div>
 
 			<!-- Sticky Actions -->
-			<div class="p-6 border-t border-(--border) bg-(--surface) space-y-4 shrink-0">
+			<div
+				class="p-6 border-t border-(--border) bg-(--surface) space-y-4 shrink-0"
+			>
 				${ui.linkEl}
 				<div class="flex items-center justify-center gap-3">
-					${ui.bmarkBtn}
-					${ui.shareBtn}
-					${ui.hideBtn}
+					${ui.bmarkBtn} ${ui.shareBtn} ${ui.hideBtn}
 				</div>
 			</div>
 		</div>
@@ -166,8 +177,7 @@ export function renderPropertyDetailLayout(
 		className: "text-(--text) flex-1 min-h-0",
 		content: html`
 			<div class="flex flex-col md:flex-row h-full min-h-0">
-				${leftCol}
-				${rightCol}
+				${leftCol} ${rightCol}
 			</div>
 		`,
 	}) as HTMLElement & { showModal: () => void; close: () => void };

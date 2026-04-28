@@ -1,5 +1,5 @@
-import { map, tileLayer } from "leaflet";
-import { html } from "../core/utils";
+import type { map } from "leaflet";
+import { html } from "@/core/utils";
 import { Dialog } from "./dialog";
 
 export const MAP_MODAL_MAXWIDTH = "860px";
@@ -7,15 +7,16 @@ export const MAP_MODAL_MAXWIDTH = "860px";
 /**
  * Initializes a Leaflet map with standard dark-mode settings.
  */
-export function initLeaflet(
+export async function initLeaflet(
 	target: string | HTMLElement,
-): ReturnType<typeof map> {
-	const lmap = map(target, {
+): Promise<ReturnType<typeof map>> {
+	const { map: Lmap, tileLayer: LtileLayer } = await import("leaflet");
+	const lmap = Lmap(target, {
 		zoomControl: true,
 		attributionControl: false,
 	});
 
-	tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+	LtileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
 		subdomains: "abcd",
 		maxZoom: 19,
 	}).addTo(lmap);

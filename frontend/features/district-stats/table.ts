@@ -1,5 +1,5 @@
-import { fmt, html } from "../../core/utils";
-import { Icons } from "../../ui/icons";
+import { fmt, html } from "@/core/utils";
+import { Icons } from "@/ui/icons";
 import type { DistrictStatsUI, LocationRow, SortKey } from "./types";
 
 /**

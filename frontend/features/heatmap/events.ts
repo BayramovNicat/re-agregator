@@ -1,7 +1,7 @@
 import { type Circle, DomEvent, type LeafletMouseEvent } from "leaflet";
-import { t } from "../../core/i18n";
-import type { HeatmapPoint } from "../../core/types";
-import { fmt, html, toast } from "../../core/utils";
+import { t } from "@/core/i18n";
+import type { HeatmapPoint } from "@/core/types";
+import { fmt, html, toast } from "@/core/utils";
 
 export function setupCircleEvents(
 	c: Circle & { _heatmapData?: HeatmapPoint },

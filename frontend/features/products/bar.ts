@@ -1,9 +1,9 @@
-import { t } from "../../core/i18n";
-import { state } from "../../core/state";
-import { frag, html } from "../../core/utils";
-import { Button } from "../../ui/button";
-import { Icons } from "../../ui/icons";
-import { Select } from "../../ui/select";
+import { t } from "@/core/i18n";
+import { state } from "@/core/state";
+import { frag, html } from "@/core/utils";
+import { Button } from "@/ui/button";
+import { Icons } from "@/ui/icons";
+import { Select } from "@/ui/select";
 import type { ProductsCallbacks, ProductsUI } from "./types";
 
 /**

@@ -1,5 +1,5 @@
-import type { MapPin } from "../../core/types";
-import { toast } from "../../core/utils";
+import type { MapPin } from "@/core/types";
+import { toast } from "@/core/utils";
 import type { MapViewState } from "./types";
 
 /**

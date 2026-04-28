@@ -1,11 +1,10 @@
-import { divIcon, marker } from "leaflet";
-import { t } from "../../core/i18n";
-import type { Property } from "../../core/types";
-import { fmt, fmtFloor, getLocale, timeAgo, tTier } from "../../core/utils";
-import { Tag } from "../../ui/chip";
-import { initLeaflet } from "../../ui/map-base";
-import { StatBox } from "../../ui/stat-box";
-import { ts } from "../../ui/tier";
+import { t } from "@/core/i18n";
+import type { Property } from "@/core/types";
+import { fmt, fmtFloor, getLocale, timeAgo, tTier } from "@/core/utils";
+import { Tag } from "@/ui/chip";
+import { initLeaflet } from "@/ui/map-base";
+import { StatBox } from "@/ui/stat-box";
+import { ts } from "@/ui/tier";
 import { PriceHistoryChart } from "./chart";
 import type { PropertyDetailUI } from "./types";
 
@@ -16,7 +15,6 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 	ui.currentProperty = p;
 	const tier = ts(p.tier);
 
-	// 1. Gallery & Header
 	ui.gallery.setUrls(p.image_urls ?? []);
 	ui.locationEl.textContent = p.location_name ?? p.district ?? "—";
 	ui.priceEl.textContent = `₼ ${fmt(p.price)}`;
@@ -34,7 +32,6 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 	const ago = p.posted_date ? timeAgo(p.posted_date) : "";
 	ui.postedEl.textContent = ago ? `${t("propPosted")} ${ago}` : "";
 
-	// 2. Statistics Grid
 	ui.statsEl.replaceChildren();
 	const statData = [
 		{ label: t("area"), value: fmt(p.area_sqm, 1) },
@@ -46,12 +43,10 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 		ui.statsEl.appendChild(StatBox(s));
 	});
 
-	// 3. Discount Visualization
 	ui.mktAvgEl.textContent = `₼${fmt(p.location_avg_price_per_sqm, 0)}/m²`;
 	ui.discPctEl.textContent = `${p.discount_percent >= 0 ? "-" : "+"}${Math.abs(p.discount_percent)}%`;
 	ui.discPctEl.style.color = tier.c;
 
-	// 4. Feature Tags
 	ui.tagsEl.replaceChildren();
 	const features = [
 		{
@@ -90,7 +85,6 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 			);
 		});
 
-	// 5. Sections (Map, History, Description)
 	if (p.latitude && p.longitude) {
 		const { latitude: lat, longitude: lng } = p;
 		ui.mapSecEl.classList.remove("hidden");
@@ -121,25 +115,25 @@ export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 		ui.descSecEl.classList.add("hidden");
 	}
 
-	// 6. Finalize
 	ui.linkEl.href = p.source_url;
 }
 
 /**
  * Initializes the Leaflet map and marker.
  */
-export function initMap(ui: PropertyDetailUI): void {
+export async function initMap(ui: PropertyDetailUI): Promise<void> {
 	// Eagerly init map (Leaflet requires the container to be in DOM)
 	ui.mapSecEl.classList.remove("hidden");
 	ui.mapSecEl.style.visibility = "hidden";
-	ui.lmap = initLeaflet(ui.mapCtEl);
+	ui.lmap = await initLeaflet(ui.mapCtEl);
+	const { divIcon, marker } = await import("leaflet");
 	const mapIcon = divIcon({
 		className: "",
 		html: /*html*/ `<div class="w-3 h-3 rounded-full bg-(--green) border-2 border-(--bg) animate-[mpulse_2s_ease-out_infinite]"></div>`,
 		iconSize: [12, 12],
 		iconAnchor: [6, 6],
 	});
-	ui.lmark = marker([0, 0], { icon: mapIcon }).addTo(ui.lmap);
+	if (ui.lmap) ui.lmark = marker([0, 0], { icon: mapIcon }).addTo(ui.lmap);
 	ui.mapSecEl.classList.add("hidden");
 	ui.mapSecEl.style.visibility = "";
 }

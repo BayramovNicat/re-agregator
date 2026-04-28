@@ -1,21 +1,15 @@
+import { bus, EVENTS } from "@/core/events";
 import { html, renderToastsContainer, trustScriptURL } from "@/core/utils";
-import { initAlerts } from "@/features/alerts/index";
-import { initDistrictStats } from "@/features/district-stats/index";
-import { initGallery } from "@/features/gallery";
 import { initHeader } from "@/features/header";
-import { initHeatmap } from "@/features/heatmap/index";
 import { initProducts } from "@/features/products/index";
-import { initPropertyDetail } from "@/features/property-detail/index";
 import { initSearch } from "@/features/search";
 import { initTrend } from "@/features/trend/index";
-import { initTooltip } from "@/ui/tooltip";
 
 /**
  * Main application entry point.
  * Initializes the layout and all feature modules.
  */
 
-// 1. Initial Layout
 const root = document.getElementById("app") as HTMLElement;
 if (!root) throw new Error("Root element #app not found");
 
@@ -33,25 +27,59 @@ root.appendChild(html`
 	</div>
 `);
 
-// 2. Feature Initialization
-// Each feature returns a cleanup function for its lifecycle management.
+// Critical features are initialized immediately for the first paint.
 const cleanups: (() => void)[] = [
 	initProducts(productsArea),
 	initTrend(trendArea),
 	initSearch(searchArea),
 	initHeader(headerArea),
-	initAlerts(root),
-	initGallery(root),
-	initTooltip(root),
-	initPropertyDetail(root),
-	initHeatmap(root),
 ];
 
-// 3. Global Static Modals & Utilities
-cleanups.push(initDistrictStats(root));
+// Heavy or secondary features are loaded on demand.
+
+// Property Detail & Gallery
+bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
+	const [{ initPropertyDetail }, { initGallery }] = await Promise.all([
+		import("@/features/property-detail/index"),
+		import("@/features/gallery"),
+	]);
+	cleanups.push(initPropertyDetail(root));
+	cleanups.push(initGallery(root));
+	bus.emit(EVENTS.PROPERTY_OPEN, p);
+});
+
+// Gallery only (if opened before property detail)
+bus.once(EVENTS.GALLERY_OPEN, async (payload) => {
+	const { initGallery } = await import("@/features/gallery");
+	cleanups.push(initGallery(root));
+	bus.emit(EVENTS.GALLERY_OPEN, payload);
+});
+
+// Heatmap
+bus.once(EVENTS.HEATMAP_OPEN, async (payload) => {
+	const { initHeatmap } = await import("@/features/heatmap/index");
+	cleanups.push(initHeatmap(root));
+	bus.emit(EVENTS.HEATMAP_OPEN, payload);
+});
+
+// Alerts
+bus.once(EVENTS.ALERTS_OPEN, async () => {
+	const { initAlerts } = await import("@/features/alerts/index");
+	cleanups.push(initAlerts(root));
+	bus.emit(EVENTS.ALERTS_OPEN);
+});
+
+// Tooltip (Load on first interaction)
+const loadTooltip = async () => {
+	window.removeEventListener("touchstart", loadTooltip);
+	const { initTooltip } = await import("@/ui/tooltip");
+	cleanups.push(initTooltip(root));
+};
+window.addEventListener("mouseover", loadTooltip, { once: true });
+window.addEventListener("touchstart", loadTooltip, { once: true });
+
 renderToastsContainer(root);
 
-// 4. Handle cleanup on window pagehide
 window.addEventListener("pagehide", (e) => {
 	if (!e.persisted) {
 		cleanups.forEach((fn) => {
@@ -60,14 +88,12 @@ window.addEventListener("pagehide", (e) => {
 	}
 });
 
-// 5. Dev hot-reload
 declare const __DEV__: boolean;
 if (__DEV__) {
 	const devWs = new WebSocket("ws://localhost:3001");
 	devWs.onmessage = () => location.reload();
 }
 
-// 6. Register Service Worker
 if ("serviceWorker" in navigator) {
 	window.addEventListener("load", () => {
 		navigator.serviceWorker

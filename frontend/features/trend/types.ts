@@ -1,4 +1,4 @@
-import type { TrendPoint } from "../../core/types";
+import type { TrendPoint } from "@/core/types";
 
 export interface TrendUI {
 	panel: HTMLElement;

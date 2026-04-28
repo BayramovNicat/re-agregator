@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 
 const SHARED =
 	"transition-all duration-150 rounded-(--r) font-medium active:scale-[0.97] disabled:opacity-[0.45] disabled:cursor-not-allowed disabled:transform-none select-none";

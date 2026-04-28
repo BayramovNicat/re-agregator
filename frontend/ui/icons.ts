@@ -1,4 +1,4 @@
-import { ce, html, trust } from "../core/utils";
+import { ce, html, trust } from "@/core/utils";
 
 /**
  * Properties for configuring an icon instance.

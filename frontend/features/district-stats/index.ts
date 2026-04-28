@@ -1,7 +1,7 @@
-import { t } from "../../core/i18n";
-import { html, makeEventManager } from "../../core/utils";
-import { RawButton } from "../../ui/button";
-import { Dialog } from "../../ui/dialog";
+import { t } from "@/core/i18n";
+import { html, makeEventManager } from "@/core/utils";
+import { RawButton } from "@/ui/button";
+import { Dialog } from "@/ui/dialog";
 import { getProcessedData } from "./logic";
 import { renderSearchBar } from "./search";
 import { DataRow, renderSortHeader } from "./table";
@@ -74,10 +74,26 @@ export function initDistrictStats(root: HTMLElement): () => void {
 		<table class="w-full border-collapse text-sm">
 			<thead>
 				<tr class="border-b border-(--border) sticky top-0 bg-(--surface) z-10">
-					${renderSortHeader(ui, "district", t("districtCol"), "left", () => onSort("district"))}
-					${renderSortHeader(ui, "avg_ppsm", t("districtAvgPpsm"), "right", () => onSort("avg_ppsm"))}
-					${renderSortHeader(ui, "listing_count", t("districtListings"), "right", () => onSort("listing_count"))}
-					${renderSortHeader(ui, "trend", t("districtTrend"), "center", () => onSort("trend"))}
+					${renderSortHeader(ui, "district", t("districtCol"), "left", () =>
+						onSort("district"),
+					)}
+					${renderSortHeader(
+						ui,
+						"avg_ppsm",
+						t("districtAvgPpsm"),
+						"right",
+						() => onSort("avg_ppsm"),
+					)}
+					${renderSortHeader(
+						ui,
+						"listing_count",
+						t("districtListings"),
+						"right",
+						() => onSort("listing_count"),
+					)}
+					${renderSortHeader(ui, "trend", t("districtTrend"), "center", () =>
+						onSort("trend"),
+					)}
 				</tr>
 			</thead>
 			${ui.tbody}

@@ -1,7 +1,7 @@
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import { state as globalState } from "../../core/state";
-import { fmt, frag, hide, makeEventManager, show } from "../../core/utils";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import { state as globalState } from "@/core/state";
+import { fmt, frag, hide, makeEventManager, show } from "@/core/utils";
 import { fetchTrendData } from "./api";
 import { dfmt, renderTrendChart } from "./chart";
 import type { TrendState, TrendUI } from "./types";

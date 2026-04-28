@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 
 /** Props accepted by {@link Label}. */
 export type LabelProps = {

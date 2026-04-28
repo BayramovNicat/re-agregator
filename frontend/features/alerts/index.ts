@@ -1,5 +1,5 @@
-import { bus, EVENTS } from "../../core/events";
-import { state } from "../../core/state";
+import { bus, EVENTS } from "@/core/events";
+import { state } from "@/core/state";
 import { deleteAlert, fetchAlerts, saveAlert } from "./api";
 import { renderAlertList } from "./list";
 import type { AlertsState, AlertsUI } from "./types";

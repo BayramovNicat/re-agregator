@@ -1,8 +1,8 @@
-import { t } from "../../core/i18n";
-import { html } from "../../core/utils";
-import { RawButton } from "../../ui/button";
-import { Icons } from "../../ui/icons";
-import { RawInput } from "../../ui/input";
+import { t } from "@/core/i18n";
+import { html } from "@/core/utils";
+import { RawButton } from "@/ui/button";
+import { Icons } from "@/ui/icons";
+import { RawInput } from "@/ui/input";
 import type { DistrictStatsUI } from "./types";
 
 /**

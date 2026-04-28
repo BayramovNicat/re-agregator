@@ -1,8 +1,8 @@
-import { bus, EVENTS } from "../../core/events";
-import { t } from "../../core/i18n";
-import { state } from "../../core/state";
-import type { Property } from "../../core/types";
-import { fmt, toast } from "../../core/utils";
+import { bus, EVENTS } from "@/core/events";
+import { t } from "@/core/i18n";
+import { state } from "@/core/state";
+import type { Property } from "@/core/types";
+import { fmt, toast } from "@/core/utils";
 
 /**
  * Pure logic for sorting deals.

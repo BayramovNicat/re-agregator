@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { html } from "@/core/utils";
 
 export function SkeletonList(count: number, view: "grid" | "row"): HTMLElement {
 	const wrap = document.createElement("div");

@@ -5,7 +5,7 @@ import type { Property } from "@/core/types";
 import { hide, makeEventManager, show, toast } from "@/core/utils";
 import type { MultiSelectElement } from "@/ui/multi-select";
 import { SkeletonList } from "@/ui/skeleton";
-import { openHeatmap } from "../heatmap/index";
+// Lazy triggered via bus.emit(EVENTS.HEATMAP_OPEN)
 import { refreshFilterChips } from "./chips";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import { renderSearchFilters } from "./filters";
@@ -13,8 +13,6 @@ import type { SearchUI } from "./types";
 import { restoreStateFromUrl, syncStateToUrl } from "./url";
 
 export function initSearch(container: HTMLElement): () => void {
-	// --- 1. References ---
-
 	const globalElements = {
 		resultsContainer: state.refs.cards as HTMLElement,
 		loadingIndicator: state.refs.loading as HTMLElement,
@@ -44,8 +42,6 @@ export function initSearch(container: HTMLElement): () => void {
 		numericInputs: {},
 		booleanInputs: {},
 	};
-
-	// --- 2. State & Core Logic ---
 
 	// Assign filter bridge immediately to avoid TDZ for other modules
 	state.getFilters = (): import("@/core/types").AlertFilters => {
@@ -212,21 +208,22 @@ export function initSearch(container: HTMLElement): () => void {
 
 	const onPriceMap = () => {
 		const activeLocations = ui.locationSelect.getValue();
-		openHeatmap(activeLocations, (locName, isToggle) => {
-			if (isToggle) {
-				const current = ui.locationSelect.getValue();
-				const idx = current.indexOf(locName);
-				if (idx > -1)
-					ui.locationSelect.setValue(current.filter((v) => v !== locName));
-				else ui.locationSelect.setValue([...current, locName]);
-			} else {
-				ui.locationSelect.setValue([locName]);
-			}
-			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
+		bus.emit(EVENTS.HEATMAP_OPEN, {
+			activeLocations,
+			onAction: (locName: string, isToggle: boolean) => {
+				if (isToggle) {
+					const current = ui.locationSelect.getValue();
+					const idx = current.indexOf(locName);
+					if (idx > -1)
+						ui.locationSelect.setValue(current.filter((v) => v !== locName));
+					else ui.locationSelect.setValue([...current, locName]);
+				} else {
+					ui.locationSelect.setValue([locName]);
+				}
+				bus.emit(EVENTS.SEARCH_STARTED, { more: false });
+			},
 		});
 	};
-
-	// --- 3. UI Assembly ---
 
 	const searchLayout = renderSearchFilters(ui, {
 		onFilterChange,
@@ -237,8 +234,6 @@ export function initSearch(container: HTMLElement): () => void {
 	});
 	state.refs.tierFilter = ui.tierSelect;
 	container.append(searchLayout, ui.activeChipsContainer);
-
-	// --- 4. Event Handlers ---
 
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
 
@@ -258,8 +253,6 @@ export function initSearch(container: HTMLElement): () => void {
 			void executeSearch(data?.more ?? false);
 		},
 	);
-
-	// --- 5. Initialization & Data Loading ---
 
 	restoreStateFromUrl(ui);
 	refreshFilterChips(ui, debouncedSearch);

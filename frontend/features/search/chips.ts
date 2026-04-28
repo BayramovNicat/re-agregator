@@ -27,7 +27,6 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		});
 	};
 
-	// 1. Boolean Filters
 	for (const config of getBooleanFilters()) {
 		if (isFilterChecked(config.id)) {
 			activeChips.push(
@@ -38,7 +37,6 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		}
 	}
 
-	// 2. Numeric Filters
 	for (const config of getNumericFilters()) {
 		const value = getNumericValue(config.id);
 		if (value) {
@@ -50,7 +48,6 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		}
 	}
 
-	// 3. Dropdowns & Search
 	if (ui.categorySelect.value) {
 		activeChips.push(
 			createChip(`${t("chipCategory")}: ${ui.categorySelect.value}`, () => {
@@ -77,7 +74,6 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		);
 	}
 
-	// 4. Locations
 	const selectedLocations = ui.locationSelect.getValue();
 	if (selectedLocations.length > 0 && !selectedLocations.includes("__all__")) {
 		for (const location of selectedLocations) {
@@ -91,12 +87,10 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		}
 	}
 
-	// 5. Update Container
 	ui.activeChipsContainer.replaceChildren(...activeChips);
 	if (activeChips.length) show(ui.activeChipsContainer, "flex");
 	else hide(ui.activeChipsContainer);
 
-	// 6. Update Advanced Toggle Count
 	if (activeChips.length) {
 		ui.advancedCount.textContent = String(activeChips.length);
 		show(ui.advancedCount, "inline-block");

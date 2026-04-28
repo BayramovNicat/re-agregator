@@ -1,5 +1,5 @@
-import type { PriceHistoryEntry } from "../../core/types";
-import { html } from "../../core/utils";
+import type { PriceHistoryEntry } from "@/core/types";
+import { html } from "@/core/utils";
 
 /**
  * Renders a price history sparkline using a declarative SVG template.

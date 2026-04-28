@@ -1,6 +1,6 @@
-import { t } from "../../core/i18n";
-import type { TrendPoint } from "../../core/types";
-import { fmt, frag, getLocale, html } from "../../core/utils";
+import { t } from "@/core/i18n";
+import type { TrendPoint } from "@/core/types";
+import { fmt, frag, getLocale, html } from "@/core/utils";
 import type { TrendUI } from "./types";
 
 /**
@@ -59,7 +59,11 @@ export function renderTrendChart(
 				<stop offset="100%" stop-color="${color}" stop-opacity="0" />
 			</linearGradient>
 		</defs>
-		<path d="${areaD}" fill="url(#spark-g)" vector-effect="non-scaling-stroke" />
+		<path
+			d="${areaD}"
+			fill="url(#spark-g)"
+			vector-effect="non-scaling-stroke"
+		/>
 		<path
 			d="${lineD}"
 			fill="none"

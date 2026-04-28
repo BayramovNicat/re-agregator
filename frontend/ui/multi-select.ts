@@ -1,4 +1,4 @@
-import { ce, cn, frag, html } from "../core/utils";
+import { ce, cn, frag, html } from "@/core/utils";
 import { RawButton } from "./button";
 import { Icons } from "./icons";
 import { RawInput } from "./input";
@@ -39,7 +39,6 @@ export function MultiSelect({
 	let isOpen = false;
 	let searchQuery = "";
 
-	// 1. Create sub-elements upfront
 	const label = html`<span class="truncate text-(--text-2)"
 		>${placeholder}</span
 	>`;

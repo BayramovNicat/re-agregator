@@ -11,13 +11,9 @@ import {
 	show,
 	tTier,
 } from "@/core/utils";
-import { openGallery } from "@/features/gallery";
-import {
-	hideMapView,
-	initMapView,
-	showMapView,
-} from "@/features/map-view/index";
-import { openPropertyDetail } from "@/features/property-detail";
+// Lazy triggered via bus.emit(EVENTS.GALLERY_OPEN)
+// Map View is lazy loaded in setView()
+// Lazy triggered via bus.emit(EVENTS.PROPERTY_OPEN)
 import { RawButton } from "@/ui/button";
 import { EmptyState } from "@/ui/empty-state";
 import { Icons } from "@/ui/icons";
@@ -53,8 +49,6 @@ export function initProducts(container: HTMLElement): () => void {
 		mapViewContainer: null as unknown as HTMLElement,
 		backToTopBtn: null as unknown as HTMLButtonElement,
 	};
-
-	// --- 1. UI Assembly ---
 
 	ui.loadingState = EmptyState({
 		icon: Icons.spinner({
@@ -120,8 +114,6 @@ export function initProducts(container: HTMLElement): () => void {
 	);
 	document.body.appendChild(ui.backToTopBtn);
 
-	// --- 2. State & Data Logic ---
-
 	const cardCallbacks: CardCallbacks = {
 		onBM: (p) => {
 			toggleBM(p);
@@ -131,8 +123,8 @@ export function initProducts(container: HTMLElement): () => void {
 			hideItem(url);
 			updateSavedBadge();
 		},
-		onGallery: openGallery,
-		onDetail: openPropertyDetail,
+		onGallery: (urls, index) => bus.emit(EVENTS.GALLERY_OPEN, { urls, index }),
+		onDetail: (p) => bus.emit(EVENTS.PROPERTY_OPEN, p),
 	};
 
 	function render(): void {
@@ -217,7 +209,7 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 	}
 
-	function setView(view: "grid" | "list" | "map") {
+	async function setView(view: "grid" | "list" | "map") {
 		if (state.currentView === view) return;
 		const wasMap = state.currentView === "map";
 		state.currentView = view;
@@ -231,9 +223,14 @@ export function initProducts(container: HTMLElement): () => void {
 			hide(ui.sentinel);
 			hide(ui.loadMoreContainer);
 			render();
+			const { initMapView, showMapView } = await import(
+				"@/features/map-view/index"
+			);
+			if (!cleanupMapView) cleanupMapView = initMapView(ui.mapViewContainer);
 			showMapView();
 		} else {
 			if (wasMap) {
+				const { hideMapView } = await import("@/features/map-view/index");
 				hideMapView();
 				show(ui.cardsContainer);
 				show(ui.sentinel);
@@ -282,10 +279,8 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 	}
 
-	// --- 3. Event Handlers ---
-
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
-	const cleanupMapView = initMapView(ui.mapViewContainer);
+	let cleanupMapView: (() => void) | null = null;
 
 	const onScroll = () => {
 		const isScrolled = window.scrollY > 450;
@@ -375,8 +370,6 @@ export function initProducts(container: HTMLElement): () => void {
 	add(document, "pd:bmark", onPdBmark);
 	add(document, "pd:hide", onPdHide);
 
-	// --- 4. Initialization ---
-
 	// Populate global refs for other features
 	state.refs.cards = ui.cardsContainer;
 	state.refs.loading = ui.loadingState;
@@ -400,6 +393,6 @@ export function initProducts(container: HTMLElement): () => void {
 		offDeals();
 		offSearchStart();
 		ui.backToTopBtn.remove();
-		cleanupMapView();
+		if (cleanupMapView) cleanupMapView();
 	};
 }

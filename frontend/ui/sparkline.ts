@@ -1,4 +1,4 @@
-import type { PriceHistoryEntry } from "../core/types";
+import type { PriceHistoryEntry } from "@/core/types";
 
 export function Sparkline(
 	history: PriceHistoryEntry[],

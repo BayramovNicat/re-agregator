@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 
 const SHARED =
 	"bg-(--surface-2) border border-(--border) rounded-(--r-sm) font-inherit appearance-none cursor-pointer transition-[border-color] duration-150";

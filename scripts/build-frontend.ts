@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync, watch } from "node:fs";
+import { cpSync, mkdirSync, rmSync, watch } from "node:fs";
 import tailwindcss from "@tailwindcss/postcss";
 import postcss from "postcss";
 
@@ -28,6 +28,8 @@ if (watchMode) {
 	});
 }
 
+// Ensure public is clean
+rmSync("./public", { recursive: true, force: true });
 mkdirSync("./public", { recursive: true });
 
 async function build() {
@@ -36,11 +38,12 @@ async function build() {
 		recursive: true,
 	});
 
-	// Bundle + minify TS → app.js
+	// Bundle + minify TS → main.js (with splitting)
 	const jsResult = await Bun.build({
 		entrypoints: ["./frontend/main.ts"],
 		outdir: "./public",
-		naming: "app.js",
+		splitting: true,
+		format: "esm",
 		minify: true,
 		target: "browser",
 		define: { __DEV__: watchMode ? "true" : "false" },
@@ -107,11 +110,11 @@ async function build() {
 		recursive: true,
 	});
 
-	const jsSizeKB = (Bun.file("./public/app.js").size / 1024).toFixed(1);
+	const jsSizeKB = (Bun.file("./public/main.js").size / 1024).toFixed(1);
 	const cssSizeKB = (Bun.file("./public/styles.css").size / 1024).toFixed(1);
 	const swSizeKB = (Bun.file("./public/sw.js").size / 1024).toFixed(1);
 	console.log(
-		`Built public/  app.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  sw.js ${swSizeKB} KB  index.html ✓  manifest.json ✓`,
+		`Built public/  main.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  sw.js ${swSizeKB} KB  index.html ✓  manifest.json ✓`,
 	);
 
 	for (const client of reloadClients) {

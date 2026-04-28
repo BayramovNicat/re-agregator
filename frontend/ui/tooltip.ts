@@ -1,4 +1,4 @@
-import { html, makeEventManager } from "../core/utils";
+import { html, makeEventManager } from "@/core/utils";
 
 /**
  * Super-optimized global tooltip system.

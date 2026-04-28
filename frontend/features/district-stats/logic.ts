@@ -16,13 +16,11 @@ export function getProcessedData(state: DistrictStatsState): LocationRow[] {
 
 	let data = [...state.cachedData];
 
-	// 1. Filter
 	if (state.filterQuery) {
 		const q = state.filterQuery.toLowerCase();
 		data = data.filter((r) => r.location_name.toLowerCase().includes(q));
 	}
 
-	// 2. Sort strategies
 	const sorters: Record<SortKey, (a: LocationRow, b: LocationRow) => number> = {
 		district: (a, b) => a.location_name.localeCompare(b.location_name),
 		avg_ppsm: (a, b) => a.avg_price_per_sqm - b.avg_price_per_sqm,

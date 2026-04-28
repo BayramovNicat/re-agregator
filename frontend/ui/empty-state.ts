@@ -1,4 +1,4 @@
-import { ce, cn, html } from "../core/utils";
+import { ce, cn, html } from "@/core/utils";
 
 export type EmptyStateProps = {
 	icon: SVGSVGElement;

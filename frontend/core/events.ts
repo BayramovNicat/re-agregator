@@ -39,6 +39,17 @@ class EventBus {
 		return () => this.off(event, cb);
 	}
 
+	once<K extends keyof EventPayloads>(
+		event: K,
+		cb: Callback<EventPayloads[K]>,
+	): () => void {
+		const wrapper = (data: EventPayloads[K]) => {
+			this.off(event, wrapper);
+			cb(data);
+		};
+		return this.on(event, wrapper);
+	}
+
 	off<K extends keyof EventPayloads>(event: K, cb: Callback<EventPayloads[K]>) {
 		const list = this.listeners[event];
 		if (!list) return;

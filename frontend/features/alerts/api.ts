@@ -1,7 +1,7 @@
-import { t } from "../../core/i18n";
-import { state } from "../../core/state";
-import type { Alert } from "../../core/types";
-import { toast } from "../../core/utils";
+import { t } from "@/core/i18n";
+import { state } from "@/core/state";
+import type { Alert } from "@/core/types";
+import { toast } from "@/core/utils";
 
 /**
  * Fetches active alerts for a given chatId.

@@ -1,8 +1,8 @@
 import { type CircleMarker, circleMarker } from "leaflet";
-import type { MapPin, Property } from "../../core/types";
-import { fmt, fmtFloor, toast } from "../../core/utils";
-import { ts } from "../../ui/tier";
-import { openPropertyDetail } from "../property-detail/index";
+import { bus, EVENTS } from "@/core/events";
+import type { MapPin, Property } from "@/core/types";
+import { fmt, fmtFloor, toast } from "@/core/utils";
+import { ts } from "@/ui/tier";
 import type { MapViewState } from "./types";
 
 /**
@@ -47,7 +47,7 @@ export function createPinMarker(
 				body: JSON.stringify({ urls: [pin.source_url] }),
 			});
 			const json = (await r.json()) as { data?: Property[] };
-			if (json.data?.[0]) openPropertyDetail(json.data[0]);
+			if (json.data?.[0]) bus.emit(EVENTS.PROPERTY_OPEN, json.data[0]);
 		} catch (e) {
 			if ((e as Error).name !== "AbortError") toast((e as Error).message, true);
 		}

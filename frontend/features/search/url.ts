@@ -25,7 +25,6 @@ export function syncStateToUrl(params: URLSearchParams): void {
 export function restoreStateFromUrl(ui: SearchUI): void {
 	const urlParams = new URLSearchParams(window.location.search);
 
-	// 1. Range / Threshold
 	const threshold = urlParams.get("threshold");
 	if (threshold !== null) {
 		ui.discountRange.value = threshold;
@@ -34,7 +33,6 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 		setRangeProgress(ui.discountRange);
 	}
 
-	// 2. Numeric Inputs
 	for (const config of getNumericFilters()) {
 		const val = urlParams.get(config.id);
 		if (val && val !== "undefined" && val !== "null") {
@@ -42,14 +40,12 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 		}
 	}
 
-	// 3. Boolean Inputs
 	for (const config of getBooleanFilters()) {
 		if (urlParams.get(config.id) === "true") {
 			ui.booleanInputs[config.id].checked = true;
 		}
 	}
 
-	// 4. Dropdowns & Custom
 	const category = urlParams.get("category");
 	if (category) ui.categorySelect.value = category;
 
@@ -61,7 +57,6 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 		ui.descriptionInput.value = desc;
 	}
 
-	// 5. Locations
 	const location = urlParams.get("location");
 	if (location) {
 		ui.locationSelect.setValue(location.split(",").filter(Boolean));

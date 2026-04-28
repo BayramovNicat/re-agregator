@@ -1,5 +1,5 @@
-import { t } from "../core/i18n";
-import { ce, cn, html, makeEventManager, toThumbUrl } from "../core/utils";
+import { t } from "@/core/i18n";
+import { ce, cn, html, makeEventManager, toThumbUrl } from "@/core/utils";
 import { RawButton } from "./button";
 import { Icons } from "./icons";
 
@@ -36,7 +36,6 @@ export function Gallery({
 	let imageUrls: string[] = [];
 	const eventManager = makeEventManager();
 
-	// 1. Create sub-elements directly
 	const sliderElm = html`<div
 		class="relative w-full h-full ${fullscreen ? "pointer-events-none" : ""}"
 	></div>`;
@@ -102,7 +101,6 @@ export function Gallery({
 			})
 		: null;
 
-	// 2. Assemble the main element
 	const rootElm = ce(
 		html`
 			<div
@@ -116,13 +114,13 @@ export function Gallery({
 				role="region"
 				aria-label="${t("gallery")}"
 			>
-				${sliderElm} ${emptyElm} ${prevBtn} ${nextBtn} ${counterElm} ${expandBtn || ""}
+				${sliderElm} ${emptyElm} ${prevBtn} ${nextBtn} ${counterElm}
+				${expandBtn || ""}
 			</div>
 		`,
 		props,
 	) as GalleryElement;
 
-	// 3. Logic
 	const _loadImage = (idx: number): void => {
 		if (count === 0) return;
 		const i = (idx + count) % count;
@@ -197,7 +195,7 @@ export function Gallery({
 				style="opacity: 0; visibility: hidden"
 			>
 				<img
-					referrerPolicy="no-referrer"
+					referrerpolicy="no-referrer"
 					alt="${t("propPhotoAlt", { n: i + 1, total: count })}"
 					draggable="false"
 					class="${cn(

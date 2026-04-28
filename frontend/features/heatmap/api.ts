@@ -1,4 +1,4 @@
-import type { HeatmapPoint } from "../../core/types";
+import type { HeatmapPoint } from "@/core/types";
 
 /**
  * Fetches heatmap data from the API.

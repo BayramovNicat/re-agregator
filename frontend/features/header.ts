@@ -1,8 +1,7 @@
-import { getLang, setLang, t } from "../core/i18n";
-import { cn, html, makeEventManager } from "../core/utils";
-import { Button } from "../ui/button";
-import { Icons } from "../ui/icons";
-import { openDistrictStats } from "./district-stats/index";
+import { getLang, setLang, t } from "@/core/i18n";
+import { cn, html, makeEventManager } from "@/core/utils";
+import { Button } from "@/ui/button";
+import { Icons } from "@/ui/icons";
 import { HealthStatus } from "./health-status";
 
 const LANGS = [
@@ -120,6 +119,7 @@ export function initHeader(container: HTMLElement): () => void {
 		}
 	});
 
+	let statsInitialized = false;
 	const statsBtn = Button({
 		title: t("districtStats"),
 		color: "indigo",
@@ -127,7 +127,17 @@ export function initHeader(container: HTMLElement): () => void {
 		ariaLabel: t("statsBtn"),
 		content: Icons.barChart(14),
 		className: "size-8",
-		onclick: () => openDistrictStats(),
+		onclick: async () => {
+			const { initDistrictStats, openDistrictStats } = await import(
+				"./district-stats/index"
+			);
+			if (!statsInitialized) {
+				const root = document.getElementById("app") as HTMLElement;
+				initDistrictStats(root);
+				statsInitialized = true;
+			}
+			openDistrictStats();
+		},
 	});
 
 	const header = html`

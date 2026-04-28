@@ -1,4 +1,4 @@
-import { html } from "../core/utils";
+import { html } from "@/core/utils";
 
 export function StatBox({
 	label,

@@ -2,7 +2,6 @@ import { bus, EVENTS } from "@/core/events";
 import { t } from "@/core/i18n";
 import type { Property } from "@/core/types";
 import { makeEventManager } from "@/core/utils";
-import { openGallery } from "@/features/gallery";
 import { bindPropertyData, initMap } from "@/features/property-detail/logic";
 import type { PropertyDetailUI } from "@/features/property-detail/types";
 import { renderPropertyDetailLayout } from "@/features/property-detail/ui";
@@ -41,7 +40,10 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	const layout = renderPropertyDetailLayout(ui, {
 		onExpand: () => {
 			if (ui.currentProperty?.image_urls) {
-				openGallery(ui.currentProperty.image_urls, ui.gallery.getIndex());
+				bus.emit(EVENTS.GALLERY_OPEN, {
+					urls: ui.currentProperty.image_urls,
+					index: ui.gallery.getIndex(),
+				});
 			}
 		},
 		onShare: () => {
