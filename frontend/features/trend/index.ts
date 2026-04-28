@@ -73,11 +73,11 @@ export function initTrend(container: HTMLElement): () => void {
 			frag`<span>${dfmt(data[0]?.week ?? "")}</span><span>${dfmt(data[data.length - 1]?.week ?? "")}</span>`,
 		);
 
+		show(ui.panel);
+
 		if (state.currentSvg) state.currentSvg.remove();
 		state.currentSvg = renderTrendChart(ui, data, up, dn);
 		if (state.currentSvg) ui.chartEl.insertBefore(state.currentSvg, ui.tipEl);
-
-		show(ui.panel);
 	}
 
 	const offLoc = bus.on(EVENTS.LOCATION_CHANGED, (loc) => {

@@ -15,15 +15,15 @@ export function renderTrendChart(
 	const vals = data.map((v) => Number(v.avg_ppsm));
 	const W = ui.chartEl.clientWidth || 600;
 	const H = 68;
-	const PAD = 6;
+	const PAD_Y = 6;
 
 	if (W === 0) return null;
 
 	const min = Math.min(...vals);
 	const max = Math.max(...vals);
 	const range = max - min || 1;
-	const xv = (i: number) => PAD + (i / (data.length - 1)) * (W - PAD * 2);
-	const yv = (v: number) => H - PAD - ((v - min) / range) * (H - PAD * 2);
+	const xv = (i: number) => (i / (data.length - 1)) * W;
+	const yv = (v: number) => H - PAD_Y - ((v - min) / range) * (H - PAD_Y * 2);
 	const pts = vals.map((v, i) => [xv(i), yv(v)] as [number, number]);
 
 	const buildPath = (points: [number, number][]): string => {
@@ -49,6 +49,7 @@ export function renderTrendChart(
 
 	const svg = html`<svg
 		viewBox="0 0 ${W} ${H}"
+		preserveAspectRatio="none"
 		style="width:100%;height:${H}px;display:block;cursor:crosshair"
 		xmlns="http://www.w3.org/2000/svg"
 	>

@@ -17,7 +17,7 @@ export function renderTrendUI(ui: TrendUI): HTMLElement {
 	ui.tipEl = html`<div
 		class="absolute hidden bg-(--surface-3) border border-(--border-h) rounded-(--r-sm) px-2.75 py-1.75 text-xs pointer-events-none z-10 whitespace-nowrap leading-normal top-0 left-0"
 	></div>`;
-	ui.chartEl = html`<div class="relative -mx-0.5">${ui.tipEl}</div>`;
+	ui.chartEl = html`<div class="w-full relative">${ui.tipEl}</div>`;
 	ui.datesEl = html`<div
 		class="flex justify-between text-xs text-(--muted) mt-1.25 px-0.5"
 	></div>`;
