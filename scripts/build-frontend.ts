@@ -89,7 +89,14 @@ async function build() {
 	}
 
 	// Copy HTML & Static Assets
-	await Bun.write("./public/index.html", Bun.file("./frontend/index.html"));
+	// Inline CSS into HTML to eliminate render-blocking request
+	let html = await Bun.file("./frontend/index.html").text();
+	const css = await Bun.file("./public/styles.css").text();
+	html = html.replace(
+		/<link[^>]*href="\/styles\.css"[^>]*>/,
+		() => `<style>${css}</style>`,
+	);
+	await Bun.write("./public/index.html", html);
 	await Bun.write("./public/robots.txt", Bun.file("./frontend/robots.txt"));
 	await Bun.write("./public/favicon.png", Bun.file("./frontend/favicon.png"));
 	const faviconIco = Bun.file("./frontend/favicon.ico");
