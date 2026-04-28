@@ -90,7 +90,7 @@ export async function serveStatic(
 				"Content-Type": asset.contentType,
 				"Content-Encoding": "br",
 				"Cache-Control": CACHE_IMMUTABLE,
-				Vary: "Accept-Encoding",
+				"Vary": "Accept-Encoding",
 				"Content-Security-Policy": CSP,
 			},
 		});

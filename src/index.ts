@@ -1,5 +1,4 @@
 import { IS_DEV, PORT } from "@/config.js";
-import { br } from "@/middleware/brotli.js";
 import { initStatic, serveStatic } from "@/middleware/static.js";
 import { startCron } from "@/plugins/cron.js";
 import { routes } from "@/routes.js";
@@ -10,7 +9,7 @@ await initStatic(publicDir);
 Bun.serve({
 	port: PORT,
 	routes,
-	fetch: br((req) => serveStatic(req, publicDir)),
+	fetch: (req) => serveStatic(req, publicDir),
 });
 
 console.log(`Server listening on http://localhost:${PORT}`);
