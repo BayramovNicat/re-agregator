@@ -22,6 +22,8 @@ const COLORS = {
 		"text-(--muted) border-(--border) bg-transparent hover:text-(--green) hover:border-(--green-b) hover:bg-(--green-dim)",
 	blue: "text-(--muted) border-(--border) bg-transparent hover:text-(--blue) hover:border-(--blue-b) hover:bg-(--blue-dim)",
 	muted: "text-(--muted) border-none bg-transparent hover:text-(--text)",
+	accent:
+		"bg-(--accent-solid) text-white border-none font-semibold hover:bg-(--accent-h) hover:shadow-[0_4px_12px_rgba(79,70,229,0.3)]",
 };
 
 /** Props accepted by {@link RawButton}. */
