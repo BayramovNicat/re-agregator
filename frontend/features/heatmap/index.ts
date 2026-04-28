@@ -1,10 +1,11 @@
 import {
 	circle,
 	DomEvent,
+	type FeatureGroup,
 	featureGroup,
 	type LeafletMouseEvent,
 	type Map as LMap,
-	layerGroup,
+	latLngBounds,
 } from "leaflet";
 import { bus, EVENTS } from "../../core/events";
 import { t } from "../../core/i18n";
@@ -15,7 +16,7 @@ import { fetchHeatmapData } from "./api";
 import { getPriceColor } from "./logic";
 
 export function initHeatmap(root: HTMLElement): () => void {
-	const overlay = layerGroup();
+	const overlay = featureGroup();
 	let isFirstOpen = true;
 	let lmap: LMap | null = null;
 	let currentOnAction: ((name: string, isToggle: boolean) => void) | null =
@@ -39,6 +40,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 		if (!lmap) {
 			const ct = modal.querySelector(`#${containerId}`) as HTMLElement;
 			lmap = initLeaflet(ct);
+			overlay.addTo(lmap);
 		}
 
 		if (isFirstOpen) {
@@ -52,7 +54,6 @@ export function initHeatmap(root: HTMLElement): () => void {
 			}
 		}
 
-		overlay.addTo(lmap);
 		lmap.invalidateSize();
 	};
 
@@ -81,14 +82,12 @@ export function openHeatmap(
 function renderPoints(
 	lmap: LMap,
 	data: HeatmapPoint[],
-	group: ReturnType<typeof layerGroup>,
+	group: FeatureGroup,
 	onSelect: (name: string, isToggle: boolean) => void,
 ): void {
 	const ppsms = data.map((d) => d.avg_price_per_sqm);
 	const min = Math.min(...ppsms);
 	const max = Math.max(...ppsms);
-
-	const points = featureGroup();
 
 	for (const d of data) {
 		const color = getPriceColor(d.avg_price_per_sqm, min, max);
@@ -129,9 +128,11 @@ function renderPoints(
 			toast(d.location_name);
 		});
 
-		c.addTo(points);
+		c.addTo(group);
 	}
 
-	points.addTo(group);
-	lmap.fitBounds(points.getBounds(), { padding: [20, 20] });
+	if (data.length > 0) {
+		const b = latLngBounds(data.map((d) => [d.lat, d.lng]));
+		lmap.fitBounds(b, { padding: [20, 20] });
+	}
 }

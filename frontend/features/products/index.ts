@@ -15,7 +15,7 @@ import { RawButton } from "../../ui/button";
 import { EmptyState } from "../../ui/empty-state";
 import { Icons } from "../../ui/icons";
 import { openGallery } from "../gallery";
-import { hideMapView, initMapView, showMapView } from "../map-view";
+import { hideMapView, initMapView, showMapView } from "../map-view/index";
 import { openPropertyDetail } from "../property-detail";
 import { renderProductsBar } from "./bar";
 import { appendSkeletons, renderList, updatePagination } from "./list";
