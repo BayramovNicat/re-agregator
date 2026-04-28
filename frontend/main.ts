@@ -1,6 +1,6 @@
 import { html, renderToastsContainer, trustScriptURL } from "./core/utils";
-import { initAlerts } from "./features/alerts";
-import { initDistrictStats } from "./features/district-stats";
+import { initAlerts } from "./features/alerts/index";
+import { initDistrictStats } from "./features/district-stats/index";
 import { initGallery } from "./features/gallery";
 import { initHeader } from "./features/header";
 import { initHeatmap } from "./features/heatmap";

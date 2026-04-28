@@ -105,7 +105,9 @@ export function initSearch(container: HTMLElement): () => void {
 		}
 	}
 
-	function buildSearchParams(currentFilters: import("../../core/types").AlertFilters) {
+	function buildSearchParams(
+		currentFilters: import("../../core/types").AlertFilters,
+	) {
 		const searchParams = new URLSearchParams({
 			location: currentFilters.location,
 			threshold: String(currentFilters.threshold),

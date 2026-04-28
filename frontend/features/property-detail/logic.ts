@@ -1,13 +1,7 @@
 import { divIcon, marker } from "leaflet";
 import { t } from "../../core/i18n";
 import type { Property } from "../../core/types";
-import {
-	fmt,
-	fmtFloor,
-	getLocale,
-	timeAgo,
-	tTier,
-} from "../../core/utils";
+import { fmt, fmtFloor, getLocale, timeAgo, tTier } from "../../core/utils";
 import { Tag } from "../../ui/chip";
 import { initLeaflet } from "../../ui/map-base";
 import { StatBox } from "../../ui/stat-box";

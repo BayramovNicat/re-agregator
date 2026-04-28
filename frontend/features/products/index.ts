@@ -11,13 +11,14 @@ import {
 	show,
 	tTier,
 } from "../../core/utils";
+import { RawButton } from "../../ui/button";
 import { EmptyState } from "../../ui/empty-state";
 import { Icons } from "../../ui/icons";
-import { RawButton } from "../../ui/button";
 import { openGallery } from "../gallery";
 import { hideMapView, initMapView, showMapView } from "../map-view";
 import { openPropertyDetail } from "../property-detail";
 import { renderProductsBar } from "./bar";
+import { appendSkeletons, renderList, updatePagination } from "./list";
 import {
 	handleExport,
 	hideItem,
@@ -25,7 +26,6 @@ import {
 	syncStateToStorage,
 	toggleBM,
 } from "./logic";
-import { appendSkeletons, renderList, updatePagination } from "./list";
 import type { ProductsUI } from "./types";
 
 export function initProducts(container: HTMLElement): () => void {

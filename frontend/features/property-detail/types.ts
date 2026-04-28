@@ -25,7 +25,7 @@ export interface PropertyDetailUI {
 	shareTextEl: HTMLElement;
 	bmarkBtn: HTMLButtonElement;
 	hideBtn: HTMLButtonElement;
-	
+
 	// State/Refs
 	currentProperty: Property | null;
 	lmap: ReturnType<typeof map> | null;
