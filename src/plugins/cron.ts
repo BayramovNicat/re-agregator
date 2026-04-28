@@ -47,6 +47,5 @@ export function startCron(): void {
 		}, delay);
 	}
 
-	runCronScrape();
 	scheduleNext();
 }

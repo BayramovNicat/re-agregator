@@ -55,6 +55,25 @@ async function getVersionedHtml(publicDir: string): Promise<string> {
 	return html;
 }
 
+const IMMUTABLE_EXTS = new Set([
+	".js",
+	".css",
+	".png",
+	".jpg",
+	".jpeg",
+	".webp",
+	".svg",
+	".ico",
+	".woff2",
+	".woff",
+	".ttf",
+	".webmanifest",
+	".json",
+]);
+
+const CACHE_IMMUTABLE = "public, max-age=31536000, immutable";
+const CACHE_REVALIDATE = "no-cache";
+
 export async function serveStatic(
 	req: Request,
 	publicDir: string,
@@ -69,7 +88,7 @@ export async function serveStatic(
 			headers: {
 				"Content-Type": asset.contentType,
 				"Content-Encoding": "br",
-				"Cache-Control": "public, max-age=31536000, immutable",
+				"Cache-Control": CACHE_IMMUTABLE,
 				Vary: "Accept-Encoding",
 				"Content-Security-Policy": CSP,
 			},
@@ -86,18 +105,14 @@ export async function serveStatic(
 			headers["Cache-Control"] = "no-store";
 		} else if (pathname === "/sw.js") {
 			headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-		} else if (
-			pathname.endsWith(".js") ||
-			pathname.endsWith(".css") ||
-			pathname.endsWith(".png") ||
-			pathname.endsWith(".jpg") ||
-			pathname.endsWith(".jpeg") ||
-			pathname.endsWith(".webp") ||
-			pathname.endsWith(".svg") ||
-			pathname.endsWith(".ico") ||
-			pathname.endsWith(".webmanifest")
-		) {
-			headers["Cache-Control"] = "public, max-age=31536000, immutable";
+		} else {
+			const dotIndex = pathname.lastIndexOf(".");
+			if (dotIndex !== -1) {
+				const ext = pathname.slice(dotIndex).toLowerCase();
+				if (IMMUTABLE_EXTS.has(ext)) {
+					headers["Cache-Control"] = CACHE_IMMUTABLE;
+				}
+			}
 		}
 
 		return new Response(file, { headers });
@@ -106,8 +121,9 @@ export async function serveStatic(
 	return new Response(await getVersionedHtml(publicDir), {
 		headers: {
 			"Content-Type": "text/html; charset=utf-8",
-			"Cache-Control": "no-store",
+			"Cache-Control": CACHE_REVALIDATE,
 			"Content-Security-Policy": CSP,
 		},
 	});
 }
+
