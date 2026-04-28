@@ -177,15 +177,19 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 			filterArgs,
 			pageArgs,
 		);
-		return res.json({
-			location: loc.raw,
-			threshold_pct: thresholdPct,
-			limit: pg.limit,
-			offset: pg.offset,
-			count: data.length,
-			total,
-			data,
-		});
+		return res.json(
+			{
+				location: loc.raw,
+				threshold_pct: thresholdPct,
+				limit: pg.limit,
+				offset: pg.offset,
+				count: data.length,
+				total,
+				data,
+			},
+			60,
+			30,
+		);
 	} catch (err) {
 		console.error("[DealsController] getUndervaluedDeals:", err);
 		return res.error("Failed to fetch undervalued listings");

@@ -1,9 +1,11 @@
 import { bus, EVENTS } from "@/core/events";
 import { html, renderToastsContainer, trustScriptURL } from "@/core/utils";
+import { initAlerts } from "@/features/alerts/index";
 import { initHeader } from "@/features/header";
 import { initProducts } from "@/features/products/index";
 import { initSearch } from "@/features/search";
 import { initTrend } from "@/features/trend/index";
+import { initTooltip } from "@/ui/tooltip";
 
 /**
  * Main application entry point.
@@ -33,9 +35,11 @@ const cleanups: (() => void)[] = [
 	initTrend(trendArea),
 	initSearch(searchArea),
 	initHeader(headerArea),
+	initTooltip(root),
+	initAlerts(root),
 ];
 
-// Heavy or secondary features are loaded on demand.
+// Heavy features are loaded on demand.
 
 // Property Detail & Gallery
 bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
@@ -61,22 +65,6 @@ bus.once(EVENTS.HEATMAP_OPEN, async (payload) => {
 	cleanups.push(initHeatmap(root));
 	bus.emit(EVENTS.HEATMAP_OPEN, payload);
 });
-
-// Alerts
-bus.once(EVENTS.ALERTS_OPEN, async () => {
-	const { initAlerts } = await import("@/features/alerts/index");
-	cleanups.push(initAlerts(root));
-	bus.emit(EVENTS.ALERTS_OPEN);
-});
-
-// Tooltip (Load on first interaction)
-const loadTooltip = async () => {
-	window.removeEventListener("touchstart", loadTooltip);
-	const { initTooltip } = await import("@/ui/tooltip");
-	cleanups.push(initTooltip(root));
-};
-window.addEventListener("mouseover", loadTooltip, { once: true });
-window.addEventListener("touchstart", loadTooltip, { once: true });
 
 renderToastsContainer(root);
 

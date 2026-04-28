@@ -31,6 +31,12 @@ import type {
 import { classifyDeal, type DealTier } from "@/utils/deals.js";
 import { queryRaw } from "@/utils/prisma.js";
 
+const LOCATIONS_CACHE_TTL = 10 * 60_000;
+let locationsCache: { data: string[]; at: number } | null = null;
+
+const AVG_CACHE_TTL = 30 * 60_000;
+const avgCache = new Map<string, { avg: number; at: number }>();
+
 export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 	const rows = await queryRaw<TrendPoint[]>(Prisma.sql`
 		SELECT
@@ -54,13 +60,66 @@ export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 }
 
 export async function getLocations(): Promise<string[]> {
+	if (locationsCache && Date.now() - locationsCache.at < LOCATIONS_CACHE_TTL) {
+		return locationsCache.data;
+	}
 	const rows = await queryRaw<{ location_name: string }[]>(Prisma.sql`
 		SELECT DISTINCT location_name
 		FROM "Property"
 		WHERE location_name IS NOT NULL
 		ORDER BY location_name ASC
 	`);
-	return rows.map((r) => r.location_name);
+	const data = rows.map((r) => r.location_name);
+	locationsCache = { data, at: Date.now() };
+	return data;
+}
+
+async function getLocationAverages(
+	locations: string[] | "__all__",
+): Promise<Map<string, number>> {
+	const now = Date.now();
+	const isAll = locations === "__all__";
+	const locList = isAll ? [] : (locations as string[]);
+
+	// Check if we have all needed in cache
+	if (!isAll) {
+		const cached = new Map<string, number>();
+		let allInCache = true;
+		for (const l of locList) {
+			const entry = avgCache.get(l);
+			if (entry && now - entry.at < AVG_CACHE_TTL) {
+				cached.set(l, entry.avg);
+			} else {
+				allInCache = false;
+				break;
+			}
+		}
+		if (allInCache) return cached;
+	}
+
+	// Fetch missing or all
+	const avgLocCondition = isAll
+		? Prisma.sql`location_name IS NOT NULL`
+		: Prisma.sql`location_name IN (${Prisma.join(locList)})`;
+
+	const rows = await queryRaw<{ location_name: string; avg_ppsm: number }[]>(
+		Prisma.sql`
+		SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
+		FROM "Property"
+		WHERE ${avgLocCondition}
+			${locAvgBaseConditions()}
+		GROUP BY location_name
+		HAVING COUNT(*) >= 3
+	`,
+	);
+
+	const result = new Map<string, number>();
+	for (const r of rows) {
+		const avg = Number(r.avg_ppsm);
+		result.set(r.location_name, avg);
+		avgCache.set(r.location_name, { avg, at: now });
+	}
+	return result;
 }
 
 export async function getHeatmapData(): Promise<HeatmapPoint[]> {
@@ -163,13 +222,17 @@ export async function getMapPins(options: {
 	const { locations, thresholdPercent, filters } = options;
 	const factor = (100 - thresholdPercent) / 100.0;
 
+	const avgsMap = await getLocationAverages(locations);
+	if (avgsMap.size === 0) return [];
+
 	const isAll = locations === "__all__";
 	const locCondition = isAll
 		? Prisma.sql`p.location_name IS NOT NULL`
 		: Prisma.sql`p.location_name IN (${Prisma.join(locations)})`;
-	const avgLocCondition = isAll
-		? Prisma.sql`location_name IS NOT NULL`
-		: Prisma.sql`location_name IN (${Prisma.join(locations)})`;
+
+	const avgEntries = Array.from(avgsMap.entries()).map(
+		([loc, avg]) => Prisma.sql`(${loc}, ${avg}::numeric)`,
+	);
 
 	const conditions: Prisma.Sql[] = [
 		locCondition,
@@ -183,13 +246,8 @@ export async function getMapPins(options: {
 	];
 
 	const rows = await queryRaw<MapPinRow[]>(Prisma.sql`
-		WITH loc_avg AS (
-			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
-			FROM "Property"
-			WHERE ${avgLocCondition}
-				${locAvgBaseConditions()}
-			GROUP BY location_name
-			HAVING COUNT(*) >= 3
+		WITH loc_avg(location_name, avg_ppsm) AS (
+			VALUES ${Prisma.join(avgEntries)}
 		)
 		SELECT
 			p.source_url,
@@ -237,13 +295,17 @@ export async function getUndervalued(
 	const { limit = 200, offset = 0 } = pagination;
 	const factor = (100 - thresholdPercent) / 100.0;
 
+	const avgsMap = await getLocationAverages(locations);
+	if (avgsMap.size === 0) return { total: 0, data: [] };
+
 	const isAll = locations === "__all__";
-	const avgLocCondition = isAll
-		? Prisma.sql`location_name IS NOT NULL`
-		: Prisma.sql`location_name IN (${Prisma.join(locations)})`;
 	const pLocCondition = isAll
 		? Prisma.sql`p.location_name IS NOT NULL`
 		: Prisma.sql`p.location_name IN (${Prisma.join(locations)})`;
+
+	const avgEntries = Array.from(avgsMap.entries()).map(
+		([loc, avg]) => Prisma.sql`(${loc}, ${avg}::numeric)`,
+	);
 
 	const conditions = [
 		pLocCondition,
@@ -255,13 +317,8 @@ export async function getUndervalued(
 	];
 
 	const rows = await queryRaw<PropertyRowWithCount[]>(Prisma.sql`
-		WITH loc_avg AS (
-			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
-			FROM "Property"
-			WHERE ${avgLocCondition}
-				${locAvgBaseConditions()}
-			GROUP BY location_name
-			HAVING COUNT(*) >= 3
+		WITH loc_avg(location_name, avg_ppsm) AS (
+			VALUES ${Prisma.join(avgEntries)}
 		)
 		SELECT
 			p.*,
@@ -291,23 +348,22 @@ export async function getPriceDropDeals(
 	const { minDropCount = 1, limit = 200, offset = 0 } = options;
 
 	const isAll = location === "__all__";
-	const locationList = isAll ? [] : location;
+	const locationList = isAll ? [] : (location as string[]);
+
+	const avgsMap = await getLocationAverages(location);
+	if (avgsMap.size === 0) return { total: 0, data: [] };
 
 	const locCondition = isAll
 		? Prisma.sql`p.location_name IS NOT NULL`
 		: Prisma.sql`p.location_name IN (${Prisma.join(locationList)})`;
-	const avgLocCondition = isAll
-		? Prisma.sql`location_name IS NOT NULL`
-		: Prisma.sql`location_name IN (${Prisma.join(locationList)})`;
+
+	const avgEntries = Array.from(avgsMap.entries()).map(
+		([loc, avg]) => Prisma.sql`(${loc}, ${avg}::numeric)`,
+	);
 
 	const rows = await queryRaw<PropertyRowWithHistory[]>(Prisma.sql`
-		WITH loc_avg AS (
-			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
-			FROM "Property"
-			WHERE ${avgLocCondition}
-				${locAvgBaseConditions()}
-			GROUP BY location_name
-			HAVING COUNT(*) >= 3
+		WITH loc_avg(location_name, avg_ppsm) AS (
+			VALUES ${Prisma.join(avgEntries)}
 		),
 		history AS (
 			SELECT

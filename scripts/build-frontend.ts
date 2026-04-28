@@ -53,6 +53,14 @@ async function build() {
 		throw new Error("JS build failed");
 	}
 
+	// Log all chunks
+	for (const output of jsResult.outputs) {
+		if (output.path.endsWith(".js")) {
+			const size = (output.size / 1024).toFixed(2);
+			console.log(`  → ${output.path.split("/").pop()} (${size} KB)`);
+		}
+	}
+
 	// PostCSS runs Tailwind JIT scanner → Bun minifies → styles.css
 	const cssSource = await Bun.file("./frontend/styles.css").text();
 	const postcssResult = await postcss([tailwindcss]).process(cssSource, {

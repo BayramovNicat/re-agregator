@@ -17,14 +17,20 @@ import { streamScrape } from "@/modules/scrape/scrape.controller.js";
 import { handleWebhook } from "@/modules/telegram/telegram.controller.js";
 import { prisma } from "@/utils/prisma.js";
 
+let healthCache: { count: number; at: number } | null = null;
+const HEALTH_TTL = 5 * 60_000;
+
 export const routes = {
 	"/health": {
 		GET: br(async () => {
-			const count = await prisma.property.count();
+			if (!healthCache || Date.now() - healthCache.at > HEALTH_TTL) {
+				const count = await prisma.property.count();
+				healthCache = { count, at: Date.now() };
+			}
 			return Response.json({
 				status: "ok",
 				timestamp: new Date().toISOString(),
-				properties: count,
+				properties: healthCache.count,
 			});
 		}),
 	},
