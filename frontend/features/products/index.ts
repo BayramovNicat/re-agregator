@@ -142,6 +142,8 @@ export function initProducts(container: HTMLElement): () => void {
 			return;
 		}
 
+		if (state.hasSearched) hide(ui.welcomeState);
+
 		list = sortDeals(list, sortBy);
 		if (!list.length) {
 			if (!state.hasSearched) hide(ui.resultsBarInner);

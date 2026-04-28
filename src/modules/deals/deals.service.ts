@@ -24,7 +24,6 @@ import type {
 	PriceHistoryEntry,
 	PropertyFilters,
 	PropertyRow,
-	PropertyRowWithCount,
 	PropertyRowWithHistory,
 	TrendPoint,
 } from "@/types/index.js";
@@ -59,21 +58,33 @@ export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 	}));
 }
 
+let locationsPromise: Promise<string[]> | null = null;
 export async function getLocations(): Promise<string[]> {
 	if (locationsCache && Date.now() - locationsCache.at < LOCATIONS_CACHE_TTL) {
 		return locationsCache.data;
 	}
-	const rows = await queryRaw<{ location_name: string }[]>(Prisma.sql`
-		SELECT DISTINCT location_name
-		FROM "Property"
-		WHERE location_name IS NOT NULL
-		ORDER BY location_name ASC
-	`);
-	const data = rows.map((r) => r.location_name);
-	locationsCache = { data, at: Date.now() };
-	return data;
+	if (locationsPromise) return locationsPromise;
+
+	locationsPromise = (async () => {
+		try {
+			const rows = await queryRaw<{ location_name: string }[]>(Prisma.sql`
+				SELECT DISTINCT location_name
+				FROM "Property"
+				WHERE location_name IS NOT NULL
+				ORDER BY location_name ASC
+			`);
+			const data = rows.map((r) => r.location_name);
+			locationsCache = { data, at: Date.now() };
+			return data;
+		} finally {
+			locationsPromise = null;
+		}
+	})();
+
+	return locationsPromise;
 }
 
+let avgPromise: Promise<Map<string, number>> | null = null;
 async function getLocationAverages(
 	locations: string[] | "__all__",
 ): Promise<Map<string, number>> {
@@ -81,7 +92,6 @@ async function getLocationAverages(
 	const isAll = locations === "__all__";
 	const locList = isAll ? [] : (locations as string[]);
 
-	// Check if we have all needed in cache
 	if (!isAll) {
 		const cached = new Map<string, number>();
 		let allInCache = true;
@@ -95,31 +105,45 @@ async function getLocationAverages(
 			}
 		}
 		if (allInCache) return cached;
+	} else if (avgPromise) {
+		return avgPromise;
 	}
 
-	// Fetch missing or all
-	const avgLocCondition = isAll
-		? Prisma.sql`location_name IS NOT NULL`
-		: Prisma.sql`location_name IN (${Prisma.join(locList)})`;
+	const fetchPromise = (async () => {
+		const avgLocCondition = isAll
+			? Prisma.sql`location_name IS NOT NULL`
+			: Prisma.sql`location_name IN (${Prisma.join(locList)})`;
 
-	const rows = await queryRaw<{ location_name: string; avg_ppsm: number }[]>(
-		Prisma.sql`
-		SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
-		FROM "Property"
-		WHERE ${avgLocCondition}
-			${locAvgBaseConditions()}
-		GROUP BY location_name
-		HAVING COUNT(*) >= 3
-	`,
-	);
+		const rows = await queryRaw<{ location_name: string; avg_ppsm: number }[]>(
+			Prisma.sql`
+			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
+			FROM "Property"
+			WHERE ${avgLocCondition}
+				${locAvgBaseConditions()}
+			GROUP BY location_name
+			HAVING COUNT(*) >= 3
+		`,
+		);
 
-	const result = new Map<string, number>();
-	for (const r of rows) {
-		const avg = Number(r.avg_ppsm);
-		result.set(r.location_name, avg);
-		avgCache.set(r.location_name, { avg, at: now });
+		const result = new Map<string, number>();
+		for (const r of rows) {
+			const avg = Number(r.avg_ppsm);
+			result.set(r.location_name, avg);
+			avgCache.set(r.location_name, { avg, at: now });
+		}
+		return result;
+	})();
+
+	if (isAll) {
+		avgPromise = fetchPromise;
+		try {
+			return await fetchPromise;
+		} finally {
+			avgPromise = null;
+		}
 	}
-	return result;
+
+	return fetchPromise;
 }
 
 export async function getHeatmapData(): Promise<HeatmapPoint[]> {
@@ -316,23 +340,41 @@ export async function getUndervalued(
 		...applyFilters(filters),
 	];
 
-	const rows = await queryRaw<PropertyRowWithCount[]>(Prisma.sql`
-		WITH loc_avg(location_name, avg_ppsm) AS (
-			VALUES ${Prisma.join(avgEntries)}
-		)
-		SELECT
-			p.*,
-			ROUND(loc_avg.avg_ppsm::numeric, 2)                                                AS location_avg_price_per_sqm,
-			ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent,
-			COUNT(*) OVER ()                                                                    AS total_count
+	const baseQuery = Prisma.sql`
 		FROM "Property" p
 		JOIN loc_avg ON p.location_name = loc_avg.location_name
 		WHERE ${Prisma.join(conditions, " AND ")}
-		ORDER BY discount_percent DESC
-		LIMIT ${limit} OFFSET ${offset}
-	`);
+	`;
 
-	return mapResponse(rows);
+	const [totalRows, dataRows] = await Promise.all([
+		queryRaw<{ count: bigint }[]>(Prisma.sql`
+			WITH loc_avg(location_name, avg_ppsm) AS (
+				VALUES ${Prisma.join(avgEntries)}
+			)
+			SELECT COUNT(*)::bigint AS count
+			${baseQuery}
+		`),
+		queryRaw<PropertyRow[]>(Prisma.sql`
+			WITH loc_avg(location_name, avg_ppsm) AS (
+				VALUES ${Prisma.join(avgEntries)}
+			)
+			SELECT
+				p.*,
+				ROUND(loc_avg.avg_ppsm::numeric, 2)                                                AS location_avg_price_per_sqm,
+				ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent
+			${baseQuery}
+			ORDER BY discount_percent DESC
+			LIMIT ${limit} OFFSET ${offset}
+		`),
+	]);
+
+	return {
+		total: Number(totalRows[0]?.count || 0),
+		data: dataRows.map((p) => ({
+			...p,
+			tier: classifyDeal(Number(p.discount_percent)),
+		})),
+	};
 }
 
 export async function getPriceDropDeals(
@@ -361,43 +403,47 @@ export async function getPriceDropDeals(
 		([loc, avg]) => Prisma.sql`(${loc}, ${avg}::numeric)`,
 	);
 
-	const rows = await queryRaw<PropertyRowWithHistory[]>(Prisma.sql`
-		WITH loc_avg(location_name, avg_ppsm) AS (
-			VALUES ${Prisma.join(avgEntries)}
-		),
-		history AS (
-			SELECT
-				property_id,
-				json_agg(
-					json_build_object('price', price::text, 'recorded_at', recorded_at)
-					ORDER BY recorded_at DESC
-				) AS entries
-			FROM "PriceHistory"
-			WHERE property_id IN (
-				SELECT id FROM "Property"
-				WHERE ${locCondition} AND price_drop_count >= ${minDropCount}
-			)
-			GROUP BY property_id
-		)
-		SELECT
-			p.*,
-			COALESCE(ROUND(la.avg_ppsm::numeric, 2), 0) AS location_avg_price_per_sqm,
-			CASE WHEN la.avg_ppsm > 0
-				THEN ROUND(((la.avg_ppsm - p.price_per_sqm) / la.avg_ppsm * 100)::numeric, 2)
-				ELSE 0
-			END AS discount_percent,
-			h.entries AS price_history,
-			COUNT(*) OVER () AS total_count
+	const baseQuery = Prisma.sql`
 		FROM "Property" p
 		LEFT JOIN loc_avg la ON la.location_name = p.location_name
 		LEFT JOIN history h ON h.property_id = p.id
 		WHERE ${locCondition}
 			AND p.price_drop_count >= ${minDropCount}
-		ORDER BY p.price_drop_count DESC, p.updated_at DESC
-		LIMIT ${limit} OFFSET ${offset}
-	`);
+	`;
 
-	return mapResponse(rows);
+	const [totalRows, dataRows] = await Promise.all([
+		queryRaw<{ count: bigint }[]>(Prisma.sql`
+			WITH loc_avg(location_name, avg_ppsm) AS (
+				VALUES ${Prisma.join(avgEntries)}
+			)
+			SELECT COUNT(*)::bigint AS count
+			${baseQuery}
+		`),
+		queryRaw<PropertyRowWithHistory[]>(Prisma.sql`
+			WITH loc_avg(location_name, avg_ppsm) AS (
+				VALUES ${Prisma.join(avgEntries)}
+			)
+			SELECT
+				p.*,
+				COALESCE(ROUND(la.avg_ppsm::numeric, 2), 0) AS location_avg_price_per_sqm,
+				CASE WHEN la.avg_ppsm > 0
+					THEN ROUND(((la.avg_ppsm - p.price_per_sqm) / la.avg_ppsm * 100)::numeric, 2)
+					ELSE 0
+				END AS discount_percent,
+				h.entries AS price_history
+			${baseQuery}
+			ORDER BY p.price_drop_count DESC, p.updated_at DESC
+			LIMIT ${limit} OFFSET ${offset}
+		`),
+	]);
+
+	return {
+		total: Number(totalRows[0]?.count || 0),
+		data: dataRows.map((p) => ({
+			...p,
+			tier: classifyDeal(Number(p.discount_percent)),
+		})),
+	};
 }
 
 // --- Internal helpers (not exported) ---
@@ -483,16 +529,4 @@ function applyFilters(filters: PropertyFilters): Prisma.Sql[] {
 		);
 
 	return conditions;
-}
-
-function mapResponse<T extends PropertyRowWithCount>(rows: T[]) {
-	if (rows.length === 0) return { total: 0, data: [] };
-	const total = Number(rows[0]?.total_count);
-	return {
-		total,
-		data: rows.map(({ total_count: _, ...p }) => ({
-			...p,
-			tier: classifyDeal(Number(p.discount_percent)),
-		})),
-	};
 }

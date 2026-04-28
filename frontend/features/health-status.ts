@@ -28,23 +28,33 @@ export function HealthStatus(props: HealthStatusProps = {}): HTMLDivElement {
 		props,
 	);
 
-	// Fetch health info
-	void (async () => {
-		try {
-			const r = await fetch("/health");
-			const d = (await r.json()) as { properties?: number };
-			text.textContent = d.properties
-				? `${d.properties.toLocaleString()} ${t(
-						d.properties !== 1 ? "listings" : "listing",
-					)}`
-				: `0 ${t("listings")}`;
-		} catch {
-			text.textContent = t("statusDown");
-			dot.classList.remove("bg-(--green)");
-			dot.classList.add("bg-(--muted)");
-			dot.classList.remove("animate-[livepulse_2s_ease-in-out_infinite]");
-		}
-	})();
+	// Use injected health data if available
+	const initialHealth = window.__INITIAL_DATA__?.health;
+	if (initialHealth) {
+		text.textContent = initialHealth.properties
+			? `${initialHealth.properties.toLocaleString()} ${t(
+					initialHealth.properties !== 1 ? "listings" : "listing",
+				)}`
+			: `0 ${t("listings")}`;
+	} else {
+		// Fetch health info
+		void (async () => {
+			try {
+				const r = await fetch("/health");
+				const d = (await r.json()) as { properties?: number };
+				text.textContent = d.properties
+					? `${d.properties.toLocaleString()} ${t(
+							d.properties !== 1 ? "listings" : "listing",
+						)}`
+					: `0 ${t("listings")}`;
+			} catch {
+				text.textContent = t("statusDown");
+				dot.classList.remove("bg-(--green)");
+				dot.classList.add("bg-(--muted)");
+				dot.classList.remove("animate-[livepulse_2s_ease-in-out_infinite]");
+			}
+		})();
+	}
 
 	return el;
 }

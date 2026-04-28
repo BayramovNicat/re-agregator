@@ -258,6 +258,31 @@ export function initSearch(container: HTMLElement): () => void {
 	refreshFilterChips(ui, debouncedSearch);
 
 	async function loadInitialData() {
+		const initialData = window.__INITIAL_DATA__;
+
+		if (initialData) {
+			const { locations: locationData, undervalued } = initialData;
+
+			// Handle locations
+			const locationOptions = [
+				{ value: "__all__", label: t("allLocations") },
+				...locationData.map((loc: string) => ({ value: loc, label: loc })),
+			];
+			ui.locationSelect.setOptions(locationOptions);
+
+			// Handle deals
+			if (undervalued) {
+				state.allResults = undervalued.data;
+				state.currentTotal = undervalued.total;
+				state.currentOffset = undervalued.data.length;
+				state.hasSearched = true;
+				// Small delay to ensure all listeners (Products, Map, etc.) are ready
+				setTimeout(() => bus.emit(EVENTS.DEALS_UPDATED), 10);
+			}
+
+			return;
+		}
+
 		const searchPromise = executeSearch(false);
 
 		try {
@@ -268,7 +293,6 @@ export function initSearch(container: HTMLElement): () => void {
 				...locationData.data.map((loc) => ({ value: loc, label: loc })),
 			];
 
-			// Load options and re-restore state to ensure labels are correct
 			ui.locationSelect.setOptions(locationOptions);
 			restoreStateFromUrl(ui);
 			refreshFilterChips(ui, debouncedSearch);

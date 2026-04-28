@@ -18,19 +18,30 @@ import { handleWebhook } from "@/modules/telegram/telegram.controller.js";
 import { prisma } from "@/utils/prisma.js";
 
 let healthCache: { count: number; at: number } | null = null;
+let healthPromise: Promise<number> | null = null;
 const HEALTH_TTL = 5 * 60_000;
 
 export const routes = {
 	"/health": {
 		GET: br(async () => {
 			if (!healthCache || Date.now() - healthCache.at > HEALTH_TTL) {
-				const count = await prisma.property.count();
-				healthCache = { count, at: Date.now() };
+				if (!healthPromise) {
+					healthPromise = (async () => {
+						try {
+							const count = await prisma.property.count();
+							healthCache = { count, at: Date.now() };
+							return count;
+						} finally {
+							healthPromise = null;
+						}
+					})();
+				}
+				await healthPromise;
 			}
 			return Response.json({
 				status: "ok",
 				timestamp: new Date().toISOString(),
-				properties: healthCache.count,
+				properties: healthCache?.count ?? 0,
 			});
 		}),
 	},

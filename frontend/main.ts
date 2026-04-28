@@ -5,12 +5,16 @@ import { initHeader } from "@/features/header";
 import { initProducts } from "@/features/products/index";
 import { initSearch } from "@/features/search";
 import { initTrend } from "@/features/trend/index";
+import { Icons } from "@/ui/icons";
 import { initTooltip } from "@/ui/tooltip";
 
 /**
  * Main application entry point.
  * Initializes the layout and all feature modules.
  */
+
+// Side-effect to keep Icons in main chunk
+window.__ICONS = Icons;
 
 const root = document.getElementById("app") as HTMLElement;
 if (!root) throw new Error("Root element #app not found");
@@ -41,7 +45,7 @@ const cleanups: (() => void)[] = [
 
 // Heavy features are loaded on demand.
 
-// Property Detail & Gallery
+// Property Detail & Gallery (Grouped)
 bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
 	const [{ initPropertyDetail }, { initGallery }] = await Promise.all([
 		import("@/features/property-detail/index"),
@@ -52,7 +56,6 @@ bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
 	bus.emit(EVENTS.PROPERTY_OPEN, p);
 });
 
-// Gallery only (if opened before property detail)
 bus.once(EVENTS.GALLERY_OPEN, async (payload) => {
 	const { initGallery } = await import("@/features/gallery");
 	cleanups.push(initGallery(root));
