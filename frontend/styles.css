@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "leaflet/dist/leaflet.css";
 
 :root {
 	--bg: #09090e;
@@ -101,7 +100,7 @@ input[type="number"] {
 
 /* ── Leaflet ── */
 .leaflet-container {
-	background: #0d0d14;
+	background: #0d0d14 !important;
 	font-family: ui-sans-serif, system-ui, sans-serif;
 }
 .leaflet-control-zoom a {

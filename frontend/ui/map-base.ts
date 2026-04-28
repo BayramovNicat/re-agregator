@@ -5,11 +5,28 @@ import { Dialog } from "./dialog";
 export const MAP_MODAL_MAXWIDTH = "860px";
 
 /**
+ * Ensures the Leaflet CSS is loaded in the document.
+ */
+function ensureLeafletStyles(): Promise<void> {
+	if (document.getElementById("leaflet-css")) return Promise.resolve();
+	return new Promise((resolve) => {
+		const link = document.createElement("link");
+		link.id = "leaflet-css";
+		link.rel = "stylesheet";
+		link.href = "/leaflet.css";
+		link.onload = () => resolve();
+		link.onerror = () => resolve(); // Proceed even on error to avoid hanging
+		document.head.appendChild(link);
+	});
+}
+
+/**
  * Initializes a Leaflet map with standard dark-mode settings.
  */
 export async function initLeaflet(
 	target: string | HTMLElement,
 ): Promise<ReturnType<typeof map>> {
+	await ensureLeafletStyles();
 	const { map: Lmap, tileLayer: LtileLayer } = await import("leaflet");
 	const lmap = Lmap(target, {
 		zoomControl: true,

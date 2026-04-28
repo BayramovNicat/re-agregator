@@ -33,10 +33,10 @@ rmSync("./public", { recursive: true, force: true });
 mkdirSync("./public", { recursive: true });
 
 async function build() {
-	// Copy Leaflet assets
 	cpSync("./node_modules/leaflet/dist/images", "./public/images", {
 		recursive: true,
 	});
+	cpSync("./node_modules/leaflet/dist/leaflet.css", "./public/leaflet.css");
 
 	// Bundle + minify TS → main.js (with splitting)
 	const jsResult = await Bun.build({

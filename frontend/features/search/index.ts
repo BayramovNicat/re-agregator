@@ -258,6 +258,8 @@ export function initSearch(container: HTMLElement): () => void {
 	refreshFilterChips(ui, debouncedSearch);
 
 	async function loadInitialData() {
+		const searchPromise = executeSearch(false);
+
 		try {
 			const response = await fetch("/api/deals/locations");
 			const locationData = (await response.json()) as { data: string[] };
@@ -270,11 +272,11 @@ export function initSearch(container: HTMLElement): () => void {
 			ui.locationSelect.setOptions(locationOptions);
 			restoreStateFromUrl(ui);
 			refreshFilterChips(ui, debouncedSearch);
-
-			void executeSearch(false);
 		} catch {
 			ui.locationSelect.setOptions([{ value: "", label: t("failedLocs") }]);
 		}
+
+		await searchPromise;
 	}
 
 	void loadInitialData();
