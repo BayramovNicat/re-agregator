@@ -4,16 +4,9 @@ import { Button } from "@/ui/button";
 import { Icons } from "@/ui/icons";
 import { HealthStatus } from "./health-status";
 
-const LANGS = [
-	{ code: "en" as const, label: "EN" },
-	{ code: "az" as const, label: "AZ" },
-	{ code: "ru" as const, label: "RU" },
-] as const;
+let statsInitialized = false;
+let scrapeOpsInitialized = false;
 
-/**
- * A dropdown language switcher component.
- * Uses the standard Button component for the trigger and provides a custom dropdown.
- */
 function LangSwitcher(evm: ReturnType<typeof makeEventManager>): HTMLElement {
 	const cur = getLang();
 
@@ -80,6 +73,56 @@ function LangSwitcher(evm: ReturnType<typeof makeEventManager>): HTMLElement {
 	return wrapper;
 }
 
+const LANGS = [
+	{ code: "en" as const, label: "EN" },
+	{ code: "az" as const, label: "AZ" },
+	{ code: "ru" as const, label: "RU" },
+] as const;
+
+function StatsButton(): HTMLButtonElement {
+	return Button({
+		title: t("districtStats"),
+		color: "indigo",
+		variant: "square",
+		ariaLabel: t("statsBtn"),
+		content: Icons.barChart(14),
+		className: "size-8",
+		onclick: async () => {
+			const { initDistrictStats, openDistrictStats } = await import(
+				"./district-stats/index"
+			);
+			if (!statsInitialized) {
+				const root = document.getElementById("app") as HTMLElement;
+				initDistrictStats(root);
+				statsInitialized = true;
+			}
+			openDistrictStats();
+		},
+	});
+}
+
+function ScrapeOpsButton(): HTMLButtonElement {
+	return Button({
+		title: t("scrapeOps"),
+		color: "indigo",
+		variant: "square",
+		ariaLabel: t("scrapeOps"),
+		content: Icons.refresh(14),
+		className: "size-8",
+		onclick: async () => {
+			const { initScrapeOps, openScrapeOps } = await import(
+				"./scrape-ops/index"
+			);
+			if (!scrapeOpsInitialized) {
+				const root = document.getElementById("app") as HTMLElement;
+				initScrapeOps(root);
+				scrapeOpsInitialized = true;
+			}
+			openScrapeOps();
+		},
+	});
+}
+
 /**
  * Initializes the application header.
  * @param container - The parent element to attach the header to.
@@ -119,34 +162,11 @@ export function initHeader(container: HTMLElement): () => void {
 		}
 	});
 
-	let statsInitialized = false;
-	const statsBtn = Button({
-		title: t("districtStats"),
-		color: "indigo",
-		variant: "square",
-		ariaLabel: t("statsBtn"),
-		content: Icons.barChart(14),
-		className: "size-8",
-		onclick: async () => {
-			const { initDistrictStats, openDistrictStats } = await import(
-				"./district-stats/index"
-			);
-			if (!statsInitialized) {
-				const root = document.getElementById("app") as HTMLElement;
-				initDistrictStats(root);
-				statsInitialized = true;
-			}
-			openDistrictStats();
-		},
-	});
-
 	const header = html`
-		<header
-			class="flex items-center justify-between py-4 border-b border-(--border) mb-6"
-		>
+		<header class="flex items-center justify-between py-4 border-b border-(--border) mb-6">
 			${logo}
 			<div class="flex items-center gap-2">
-				${statsBtn}
+				${StatsButton()} ${ScrapeOpsButton()}
 				<div class="w-px h-4 bg-(--border) mx-1"></div>
 				${LangSwitcher(evm)}
 			</div>

@@ -154,7 +154,9 @@ export class ScrapingService {
           )`,
 				);
 
-				const [{ count }] = await queryRaw<[{ count: number }]>(Prisma.sql`
+				const [{ inserted_count, existing_count }] = await queryRaw<
+					[{ inserted_count: number; existing_count: number }]
+				>(Prisma.sql`
 					WITH old_prices AS (
 							SELECT id, source_url, price, price_per_sqm
 							FROM "Property"
@@ -210,10 +212,15 @@ export class ScrapingService {
 							SELECT property_id, old_price, old_ppsm, now()
 							FROM price_changed
 						)
-					SELECT COUNT(*)::int AS count FROM upserted
+					SELECT
+							(COUNT(*) FILTER (WHERE old.source_url IS NULL))::int AS inserted_count,
+							(COUNT(*) FILTER (WHERE old.source_url IS NOT NULL))::int AS existing_count
+						FROM upserted u
+						LEFT JOIN old_prices old ON old.source_url = u.source_url
 				`);
 
-				persisted += count;
+				persisted += inserted_count;
+				skipped += existing_count;
 			} catch (err) {
 				console.warn(
 					`[ScrapingService] Batch upsert failed at offset ${i}, falling back to row-by-row:`,
@@ -222,9 +229,9 @@ export class ScrapingService {
 				for (const r of chunk) {
 					const result = await this.persistSingleListing(r);
 					if (result.ok) {
-						persisted++;
+						if (result.created) persisted++;
+						else skipped++;
 					} else {
-						skipped++;
 						errors.push(result.error);
 					}
 				}
@@ -236,7 +243,7 @@ export class ScrapingService {
 
 	private async persistSingleListing(
 		r: PreparedRow,
-	): Promise<{ ok: true } | { ok: false; error: string }> {
+	): Promise<{ ok: true; created: boolean } | { ok: false; error: string }> {
 		try {
 			const existing = await prisma.property.findUnique({
 				where: { source_url: r.source_url },
@@ -300,7 +307,7 @@ export class ScrapingService {
 					},
 				});
 			}
-			return { ok: true };
+			return { ok: true, created: existing === null };
 		} catch (e) {
 			return {
 				ok: false,

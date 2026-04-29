@@ -162,6 +162,10 @@ export const Icons = {
 		'<circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><path d="M11 8v3M11 15h.01" stroke-width="2" />',
 	),
 
+	refresh: i(
+		'<path d="M21 12a9 9 0 0 0-15-6.7L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 15 6.7L21 16" /><path d="M21 21v-5h-5" />',
+	),
+
 	search: i(
 		'<circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />',
 	),

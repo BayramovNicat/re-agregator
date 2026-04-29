@@ -13,7 +13,11 @@ import {
 	getTrend,
 	getUndervaluedDeals,
 } from "@/modules/deals/deals.controller.js";
-import { streamScrape } from "@/modules/scrape/scrape.controller.js";
+import {
+	getScrapeRuns,
+	runScrape,
+	streamScrape,
+} from "@/modules/scrape/scrape.controller.js";
 import { handleWebhook } from "@/modules/telegram/telegram.controller.js";
 import { prisma } from "@/utils/prisma.js";
 
@@ -53,6 +57,8 @@ export const routes = {
 	"/api/deals/by-urls": { POST: br(getDealsByUrls) },
 	"/api/heatmap": { GET: br(getHeatmap) },
 	"/api/scrape/stream": { GET: streamScrape },
+	"/api/scrape/runs": { GET: br(getScrapeRuns) },
+	"/api/scrape/run": { POST: br(runScrape) },
 	"/api/alerts": { GET: br(getAlerts), POST: br(createAlert) },
 	"/api/alerts/:token": { DELETE: br(deleteAlert) },
 	"/api/telegram/webhook": { POST: br(handleWebhook) },

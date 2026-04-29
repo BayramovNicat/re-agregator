@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ScrapeRunTrigger {
+  manual
+  cron
+}
+
+enum ScrapeRunStatus {
+  running
+  success
+  failed
+  skipped
+}
+
 model Property {
   id              Int       @id @default(autoincrement())
   source_url      String    @unique
@@ -72,4 +84,24 @@ model Alert {
 
   @@index([is_active])
   @@index([chat_id])
+}
+
+model ScrapeRun {
+  id               String           @id @default(uuid())
+  trigger          ScrapeRunTrigger
+  status           ScrapeRunStatus
+  started_at       DateTime         @default(now())
+  finished_at      DateTime?
+  duration_ms      Int?
+  options          Json?
+  platform_results Json?
+  total_fetched    Int              @default(0)
+  total_persisted  Int              @default(0)
+  total_skipped    Int              @default(0)
+  total_errors     Int              @default(0)
+  error_message    String?
+
+  @@index([started_at])
+  @@index([status, started_at])
+  @@index([trigger, started_at])
 }

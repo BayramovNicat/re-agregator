@@ -1,26 +1,20 @@
 import { runAlerts } from "@/modules/alerts/alerts.service.js";
-import { ScrapingService } from "@/modules/scrape/scrape.service.js";
-import { BinaScraper } from "@/scrapers/bina.scraper.js";
-import { acquireLock, releaseLock } from "@/utils/scrape-lock.js";
+import { scrapeRunsService } from "@/modules/scrape/scrape-runs.service.js";
 
 export function startCron(): void {
-	const cronService = new ScrapingService([new BinaScraper()]);
-
 	async function runCronScrape() {
-		if (!acquireLock()) {
-			console.log("[Cron] Previous scrape still running, skipping this tick.");
-			return;
-		}
 		console.log("[Cron] Hourly scrape started", new Date().toISOString());
 		try {
-			const results = await cronService.runAll({ maxPages: 40, delayMs: 800 });
-			const total = results.reduce((sum, r) => sum + r.persisted, 0);
-			console.log(`[Cron] Hourly scrape done — persisted=${total}`);
-			await runAlerts();
+			const run = await scrapeRunsService.run("cron", {
+				maxPages: 20,
+				delayMs: 800,
+			});
+			if (run.status === "success") {
+				await runAlerts();
+			}
+			console.log(`[Cron] Hourly scrape done — status=${run.status}`);
 		} catch (err) {
 			console.error("[Cron] Hourly scrape failed:", err);
-		} finally {
-			releaseLock();
 		}
 	}
 

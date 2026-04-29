@@ -11,7 +11,7 @@ const BACKDROP = `
 const INNER = `
 	fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
 	flex flex-col overflow-hidden
-	bg-(--surface) border border-(--border) rounded-(--r-lg)
+	bg-(--surface) text-(--text) border border-(--border) rounded-(--r-lg)
 	max-h-[calc(100vh-2rem)]
 	shadow-[0_24px_80px_rgba(0,0,0,0.6)]
 `;
