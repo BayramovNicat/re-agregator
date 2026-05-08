@@ -1,12 +1,8 @@
-Run project tests for this Bun/TypeScript project.
+Run fast project validation.
 
-Default steps:
-1. Run `bun run typecheck`.
-2. Run `bun test`.
-3. Run `bun run test:e2e` when UI/browser behavior changed or user asks for full test.
+- Run `bun run typecheck`.
+- Run `bun test`.
+- If UI/browser behavior changed or user asks full, run `bun run test:e2e`.
+- Never run `bun run verify:db` without explicit approval and local/test `DATABASE_URL`.
 
-DB validation:
-- `bun run verify:db` resets seeded test data.
-- Do not run unless user explicitly approves and `DATABASE_URL` points to a local/test database.
-
-Keep output terse. Report failures with command, failing file/test, and next fix.
+Report only failures and final pass/fail.

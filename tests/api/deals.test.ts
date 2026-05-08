@@ -34,7 +34,7 @@ function skipIfNoServer() {
 function skipIfNoSeed() {
 	if (skipIfNoServer()) return true;
 	if (!seedAvailable) {
-		console.warn("Skipping seeded API test: run `bun run test:seed` first.");
+		console.warn("Skipping seeded API test: run `bun run verify:db` first.");
 		return true;
 	}
 	return false;

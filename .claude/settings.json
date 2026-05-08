@@ -1,20 +1,13 @@
 {
 	"permissions": {
 		"allow": [
-			"Write(.prettierrc.json)",
-			"Edit(.prettierrc.json)",
 			"Bash(git status --short)",
 			"Bash(git diff --stat)",
 			"Bash(git diff --name-only)",
 			"Bash(bun run typecheck)",
-			"Bash(bun run typecheck:frontend)",
-			"Bash(bun run typecheck:tests)",
 			"Bash(bun test)",
-			"Bash(bun run test:api)",
-			"Bash(bun run test:e2e)",
 			"Bash(bun run verify)",
-			"Bash(bunx biome *)",
-			"Bash(bunx eslint *)",
+			"Bash(bun run test:e2e)",
 			"Bash(bunx playwright test*)"
 		]
 	}

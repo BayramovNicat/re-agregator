@@ -15,7 +15,7 @@ RUN bunx prisma generate
 FROM deps AS build
 COPY frontend ./frontend
 COPY scripts ./scripts
-RUN bun run build:frontend
+RUN bun run build
 
 # Production image
 FROM base AS runner
