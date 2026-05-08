@@ -304,6 +304,21 @@ test("gallery opens from card photo button", async ({ page }) => {
 	await expect(page.getByRole("button", { name: "Next photo" })).toBeVisible();
 });
 
+test("gallery navigates and closes with keyboard", async ({ page }) => {
+	await page.locator(".product-card").getByRole("button", { name: "Photos" }).click();
+	const dialog = page.getByRole("dialog");
+	await expect(dialog.getByText("1 / 2")).toBeVisible();
+
+	await dialog.getByRole("button", { name: "Next photo" }).click();
+	await expect(dialog.getByText("2 / 2")).toBeVisible();
+
+	await page.keyboard.press("ArrowRight");
+	await expect(dialog.getByText("1 / 2")).toBeVisible();
+
+	await page.keyboard.press("Escape");
+	await expect(dialog).toBeHidden();
+});
+
 test("district stats dialog opens with heatmap data", async ({ page }) => {
 	await page.getByRole("button", { name: "Stats" }).click();
 	await expect(page.getByRole("dialog").getByText("District Stats")).toBeVisible();
