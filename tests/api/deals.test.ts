@@ -49,6 +49,19 @@ async function getJson(path: string) {
 	return { res, body };
 }
 
+async function postJson(path: string, body: unknown) {
+	const res = await fetch(`${baseUrl}${path}`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: typeof body === "string" ? body : JSON.stringify(body),
+	});
+	let parsed: unknown = null;
+	try {
+		parsed = await res.json();
+	} catch {}
+	return { res, body: parsed };
+}
+
 describe("public API", () => {
 	test("health returns status and property count", async () => {
 		if (skipIfNoServer()) return;
@@ -458,30 +471,113 @@ describe("public API", () => {
 
 	test("seeded alerts can be created, listed, and deleted", async () => {
 		if (skipIfNoSeed()) return;
-		const createRes = await fetch(`${baseUrl}/api/alerts`, {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({
-				chat_id: "987654321",
-				label: "API test alert",
-				filters: { location: "Yasamal", threshold: 10 },
-			}),
+		const { res: createRes, body: created } = await postJson("/api/alerts", {
+			chat_id: "987654321",
+			label: "API test alert",
+			filters: { location: "Yasamal", threshold: 10 },
 		});
 		expect(createRes.status).toBe(200);
-		const created = (await createRes.json()) as { token: string };
-		expect(typeof created.token).toBe("string");
+		expect(typeof (created as { token: string }).token).toBe("string");
 
 		const list = await getJson("/api/alerts?chat_id=987654321");
 		expect(list.res.status).toBe(200);
 		expect(
 			(list.body as { alerts: Array<{ token: string }> }).alerts.some(
-				(alert) => alert.token === created.token,
+				(alert) => alert.token === (created as { token: string }).token,
 			),
 		).toBe(true);
 
-		const deleteRes = await fetch(`${baseUrl}/api/alerts/${created.token}`, {
+		const deleteRes = await fetch(`${baseUrl}/api/alerts/${(created as { token: string }).token}`, {
 			method: "DELETE",
 		});
 		expect(deleteRes.status).toBe(200);
+	});
+
+	test("alerts reject invalid requests", async () => {
+		if (skipIfNoServer()) return;
+
+		const invalidList = await getJson("/api/alerts?chat_id=abc");
+		const invalidJson = await postJson("/api/alerts", "{");
+		const invalidChat = await postJson("/api/alerts", {
+			chat_id: "abc",
+			filters: { location: "Yasamal" },
+		});
+		const missingFilters = await postJson("/api/alerts", { chat_id: "987654321" });
+		const missingLocation = await postJson("/api/alerts", {
+			chat_id: "987654321",
+			filters: { threshold: 10 },
+		});
+
+		expect(invalidList.res.status).toBe(400);
+		expect(invalidJson.res.status).toBe(400);
+		expect(invalidChat.res.status).toBe(400);
+		expect(missingFilters.res.status).toBe(400);
+		expect(missingLocation.res.status).toBe(400);
+	});
+
+	test("seeded alert labels truncate and deleted alerts return 404", async () => {
+		if (skipIfNoSeed()) return;
+		const longLabel = "x".repeat(100);
+		const { res: createRes, body: created } = await postJson("/api/alerts", {
+			chat_id: "987654322",
+			label: longLabel,
+			filters: { location: "Yasamal", threshold: 10 },
+		});
+		expect(createRes.status).toBe(200);
+		const token = (created as { token: string }).token;
+
+		const list = await getJson("/api/alerts?chat_id=987654322");
+		expect(list.res.status).toBe(200);
+		const alert = (list.body as { alerts: Array<{ token: string; label: string }> }).alerts.find(
+			(item) => item.token === token,
+		);
+		expect(alert?.label).toHaveLength(80);
+
+		const firstDelete = await fetch(`${baseUrl}/api/alerts/${token}`, { method: "DELETE" });
+		const secondDelete = await fetch(`${baseUrl}/api/alerts/${token}`, { method: "DELETE" });
+		expect(firstDelete.status).toBe(200);
+		expect(secondDelete.status).toBe(404);
+	});
+
+	test("scrape runs reject invalid limits", async () => {
+		if (skipIfNoServer()) return;
+		for (const limit of ["0", "101", "abc"]) {
+			const { res } = await getJson(`/api/scrape/runs?limit=${limit}`);
+			expect(res.status).toBe(400);
+		}
+	});
+
+	test("seeded scrape runs returns latest run", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson("/api/scrape/runs?limit=20");
+
+		expect(res.status).toBe(200);
+		const runs = (body as { runs: Array<{ status: string; trigger: string; total_found: number }> }).runs;
+		expect(runs.length).toBeGreaterThan(0);
+		expect(
+			runs.some(
+				(run) =>
+					typeof run.status === "string" &&
+					typeof run.trigger === "string" &&
+					typeof run.total_found === "number",
+			),
+		).toBe(true);
+	});
+
+	test("telegram webhook accepts malformed and unknown updates", async () => {
+		if (skipIfNoServer()) return;
+
+		const malformed = await postJson("/api/telegram/webhook", "{");
+		const withoutMessage = await postJson("/api/telegram/webhook", { update_id: 1 });
+		const unknownMessage = await postJson("/api/telegram/webhook", {
+			message: { chat: { id: 987654321 }, text: "hello" },
+		});
+
+		expect(malformed.res.status).toBe(200);
+		expect(withoutMessage.res.status).toBe(200);
+		expect(unknownMessage.res.status).toBe(200);
+		expect(malformed.body).toMatchObject({ ok: true });
+		expect(withoutMessage.body).toMatchObject({ ok: true });
+		expect(unknownMessage.body).toMatchObject({ ok: true });
 	});
 });

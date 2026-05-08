@@ -872,7 +872,6 @@ Actions:
 
 1. Add `tsconfig.tests.json` to typecheck tests and scripts.
 2. Extract Playwright fixtures into `tests/e2e/fixtures.ts`.
-3. Add seeded API tests for remaining alert/scrape/telegram edge cases.
-4. Add E2E tests for advanced filter params, sort behavior, and dialog actions.
-5. Add CI workflow for `bun run verify`.
-6. Later add DB-backed CI job with Postgres service.
+3. Add E2E tests for advanced filter params, sort behavior, and dialog actions.
+4. Add CI workflow for `bun run verify`.
+5. Later add DB-backed CI job with Postgres service.
