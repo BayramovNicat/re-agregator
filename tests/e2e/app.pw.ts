@@ -338,6 +338,44 @@ test("heatmap dialog opens from location map", async ({ page }) => {
 	await expect(page.locator("#heatmap-map-container .leaflet-pane").first()).toHaveCount(1);
 });
 
+test("map view loads pins and switches back", async ({ page }) => {
+	const mapUrls: string[] = [];
+	await page.unroute("**/api/deals/map-pins**");
+	await page.route("**/api/deals/map-pins**", async (route) => {
+		mapUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				count: 1,
+				data: [
+					{
+						source_url: deal.source_url,
+						lat: deal.latitude,
+						lng: deal.longitude,
+						price: deal.price,
+						price_per_sqm: deal.price_per_sqm,
+						area_sqm: deal.area_sqm,
+						floor: deal.floor,
+						total_floors: deal.total_floors,
+						rooms: deal.rooms,
+						location_name: deal.location_name,
+						image_url: deal.image_urls[0],
+						discount_percent: deal.discount_percent,
+						tier: deal.tier,
+					},
+				],
+			},
+		});
+	});
+
+	await page.locator('button[title="Map view"]').click();
+	await expect.poll(() => mapUrls.length).toBeGreaterThan(0);
+	await expect(page.locator(".leaflet-container")).toBeVisible();
+	await expect(page.locator(".leaflet-overlay-pane path")).toHaveCount(1);
+
+	await page.locator('button[title="Grid view"]').click();
+	await expect(page.locator(".product-card")).toHaveCount(1);
+});
+
 test("mobile layout smoke", async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await expect(page.getByText("Redeal")).toBeVisible();
