@@ -1,0 +1,12 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"rootDir": ".",
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"declaration": false,
+		"types": ["bun-types", "@playwright/test"]
+	},
+	"include": ["tests/**/*.ts", "scripts/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
+}

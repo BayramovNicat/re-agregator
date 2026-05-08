@@ -7,8 +7,9 @@
 		"dev": "bun run scripts/build.ts --watch & NODE_ENV=development bun --watch src/index.ts",
 		"start": "bun run scripts/build.ts && bun src/index.ts",
 		"build:frontend": "bun run scripts/build.ts",
-		"typecheck": "tsc --noEmit && bun run typecheck:frontend",
+		"typecheck": "tsc --noEmit && bun run typecheck:frontend && bun run typecheck:tests",
 		"typecheck:frontend": "tsc -p frontend/tsconfig.json --noEmit",
+		"typecheck:tests": "tsc -p tsconfig.tests.json --noEmit",
 		"db:generate": "prisma generate",
 		"db:migrate": "prisma migrate deploy",
 		"db:push": "prisma db push",
@@ -19,7 +20,14 @@
 		"lint:fix": "biome lint --write",
 		"lint:fix:unsafe": "biome lint --write --unsafe",
 		"format": "biome format --write",
-		"check": "biome check --write"
+		"check": "biome check --write",
+		"test": "bun test",
+		"test:api": "bun test tests/api",
+		"test:seed": "bun scripts/seed-test-db.ts",
+		"test:e2e": "bunx playwright test",
+		"test:e2e:ui": "bunx playwright test --ui",
+		"verify": "bun run typecheck && bun test && bun run test:e2e",
+		"verify:db": "bun run test:seed && bun run test:api"
 	},
 	"dependencies": {
 		"@prisma/client": "^5.22.0",
@@ -29,6 +37,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.11",
+		"@playwright/test": "^1.57.0",
 		"@tailwindcss/postcss": "^4.2.2",
 		"@types/leaflet": "^1.9.21",
 		"@types/node": "^22.10.2",
