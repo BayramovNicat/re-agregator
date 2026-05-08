@@ -6,6 +6,17 @@ import { fetchHeatmapData } from "./api";
 import { setupCircleEvents, setupMapDragSelection } from "./events";
 import { getPriceColor } from "./logic";
 
+const MIN_CIRCLE_RADIUS = 140;
+const MAX_CIRCLE_RADIUS = 500;
+const CIRCLE_RADIUS_SCALE = 11;
+
+function getCircleRadius(count: number): number {
+	return Math.min(
+		MAX_CIRCLE_RADIUS,
+		MIN_CIRCLE_RADIUS + Math.sqrt(count) * CIRCLE_RADIUS_SCALE,
+	);
+}
+
 export function initHeatmap(root: HTMLElement): () => void {
 	let isFirstOpen = true;
 	let lmap: LMap | null = null;
@@ -135,7 +146,7 @@ async function renderPoints(
 		const isActive = getActiveLocations().includes(d.location_name);
 		const color = getPriceColor(d.avg_price_per_sqm, min, max);
 		const c = circle([d.lat, d.lng], {
-			radius: 150 + Math.sqrt(d.count) * 15,
+			radius: getCircleRadius(d.count),
 			fillColor: color,
 			fillOpacity: 0.65,
 			stroke: true,
