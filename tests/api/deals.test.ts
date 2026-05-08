@@ -199,6 +199,151 @@ describe("public API", () => {
 		).toBe(true);
 	});
 
+	test("seeded price per square meter and area filters narrow results", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson(
+			"/api/deals/undervalued?location=Yasamal&threshold=0&minPriceSqm=1450&maxPriceSqm=1550&minArea=75&maxArea=85&limit=20&offset=0",
+		);
+
+		expect(res.status).toBe(200);
+		const data = (
+			body as { data: Array<{ source_url: string; price_per_sqm: string; area_sqm: string }> }
+		).data;
+		expect(data.map((deal) => deal.source_url)).toContain(
+			"https://test.redeal.local/yasamal-deal",
+		);
+		expect(
+			data.every(
+				(deal) =>
+					Number(deal.price_per_sqm) >= 1450 &&
+					Number(deal.price_per_sqm) <= 1550 &&
+					Number(deal.area_sqm) >= 75 &&
+					Number(deal.area_sqm) <= 85,
+			),
+		).toBe(true);
+	});
+
+	test("seeded floor filters narrow results", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson(
+			"/api/deals/undervalued?location=N%C9%99rimanov&threshold=0&minFloor=3&maxFloor=3&minTotalFloors=16&maxTotalFloors=16&limit=20&offset=0",
+		);
+
+		expect(res.status).toBe(200);
+		const data = (
+			body as { data: Array<{ source_url: string; floor: number; total_floors: number }> }
+		).data;
+		expect(data.map((deal) => deal.source_url)).toContain(
+			"https://test.redeal.local/narimanov-deal",
+		);
+		expect(data.every((deal) => deal.floor === 3 && deal.total_floors === 16)).toBe(
+			true,
+		);
+	});
+
+	test("seeded mortgage filters support true and false", async () => {
+		if (skipIfNoSeed()) return;
+		const mortgageTrue = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&hasMortgage=true&limit=20&offset=0",
+		);
+		const mortgageFalse = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&hasMortgage=false&limit=20&offset=0",
+		);
+
+		expect(mortgageTrue.res.status).toBe(200);
+		expect(mortgageFalse.res.status).toBe(200);
+		expect(
+			(mortgageTrue.body as { data: Array<{ has_mortgage: boolean }> }).data.every(
+				(deal) => deal.has_mortgage === true,
+			),
+		).toBe(true);
+		expect(
+			(mortgageFalse.body as { data: Array<{ has_mortgage: boolean }> }).data.every(
+				(deal) => deal.has_mortgage === false,
+			),
+		).toBe(true);
+	});
+
+	test("seeded active mortgage, urgency, and not-last-floor filters narrow results", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&hasActiveMortgage=true&notLastFloor=true&limit=20&offset=0",
+		);
+		const urgent = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&isUrgent=true&limit=20&offset=0",
+		);
+
+		expect(res.status).toBe(200);
+		expect(urgent.res.status).toBe(200);
+		const data = (
+			body as {
+				data: Array<{ source_url: string; has_active_mortgage: boolean; floor: number; total_floors: number }>;
+			}
+		).data;
+		expect(data.map((deal) => deal.source_url)).toContain(
+			"https://test.redeal.local/narimanov-deal",
+		);
+		expect(
+			data.every(
+				(deal) => deal.has_active_mortgage === true && deal.floor < deal.total_floors,
+			),
+		).toBe(true);
+		expect(
+			(urgent.body as { data: Array<{ is_urgent: boolean }> }).data.every(
+				(deal) => deal.is_urgent === true,
+			),
+		).toBe(true);
+	});
+
+	test("seeded description search and multiple locations work", async () => {
+		if (skipIfNoSeed()) return;
+		const search = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&descriptionSearch=corner&limit=20&offset=0",
+		);
+		const multi = await getJson(
+			"/api/deals/undervalued?location=Yasamal,N%C9%99rimanov&threshold=0&limit=20&offset=0",
+		);
+
+		expect(search.res.status).toBe(200);
+		expect(multi.res.status).toBe(200);
+		const searchData = (search.body as { data: Array<{ description: string | null }> }).data;
+		expect(searchData.length).toBeGreaterThan(0);
+		expect(
+			searchData.every((deal) => deal.description?.toLowerCase().includes("corner")),
+		).toBe(true);
+		const locations = (multi.body as { data: Array<{ location_name: string }> }).data.map(
+			(deal) => deal.location_name,
+		);
+		expect(locations).toContain("Yasamal");
+		expect(locations).toContain("Nərimanov");
+	});
+
+	test("seeded pagination returns distinct pages", async () => {
+		if (skipIfNoSeed()) return;
+		const first = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&sort=price-asc&limit=1&offset=0",
+		);
+		const second = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&sort=price-asc&limit=1&offset=1",
+		);
+
+		expect(first.res.status).toBe(200);
+		expect(second.res.status).toBe(200);
+		const firstUrl = (first.body as { data: Array<{ source_url: string }> }).data[0]?.source_url;
+		const secondUrl = (second.body as { data: Array<{ source_url: string }> }).data[0]?.source_url;
+		expect(firstUrl).toBeString();
+		expect(secondUrl).toBeString();
+		expect(firstUrl).not.toBe(secondUrl);
+	});
+
+	test("undervalued deals reject invalid pagination", async () => {
+		if (skipIfNoServer()) return;
+		for (const query of ["limit=0", "limit=1001", "limit=abc", "offset=-1", "offset=abc"]) {
+			const { res } = await getJson(`/api/deals/undervalued?location=__all__&${query}`);
+			expect(res.status).toBe(400);
+		}
+	});
+
 	test("seeded sort by price ascending is ordered", async () => {
 		if (skipIfNoSeed()) return;
 		const { res, body } = await getJson(
@@ -211,6 +356,104 @@ describe("public API", () => {
 		);
 		expect(prices.length).toBeGreaterThan(1);
 		expect(prices).toEqual([...prices].sort((a, b) => a - b));
+	});
+
+	test("seeded price drops returns price-history deal", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson(
+			"/api/deals/price-drops?location=__all__&minDrops=1&limit=20&offset=0",
+		);
+
+		expect(res.status).toBe(200);
+		expect(body).toMatchObject({ location: "__all__", minDropCount: 1 });
+		expect(
+			(body as { data: Array<{ source_url: string; price_drop_count: number }> }).data,
+		).toContainEqual(
+			expect.objectContaining({
+				source_url: "https://test.redeal.local/yasamal-deal",
+				price_drop_count: 1,
+			}),
+		);
+	});
+
+	test("price drops reject invalid minDrops", async () => {
+		if (skipIfNoServer()) return;
+		for (const minDrops of ["0", "abc"]) {
+			const { res } = await getJson(
+				`/api/deals/price-drops?location=__all__&minDrops=${minDrops}`,
+			);
+			expect(res.status).toBe(400);
+		}
+	});
+
+	test("seeded heatmap returns location metrics", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson("/api/heatmap");
+
+		expect(res.status).toBe(200);
+		const data = (
+			body as {
+				data: Array<{
+					location_name: string;
+					avg_price_per_sqm: number;
+					count: number;
+					lat: number;
+					lng: number;
+					trend: string;
+				}>;
+			}
+		).data;
+		expect(data.map((row) => row.location_name)).toEqual(
+			expect.arrayContaining(["Yasamal", "Nərimanov"]),
+		);
+		expect(
+			data.every(
+				(row) =>
+					typeof row.location_name === "string" &&
+					typeof row.avg_price_per_sqm === "number" &&
+					typeof row.count === "number" &&
+					typeof row.lat === "number" &&
+					typeof row.lng === "number" &&
+					typeof row.trend === "string",
+			),
+		).toBe(true);
+	});
+
+	test("seeded trend returns weekly rows", async () => {
+		if (skipIfNoSeed()) return;
+		const { res, body } = await getJson("/api/deals/trend?location=Yasamal");
+
+		expect(res.status).toBe(200);
+		const data = (body as { data: Array<{ week: string; avg_ppsm: number; listing_count: number }> }).data;
+		expect(data.length).toBeGreaterThan(0);
+		expect(
+			data.every(
+				(row) =>
+					typeof row.week === "string" &&
+					typeof row.avg_ppsm === "number" &&
+					typeof row.listing_count === "number",
+			),
+		).toBe(true);
+	});
+
+	test("seeded map pins filter by threshold and location", async () => {
+		if (skipIfNoSeed()) return;
+		const all = await getJson("/api/deals/map-pins?location=__all__&threshold=0");
+		const yasamal = await getJson("/api/deals/map-pins?location=Yasamal&threshold=10");
+
+		expect(all.res.status).toBe(200);
+		expect(yasamal.res.status).toBe(200);
+		const allData = (all.body as { data: Array<{ lat: number; lng: number }> }).data;
+		const yasamalData = (
+			yasamal.body as { data: Array<{ location_name: string; discount_percent: number }> }
+		).data;
+		expect(allData.length).toBeGreaterThan(0);
+		expect(allData.every((pin) => typeof pin.lat === "number" && typeof pin.lng === "number")).toBe(true);
+		expect(
+			yasamalData.every(
+				(pin) => pin.location_name === "Yasamal" && pin.discount_percent >= 10,
+			),
+		).toBe(true);
 	});
 
 	test("seeded alerts can be created, listed, and deleted", async () => {

@@ -30,11 +30,12 @@ const deal = {
 	],
 };
 
-async function mockApi(page: Page) {
+async function mockApi(page: Page, options: { searchUrls?: string[] } = {}) {
 	await page.route("**/api/deals/locations", async (route) => {
 		await route.fulfill({ json: { data: ["Yasamal", "Nərimanov"] } });
 	});
 	await page.route("**/api/deals/undervalued**", async (route) => {
+		options.searchUrls?.push(route.request().url());
 		await route.fulfill({
 			json: {
 				location: "__all__",
@@ -131,6 +132,60 @@ test("advanced filters toggle and clear", async ({ page }) => {
 	await page.locator("#minPrice").fill("100000");
 	await page.getByRole("button", { name: /clear filters/i }).click();
 	await expect(page.locator("#minPrice")).toHaveValue("");
+});
+
+test("location selector updates search params", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		searchUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
+		});
+	});
+
+	const location = page.getByRole("combobox", { name: "Location" });
+	await location.click();
+	await page.getByRole("option", { name: "Yasamal" }).click();
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=Yasamal");
+
+	await page.getByRole("option", { name: "All locations" }).click();
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=__all__");
+});
+
+test("threshold slider updates label and search params", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		searchUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
+		});
+	});
+
+	await page.locator("#discount-threshold").fill("0");
+	await expect(page.getByText("All", { exact: true })).toBeVisible();
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("threshold=0");
+
+	await page.locator("#discount-threshold").fill("20");
+	await expect(page.getByText("20%", { exact: true })).toBeVisible();
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("threshold=20");
 });
 
 test("grid and list view switch", async ({ page }) => {

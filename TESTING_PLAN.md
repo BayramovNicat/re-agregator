@@ -49,7 +49,17 @@ Covered:
   - location filter correctness.
   - category + boolean filter correctness.
   - numeric filter correctness.
+  - price per square meter and area filter correctness.
+  - floor and total floors filter correctness.
+  - mortgage true/false filter correctness.
+  - active mortgage, urgency, and not-last-floor filter correctness.
+  - description search and multiple-location correctness.
+  - pagination duplicate-prevention.
   - price ascending sort correctness.
+  - price drops endpoint correctness.
+  - heatmap seeded metrics shape.
+  - trend weekly row shape.
+  - map-pin threshold and location filtering.
   - alert create/list/delete.
 
 Behavior:
@@ -65,6 +75,8 @@ Covered with mocked API:
 
 - Homepage renders first result.
 - Advanced filters open and clear.
+- Location selector changes search API params and resets to all locations.
+- Threshold slider changes label and search API params.
 - Grid/list view switch.
 - Bookmark persists after reload and saved view opens.
 - Card opens property detail dialog.
@@ -860,7 +872,7 @@ Actions:
 
 1. Add `tsconfig.tests.json` to typecheck tests and scripts.
 2. Extract Playwright fixtures into `tests/e2e/fixtures.ts`.
-3. Add seeded API tests for remaining filters.
-4. Add E2E tests for location selector and threshold slider.
+3. Add seeded API tests for remaining alert/scrape/telegram edge cases.
+4. Add E2E tests for advanced filter params, sort behavior, and dialog actions.
 5. Add CI workflow for `bun run verify`.
 6. Later add DB-backed CI job with Postgres service.
