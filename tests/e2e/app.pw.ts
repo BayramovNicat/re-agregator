@@ -103,6 +103,16 @@ async function mockApi(page: Page, options: { searchUrls?: string[] } = {}) {
 						prior_avg: 2000,
 						trend: "up",
 					},
+					{
+						location_name: "Nərimanov",
+						avg_price_per_sqm: 2500,
+						count: 8,
+						lat: 40.409,
+						lng: 49.867,
+						recent_avg: 2450,
+						prior_avg: 2500,
+						trend: "down",
+					},
 				],
 			},
 		});
@@ -326,6 +336,57 @@ test("district stats dialog opens with heatmap data", async ({ page }) => {
 	await expect(page.getByRole("columnheader", { name: /Avg ₼\/m²/i })).toBeVisible();
 });
 
+test("district stats search filters rows and avg sort toggles", async ({ page }) => {
+	await page.getByRole("button", { name: "Stats" }).click();
+	const dialog = page.locator("dialog#district-stats-modal");
+	await expect(dialog.getByRole("cell", { name: "Yasamal" })).toBeVisible();
+	await expect(dialog.getByRole("cell", { name: "Nərimanov" })).toBeVisible();
+
+	await dialog.locator("#dst-search").fill("nər");
+	await expect(dialog.getByRole("cell", { name: "Nərimanov" })).toBeVisible();
+	await expect(dialog.getByRole("cell", { name: "Yasamal" })).toHaveCount(0);
+
+	await dialog.getByRole("button", { name: "Clear search" }).click();
+	const avgHeader = dialog.getByRole("columnheader", { name: /Avg ₼\/m²/i });
+	await expect(avgHeader).toHaveAttribute("aria-sort", "descending");
+	await avgHeader.click();
+	await expect(avgHeader).toHaveAttribute("aria-sort", "ascending");
+});
+
+test("district stats retries after heatmap failure", async ({ page }) => {
+	await page.unroute("**/api/heatmap");
+	let requests = 0;
+	await page.route("**/api/heatmap", async (route) => {
+		requests += 1;
+		if (requests === 1) {
+			await route.fulfill({ status: 500, json: { error: "failed" } });
+			return;
+		}
+		await route.fulfill({
+			json: {
+				data: [
+					{
+						location_name: "Yasamal",
+						avg_price_per_sqm: 2000,
+						count: 10,
+						lat: 40.377,
+						lng: 49.837,
+						recent_avg: 2100,
+						prior_avg: 2000,
+						trend: "up",
+					},
+				],
+			},
+		});
+	});
+
+	await page.getByRole("button", { name: "Stats" }).click();
+	const dialog = page.locator("dialog#district-stats-modal");
+	await expect(dialog.getByText("Failed to load stats")).toBeVisible();
+	await dialog.getByRole("button", { name: "Retry" }).click();
+	await expect(dialog.getByRole("cell", { name: "Yasamal" })).toBeVisible();
+});
+
 test("scrape ops dialog opens with empty runs", async ({ page }) => {
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
 	await expect(page.getByRole("dialog").getByText("Scrape runs", { exact: true })).toBeVisible();
@@ -359,7 +420,7 @@ test("heatmap circle selects location", async ({ page }) => {
 	await page.getByRole("button", { name: "Location Map" }).click();
 	const dialog = page.locator("dialog#heatmap-modal");
 	await expect(dialog).toBeVisible();
-	await page.locator("#heatmap-map-container .leaflet-overlay-pane path").click({ force: true });
+	await page.locator("#heatmap-map-container .leaflet-overlay-pane path").first().click({ force: true });
 
 	await expect(dialog).toBeHidden();
 	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=Yasamal");

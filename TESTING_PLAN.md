@@ -84,6 +84,7 @@ Covered with mocked API:
 - Alerts dialog saves chat ID.
 - Gallery opens from card photo button.
 - District stats dialog opens and renders heatmap data.
+- District stats search, avg-price sort aria state, and retry after API failure.
 - Scrape ops dialog opens and shows empty runs.
 - Heatmap dialog opens from Location Map.
 - Mobile layout smoke.
@@ -424,10 +425,9 @@ Add:
 
 ### District stats behavior
 
-Current opens and renders data.
+Covered:
 
-Add:
-
+- opens and renders data.
 - search filters district rows.
 - sort avg price column toggles `aria-sort`.
 - API failure shows retry button.
@@ -821,7 +821,7 @@ Actions:
 4. Sort order test with 2+ mocked deals.
 5. Gallery next/keyboard/close tests.
 6. Heatmap circle selection test.
-7. District stats search/sort/error tests.
+7. District stats search/sort/error tests. Done.
 8. Scrape ops run-now/error tests.
 9. Empty search/error search tests.
 
