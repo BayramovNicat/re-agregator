@@ -4,7 +4,6 @@ export interface SearchUI {
 	locationSelect: MultiSelectElement;
 	discountRange: HTMLInputElement;
 	discountValueDisplay: HTMLElement;
-	searchTrigger: HTMLButtonElement;
 	advancedToggle: HTMLButtonElement;
 	advancedPanel: HTMLElement;
 	advancedCount: HTMLElement;
@@ -21,7 +20,6 @@ export interface SearchUI {
 
 export interface SearchCallbacks {
 	onFilterChange: () => void;
-	onSearch: () => void;
 	onPriceMap: () => void;
 	onTierChange: () => void;
 	onClear: () => void;

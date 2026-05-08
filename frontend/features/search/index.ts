@@ -28,7 +28,6 @@ export function initSearch(container: HTMLElement): () => void {
 		locationSelect: null as unknown as MultiSelectElement,
 		discountRange: null as unknown as HTMLInputElement,
 		discountValueDisplay: null as unknown as HTMLElement,
-		searchTrigger: null as unknown as HTMLButtonElement,
 		advancedToggle: null as unknown as HTMLButtonElement,
 		advancedPanel: null as unknown as HTMLElement,
 		advancedCount: null as unknown as HTMLElement,
@@ -135,7 +134,6 @@ export function initSearch(container: HTMLElement): () => void {
 
 		state.loading = true;
 		if (!isPagination) resetUIForSearch();
-		ui.searchTrigger.disabled = true;
 
 		try {
 			const searchParams = buildSearchParams(state.getFilters());
@@ -180,7 +178,6 @@ export function initSearch(container: HTMLElement): () => void {
 			globalElements.resultsContainer.replaceChildren();
 			toast((error as Error).message, true);
 		} finally {
-			ui.searchTrigger.disabled = false;
 			state.loading = false;
 		}
 	}
@@ -227,7 +224,6 @@ export function initSearch(container: HTMLElement): () => void {
 
 	const searchLayout = renderSearchFilters(ui, {
 		onFilterChange,
-		onSearch: () => void executeSearch(false),
 		onPriceMap,
 		onTierChange,
 		onClear,

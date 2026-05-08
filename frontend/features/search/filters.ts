@@ -18,8 +18,7 @@ export function renderSearchFilters(
 	ui: SearchUI,
 	callbacks: SearchCallbacks,
 ): HTMLElement {
-	const { onFilterChange, onSearch, onPriceMap, onTierChange, onClear } =
-		callbacks;
+	const { onFilterChange, onPriceMap, onTierChange, onClear } = callbacks;
 
 	ui.locationSelect = MultiSelect({
 		id: "loc-trigger",
@@ -60,13 +59,6 @@ export function renderSearchFilters(
 	});
 	ui.discountRange = rangeWrapper.inputElement;
 
-	ui.searchTrigger = Button({
-		id: "search-trigger",
-		variant: "base",
-		color: "accent",
-		content: frag`${Icons.search(14)} ${t("search")}`,
-		onclick: onSearch,
-	}) as HTMLButtonElement;
 
 	ui.advancedCount = html`<span
 		class="bg-(--accent-solid) text-white rounded-full px-1.5 py-px text-xs font-semibold"
@@ -209,7 +201,7 @@ export function renderSearchFilters(
 			class="bg-(--surface) border border-(--border) rounded-(--r-lg) p-5 mb-3.5"
 		>
 			<div
-				class="grid grid-cols-[1fr_auto_260px_120px] gap-3 items-end max-[680px]:grid-cols-1"
+				class="grid grid-cols-[1fr_auto_260px] gap-3 items-end max-[680px]:grid-cols-1"
 			>
 				${Field({
 					label: t("location"),
@@ -233,14 +225,6 @@ export function renderSearchFilters(
 						${ui.discountValueDisplay}
 					</div>
 					${rangeWrapper}
-				</div>
-				<div class="flex flex-col gap-1.5">
-					<span
-						class="text-xs font-medium text-(--muted) tracking-[0.06em] uppercase invisible"
-						aria-hidden="true"
-						>Go</span
-					>
-					${ui.searchTrigger}
 				</div>
 			</div>
 			${ui.advancedToggle} ${ui.advancedPanel}
