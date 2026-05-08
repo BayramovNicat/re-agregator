@@ -53,11 +53,12 @@ async function build() {
 		throw new Error("JS build failed");
 	}
 
-	// Log all chunks
-	for (const output of jsResult.outputs) {
-		if (output.path.endsWith(".js")) {
-			const size = (output.size / 1024).toFixed(2);
-			console.log(`  → ${output.path.split("/").pop()} (${size} KB)`);
+	if (!watchMode) {
+		for (const output of jsResult.outputs) {
+			if (output.path.endsWith(".js")) {
+				const size = (output.size / 1024).toFixed(2);
+				console.log(`  → ${output.path.split("/").pop()} (${size} KB)`);
+			}
 		}
 	}
 
@@ -125,12 +126,14 @@ async function build() {
 		recursive: true,
 	});
 
-	const jsSizeKB = (Bun.file("./public/main.js").size / 1024).toFixed(1);
-	const cssSizeKB = (Bun.file("./public/styles.css").size / 1024).toFixed(1);
-	const swSizeKB = (Bun.file("./public/sw.js").size / 1024).toFixed(1);
-	console.log(
-		`Built public/  main.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  sw.js ${swSizeKB} KB  index.html ✓  manifest.json ✓`,
-	);
+	if (!watchMode) {
+		const jsSizeKB = (Bun.file("./public/main.js").size / 1024).toFixed(1);
+		const cssSizeKB = (Bun.file("./public/styles.css").size / 1024).toFixed(1);
+		const swSizeKB = (Bun.file("./public/sw.js").size / 1024).toFixed(1);
+		console.log(
+			`Built public/  main.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  sw.js ${swSizeKB} KB  index.html ✓  manifest.json ✓`,
+		);
+	}
 
 	for (const client of reloadClients) {
 		try {
