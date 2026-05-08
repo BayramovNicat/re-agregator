@@ -338,6 +338,35 @@ test("heatmap dialog opens from location map", async ({ page }) => {
 	await expect(page.locator("#heatmap-map-container .leaflet-pane").first()).toHaveCount(1);
 });
 
+test("heatmap circle selects location", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		searchUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				location: "Yasamal",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
+		});
+	});
+
+	await page.getByRole("button", { name: "Location Map" }).click();
+	const dialog = page.locator("dialog#heatmap-modal");
+	await expect(dialog).toBeVisible();
+	await page.locator("#heatmap-map-container .leaflet-overlay-pane path").click({ force: true });
+
+	await expect(dialog).toBeHidden();
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=Yasamal");
+	await page.getByRole("button", { name: "Location Map" }).click();
+	await expect(page.locator("#heatmap-map-container .leaflet-overlay-pane path[stroke=\"white\"]")).toHaveCount(1);
+});
+
 test("map view loads pins and switches back", async ({ page }) => {
 	const mapUrls: string[] = [];
 	await page.unroute("**/api/deals/map-pins**");
