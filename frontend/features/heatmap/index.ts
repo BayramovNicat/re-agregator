@@ -3,7 +3,7 @@ import { bus, EVENTS } from "@/core/events";
 import type { HeatmapPoint } from "@/core/types";
 import { initLeaflet, MapDialog } from "@/ui/map-base";
 import { fetchHeatmapData } from "./api";
-import { setupCircleEvents } from "./events";
+import { setupCircleEvents, setupMapDragSelection } from "./events";
 import { getPriceColor } from "./logic";
 
 export function initHeatmap(root: HTMLElement): () => void {
@@ -12,6 +12,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 	let overlay: FeatureGroup | null = null;
 	let currentOnAction: ((name: string, isToggle: boolean) => void) | null =
 		null;
+	let cleanupDragSelection: (() => void) | null = null;
 	let cachedData: HeatmapPoint[] = [];
 	let latestActiveLocations: string[] = [];
 
@@ -61,7 +62,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 			isFirstOpen = false;
 			cachedData = await fetchHeatmapData();
 			if (cachedData.length > 0 && lmap && overlay) {
-				await renderPoints(
+				cleanupDragSelection = await renderPoints(
 					lmap,
 					cachedData,
 					overlay,
@@ -75,6 +76,15 @@ export function initHeatmap(root: HTMLElement): () => void {
 							else latestActiveLocations.push(name);
 							updateCircleStyles();
 						}
+					},
+					(names) => {
+						for (const name of names) {
+							if (currentOnAction) currentOnAction(name, true);
+							if (!latestActiveLocations.includes(name)) {
+								latestActiveLocations.push(name);
+							}
+						}
+						updateCircleStyles();
 					},
 				);
 			}
@@ -92,6 +102,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 	return () => {
 		offOpen();
 		modal.remove();
+		if (cleanupDragSelection) cleanupDragSelection();
 		if (overlay) overlay.remove();
 		if (lmap) lmap.remove();
 	};
@@ -113,7 +124,8 @@ async function renderPoints(
 	group: FeatureGroup,
 	getActiveLocations: () => string[],
 	onSelect: (name: string, isToggle: boolean) => void,
-): Promise<void> {
+	onSelectMany: (names: string[]) => void,
+): Promise<() => void> {
 	const { circle } = await import("leaflet");
 	const ppsms = data.map((d) => d.avg_price_per_sqm);
 	const min = Math.min(...ppsms);
@@ -132,7 +144,6 @@ async function renderPoints(
 			opacity: isActive ? 1 : 0.3,
 		}) as Circle & { _heatmapData?: HeatmapPoint };
 
-		// Attach data for style updates
 		c._heatmapData = d;
 
 		setupCircleEvents(c, d, getActiveLocations, onSelect);
@@ -140,7 +151,16 @@ async function renderPoints(
 		c.addTo(group);
 	}
 
+	const cleanupDragSelection = await setupMapDragSelection(
+		lmap,
+		group,
+		getActiveLocations,
+		onSelectMany,
+	);
+
 	if (data.length > 0) {
 		lmap.setView([40.396698, 49.8664491], 12);
 	}
+
+	return cleanupDragSelection;
 }

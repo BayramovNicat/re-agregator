@@ -1,4 +1,12 @@
-import { type Circle, DomEvent, type LeafletMouseEvent } from "leaflet";
+import {
+	type Circle,
+	DomEvent,
+	type FeatureGroup,
+	type LatLng,
+	type LeafletMouseEvent,
+	type Map as LMap,
+	type Rectangle,
+} from "leaflet";
 import { t } from "@/core/i18n";
 import type { HeatmapPoint } from "@/core/types";
 import { fmt, html, toast } from "@/core/utils";
@@ -57,4 +65,69 @@ export function setupCircleEvents(
 		onSelect(d.location_name, true);
 		toast(d.location_name);
 	});
+}
+
+export async function setupMapDragSelection(
+	lmap: LMap,
+	group: FeatureGroup,
+	getActiveLocations: () => string[],
+	onSelectMany: (names: string[]) => void,
+): Promise<() => void> {
+	const { latLngBounds, rectangle } = await import("leaflet");
+	let start: LatLng | null = null;
+	let selection: Rectangle | null = null;
+
+	const onMouseDown = (e: LeafletMouseEvent) => {
+		if (!e.originalEvent.shiftKey) return;
+		DomEvent.stopPropagation(e);
+		DomEvent.preventDefault(e.originalEvent);
+		lmap.dragging.disable();
+		start = e.latlng;
+		selection = rectangle(latLngBounds(start, start), {
+			color: "white",
+			weight: 1,
+			opacity: 0.8,
+			fillColor: "white",
+			fillOpacity: 0.12,
+			interactive: false,
+		}).addTo(lmap);
+	};
+
+	const onMouseMove = (e: LeafletMouseEvent) => {
+		if (!start || !selection) return;
+		selection.setBounds(latLngBounds(start, e.latlng));
+	};
+
+	const onMouseUp = (e: LeafletMouseEvent) => {
+		if (!start || !selection) return;
+		const bounds = latLngBounds(start, e.latlng);
+		const active = new Set(getActiveLocations());
+		const selected: string[] = [];
+
+		group.eachLayer((layer) => {
+			if (!("getLatLng" in layer)) return;
+			const circle = layer as Circle & { _heatmapData?: HeatmapPoint };
+			const name = circle._heatmapData?.location_name;
+			if (!name || active.has(name) || !bounds.contains(circle.getLatLng())) return;
+			active.add(name);
+			selected.push(name);
+		});
+
+		selection.remove();
+		selection = null;
+		start = null;
+		lmap.dragging.enable();
+		if (selected.length > 0) onSelectMany(selected);
+	};
+
+	lmap.on("mousedown", onMouseDown);
+	lmap.on("mousemove", onMouseMove);
+	lmap.on("mouseup", onMouseUp);
+
+	return () => {
+		selection?.remove();
+		lmap.off("mousedown", onMouseDown);
+		lmap.off("mousemove", onMouseMove);
+		lmap.off("mouseup", onMouseUp);
+	};
 }
