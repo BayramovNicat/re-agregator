@@ -35,4 +35,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .DS_Store
 
 .cursor
-.claude
+.claude/*
+!.claude/settings.json
+!.claude/commands/
+!.claude/commands/*.md
+.claude/settings.local.json
