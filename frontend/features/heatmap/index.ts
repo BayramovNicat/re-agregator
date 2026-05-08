@@ -56,6 +56,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 	const onOpen = async (
 		activeLocations: string[],
 		onAction: (name: string, isToggle: boolean) => void,
+		onSelectMany?: (names: string[]) => void,
 	) => {
 		latestActiveLocations = activeLocations;
 		currentOnAction = onAction;
@@ -89,12 +90,8 @@ export function initHeatmap(root: HTMLElement): () => void {
 						}
 					},
 					(names) => {
-						for (const name of names) {
-							if (currentOnAction) currentOnAction(name, true);
-							if (!latestActiveLocations.includes(name)) {
-								latestActiveLocations.push(name);
-							}
-						}
+						onSelectMany?.(names);
+						latestActiveLocations = names;
 						updateCircleStyles();
 					},
 				);
@@ -107,7 +104,7 @@ export function initHeatmap(root: HTMLElement): () => void {
 	};
 
 	const offOpen = bus.on(EVENTS.HEATMAP_OPEN, (payload) => {
-		void onOpen(payload.activeLocations, payload.onAction);
+		void onOpen(payload.activeLocations, payload.onAction, payload.onSelectMany);
 	});
 
 	return () => {

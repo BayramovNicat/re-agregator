@@ -18,6 +18,7 @@ export type EventPayloads = {
 	[EVENTS.HEATMAP_OPEN]: {
 		activeLocations: string[];
 		onAction: (name: string, isToggle: boolean) => void;
+		onSelectMany?: (names: string[]) => void;
 	};
 };
 

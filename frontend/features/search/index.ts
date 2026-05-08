@@ -220,6 +220,10 @@ export function initSearch(container: HTMLElement): () => void {
 				}
 				bus.emit(EVENTS.SEARCH_STARTED, { more: false });
 			},
+			onSelectMany: (locNames: string[]) => {
+				ui.locationSelect.setValue(locNames.length > 0 ? locNames : ["__all__"]);
+				bus.emit(EVENTS.SEARCH_STARTED, { more: false });
+			},
 		});
 	};
 

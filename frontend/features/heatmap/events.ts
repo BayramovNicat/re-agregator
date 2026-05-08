@@ -102,15 +102,13 @@ export async function setupMapDragSelection(
 	const onMouseUp = (e: LeafletMouseEvent) => {
 		if (!start || !selection) return;
 		const bounds = latLngBounds(start, e.latlng);
-		const active = new Set(getActiveLocations());
 		const selected: string[] = [];
 
 		group.eachLayer((layer) => {
 			if (!("getLatLng" in layer)) return;
 			const circle = layer as Circle & { _heatmapData?: HeatmapPoint };
 			const name = circle._heatmapData?.location_name;
-			if (!name || active.has(name) || !bounds.contains(circle.getLatLng())) return;
-			active.add(name);
+			if (!name || !bounds.contains(circle.getLatLng())) return;
 			selected.push(name);
 		});
 
