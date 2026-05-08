@@ -92,7 +92,11 @@ export function initProducts(container: HTMLElement): () => void {
 		onSortChange: () => {
 			localStorage.setItem("re-sort", ui.sortSelect.value);
 			state.renderedSet.clear();
-			render();
+			if (state.showingSaved) {
+				render();
+				return;
+			}
+			bus.emit(EVENTS.SEARCH_STARTED, { more: false });
 		},
 		onViewChange: (view) => setView(view),
 		onExport: () => handleExport(ui.sortSelect.value),
@@ -144,7 +148,7 @@ export function initProducts(container: HTMLElement): () => void {
 
 		if (state.hasSearched) hide(ui.welcomeState);
 
-		list = sortDeals(list, sortBy);
+		if (state.showingSaved) list = sortDeals(list, sortBy);
 		if (!list.length) {
 			if (!state.hasSearched) hide(ui.resultsBarInner);
 			else {
@@ -381,6 +385,7 @@ export function initProducts(container: HTMLElement): () => void {
 	state.refs.resultsMeta = ui.resultsMeta;
 	state.refs.loadMore = ui.loadMoreContainer;
 	state.refs.savedBtn = ui.savedBtn;
+	state.refs.sortSelect = ui.sortSelect;
 
 	// Restore persisted sort
 	const savedSort = localStorage.getItem("re-sort");

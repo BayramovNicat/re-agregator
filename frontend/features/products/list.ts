@@ -29,7 +29,14 @@ export function renderList(
 		);
 		const realCount = wrap.children.length - skeletons.length;
 
-		if (list.length >= realCount) {
+		const existingUrls = Array.from(wrap.children)
+			.filter((c) => !c.classList.contains("re-skeleton"))
+			.map((c) => (c as HTMLElement).dataset.url);
+		const canAppend = existingUrls.every(
+			(url, index) => url === list[index]?.source_url,
+		);
+
+		if (canAppend && list.length >= realCount) {
 			skeletons.forEach((s) => {
 				s.remove();
 			});

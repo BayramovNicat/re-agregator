@@ -18,7 +18,6 @@ const translations = {
 		priceMapTitle: "Location map by district",
 		discountThreshold: "Discount threshold",
 		advancedFilters: "Advanced filters",
-		search: "Search",
 
 		// Num filter labels
 		minPrice: "Min price (₼)",
@@ -269,7 +268,6 @@ const translations = {
 		failedLocs: "Ərazilər yüklənmədi",
 		discountThreshold: "Endirim həddi",
 		advancedFilters: "Ətraflı filtrlər",
-		search: "Axtar",
 
 		minPrice: "Min qiymət (₼)",
 		maxPrice: "Maks qiymət (₼)",
@@ -504,7 +502,6 @@ const translations = {
 		failedLocs: "Не удалось загрузить районы",
 		discountThreshold: "Порог скидки",
 		advancedFilters: "Расширенные фильтры",
-		search: "Поиск",
 
 		minPrice: "Мин цена (₼)",
 		maxPrice: "Макс цена (₼)",

@@ -24,9 +24,19 @@ export type PropertyFilters = {
 	descriptionSearch?: string;
 };
 
+export type DealSort =
+	| "disc"
+	| "drops"
+	| "new"
+	| "price-asc"
+	| "price-desc"
+	| "area"
+	| "ppsm";
+
 export type PaginationOptions = {
 	limit?: number;
 	offset?: number;
+	sort?: DealSort;
 };
 
 export type PropertyRow = {

@@ -108,6 +108,7 @@ export function initSearch(container: HTMLElement): () => void {
 			threshold: String(currentFilters.threshold),
 			limit: String(state.PAGE),
 			offset: String(state.currentOffset),
+			sort: state.refs.sortSelect?.value || "disc",
 		});
 
 		Object.entries(currentFilters).forEach(([key, val]) => {

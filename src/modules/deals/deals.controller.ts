@@ -1,4 +1,4 @@
-import type { PropertyFilters } from "@/types/index.js";
+import type { DealSort, PropertyFilters } from "@/types/index.js";
 import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
 import * as res from "@/utils/response.js";
 import * as dealsService from "./deals.service.js";
@@ -166,9 +166,11 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 
 	const pg = parsePaginationParams(q);
 	if (pg.error) return pg.error;
+	const sort = parseDealSort(q);
+	if (sort.error) return sort.error;
 
 	const filterArgs = parsePropertyFilters(q);
-	const pageArgs = { limit: pg.limit, offset: pg.offset };
+	const pageArgs = { limit: pg.limit, offset: pg.offset, sort: sort.value };
 
 	try {
 		const { total, data } = await dealsService.getUndervalued(
@@ -239,6 +241,24 @@ function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
 		category: q.get("category") ?? undefined,
 		descriptionSearch: q.get("descriptionSearch") ?? undefined,
 	};
+}
+
+const DEAL_SORTS = new Set<DealSort>([
+	"disc",
+	"drops",
+	"new",
+	"price-asc",
+	"price-desc",
+	"area",
+	"ppsm",
+]);
+
+function parseDealSort(q: URLSearchParams) {
+	const raw = q.get("sort") ?? "disc";
+	if (!DEAL_SORTS.has(raw as DealSort)) {
+		return { error: res.error('"sort" must be a valid deal sort', 400) };
+	}
+	return { value: raw as DealSort };
 }
 
 function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {

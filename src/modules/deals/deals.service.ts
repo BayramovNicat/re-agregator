@@ -17,6 +17,7 @@
 
 import { Prisma } from "@prisma/client";
 import type {
+	DealSort,
 	HeatmapPoint,
 	MapPin,
 	MapPinRow,
@@ -35,6 +36,25 @@ let locationsCache: { data: string[]; at: number } | null = null;
 
 const AVG_CACHE_TTL = 30 * 60_000;
 const avgCache = new Map<string, { avg: number; at: number }>();
+
+function getUndervaluedOrderBy(sort: DealSort = "disc"): Prisma.Sql {
+	switch (sort) {
+		case "drops":
+			return Prisma.sql`p.price_drop_count DESC NULLS LAST, p.updated_at DESC, p.id DESC`;
+		case "new":
+			return Prisma.sql`p.posted_date DESC NULLS LAST, p.created_at DESC, p.id DESC`;
+		case "price-asc":
+			return Prisma.sql`p.price ASC, p.id DESC`;
+		case "price-desc":
+			return Prisma.sql`p.price DESC, p.id DESC`;
+		case "area":
+			return Prisma.sql`p.area_sqm DESC NULLS LAST, p.id DESC`;
+		case "ppsm":
+			return Prisma.sql`p.price_per_sqm ASC, p.id DESC`;
+		case "disc":
+			return Prisma.sql`discount_percent DESC, p.id DESC`;
+	}
+}
 
 export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 	const rows = await queryRaw<TrendPoint[]>(Prisma.sql`
@@ -316,7 +336,8 @@ export async function getUndervalued(
 	filters: PropertyFilters = {},
 	pagination: PaginationOptions = {},
 ): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
-	const { limit = 200, offset = 0 } = pagination;
+	const { limit = 200, offset = 0, sort = "disc" } = pagination;
+	const orderBy = getUndervaluedOrderBy(sort);
 	const factor = (100 - thresholdPercent) / 100.0;
 
 	const avgsMap = await getLocationAverages(locations);
@@ -363,7 +384,7 @@ export async function getUndervalued(
 				ROUND(loc_avg.avg_ppsm::numeric, 2)                                                AS location_avg_price_per_sqm,
 				ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent
 			${baseQuery}
-			ORDER BY discount_percent DESC
+			ORDER BY ${orderBy}
 			LIMIT ${limit} OFFSET ${offset}
 		`),
 	]);
