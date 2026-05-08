@@ -113,6 +113,11 @@ input[type="number"] {
 	background: var(--surface-2) !important;
 	color: var(--text) !important;
 }
+.leaflet-zoom-box {
+	background: rgba(129, 140, 248, 0.18) !important;
+	border: 1px solid rgba(165, 180, 252, 0.65) !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
 
 @keyframes mpulse {
 	0% {

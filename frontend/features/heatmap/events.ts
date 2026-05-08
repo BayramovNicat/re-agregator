@@ -82,13 +82,14 @@ export async function setupMapDragSelection(
 		DomEvent.stopPropagation(e);
 		DomEvent.preventDefault(e.originalEvent);
 		lmap.dragging.disable();
+		lmap.boxZoom.disable();
 		start = e.latlng;
 		selection = rectangle(latLngBounds(start, start), {
-			color: "white",
+			color: "#a5b4fc",
 			weight: 1,
-			opacity: 0.8,
-			fillColor: "white",
-			fillOpacity: 0.12,
+			opacity: 0.65,
+			fillColor: "#818cf8",
+			fillOpacity: 0.18,
 			interactive: false,
 		}).addTo(lmap);
 	};
@@ -117,6 +118,7 @@ export async function setupMapDragSelection(
 		selection = null;
 		start = null;
 		lmap.dragging.enable();
+		lmap.boxZoom.enable();
 		if (selected.length > 0) onSelectMany(selected);
 	};
 
@@ -126,6 +128,8 @@ export async function setupMapDragSelection(
 
 	return () => {
 		selection?.remove();
+		lmap.dragging.enable();
+		lmap.boxZoom.enable();
 		lmap.off("mousedown", onMouseDown);
 		lmap.off("mousemove", onMouseMove);
 		lmap.off("mouseup", onMouseUp);
