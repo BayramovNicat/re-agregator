@@ -11,6 +11,9 @@ public/
 coverage
 *.lcov
 
+# test artifacts
+test-results/
+
 # logs
 logs
 _.log
