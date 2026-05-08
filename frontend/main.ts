@@ -45,20 +45,25 @@ const cleanups: (() => void)[] = [
 
 // Heavy features are loaded on demand.
 
+let galleryReady = false;
+
+async function ensureGallery(): Promise<void> {
+	if (galleryReady) return;
+	galleryReady = true;
+	const { initGallery } = await import("@/features/gallery");
+	cleanups.push(initGallery(root));
+}
+
 // Property Detail & Gallery (Grouped)
 bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
-	const [{ initPropertyDetail }, { initGallery }] = await Promise.all([
-		import("@/features/property-detail/index"),
-		import("@/features/gallery"),
-	]);
+	const { initPropertyDetail } = await import("@/features/property-detail/index");
 	cleanups.push(initPropertyDetail(root));
-	cleanups.push(initGallery(root));
+	await ensureGallery();
 	bus.emit(EVENTS.PROPERTY_OPEN, p);
 });
 
 bus.once(EVENTS.GALLERY_OPEN, async (payload) => {
-	const { initGallery } = await import("@/features/gallery");
-	cleanups.push(initGallery(root));
+	await ensureGallery();
 	bus.emit(EVENTS.GALLERY_OPEN, payload);
 });
 
