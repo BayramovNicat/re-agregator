@@ -30,6 +30,17 @@ const deal = {
 	],
 };
 
+const cheaperDeal = {
+	...deal,
+	source_url: "https://example.com/deal-2",
+	price: 90000,
+	price_per_sqm: 1200,
+	discount_percent: 15,
+	tier: "Good Deal",
+	description: "Lower priced test apartment",
+	image_urls: [],
+};
+
 async function mockApi(page: Page, options: { searchUrls?: string[] } = {}) {
 	await page.route("**/api/deals/locations", async (route) => {
 		await route.fulfill({ json: { data: ["Yasamal", "Nərimanov"] } });
@@ -186,6 +197,65 @@ test("threshold slider updates label and search params", async ({ page }) => {
 	await page.locator("#discount-threshold").fill("20");
 	await expect(page.getByText("20%", { exact: true })).toBeVisible();
 	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("threshold=20");
+});
+
+test("advanced filters update params and removable chips", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		searchUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
+		});
+	});
+
+	await page.getByRole("button", { name: /advanced filters/i }).click();
+	await page.locator("#minPrice").fill("100000");
+	await page.locator("#maxPrice").fill("130000");
+
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("minPrice=100000");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("maxPrice=130000");
+	await expect(page.getByText("Min ₼: 100000")).toBeVisible();
+
+	await page.getByText("Min ₼: 100000").getByRole("button", { name: "Remove filter" }).click();
+	await expect(page.locator("#minPrice")).toHaveValue("");
+	await expect.poll(() => searchUrls.at(-1) ?? "").not.toContain("minPrice=100000");
+});
+
+test("sort selection updates API params and persists", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		const url = route.request().url();
+		searchUrls.push(url);
+		const data = url.includes("sort=price-asc") ? [cheaperDeal, deal] : [deal, cheaperDeal];
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 2,
+				total: 2,
+				data,
+			},
+		});
+	});
+
+	await page.getByLabel("Sort by").selectOption("price-asc");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("sort=price-asc");
+	await expect(page.locator(".product-card").first()).toContainText("₼ 90,000");
+
+	await page.reload();
+	await expect(page.getByLabel("Sort by")).toHaveValue("price-asc");
 });
 
 test("grid and list view switch", async ({ page }) => {
