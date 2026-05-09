@@ -27,7 +27,6 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		mapSecEl: null as unknown as HTMLElement,
 		linkEl: null as unknown as HTMLAnchorElement,
 		shareBtn: null as unknown as HTMLButtonElement,
-		shareTextEl: null as unknown as HTMLElement,
 		bmarkBtn: null as unknown as HTMLButtonElement,
 		hideBtn: null as unknown as HTMLButtonElement,
 		currentProperty: null,
@@ -50,11 +49,13 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 			if (!ui.currentProperty) return;
 			const url = ui.currentProperty.source_url;
 			const flash = (msg: string) => {
-				const span = ui.shareTextEl;
-				if (!span) return;
-				const prev = span.textContent;
-				span.textContent = msg;
-				setTimeout(() => (span.textContent = prev), 2000);
+				const prev = ui.shareBtn.title;
+				ui.shareBtn.title = msg;
+				ui.shareBtn.setAttribute("aria-label", msg);
+				setTimeout(() => {
+					ui.shareBtn.title = prev;
+					ui.shareBtn.setAttribute("aria-label", prev);
+				}, 2000);
 			};
 
 			if (navigator.share) {

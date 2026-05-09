@@ -22,7 +22,6 @@ export interface PropertyDetailUI {
 	mapSecEl: HTMLElement;
 	linkEl: HTMLAnchorElement;
 	shareBtn: HTMLButtonElement;
-	shareTextEl: HTMLElement;
 	bmarkBtn: HTMLButtonElement;
 	hideBtn: HTMLButtonElement;
 

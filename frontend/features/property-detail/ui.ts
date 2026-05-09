@@ -77,15 +77,15 @@ export function renderPropertyDetailLayout(
 		${t("viewListing")} ${Icons.external(14)}
 	</a>` as HTMLAnchorElement;
 
-	ui.shareTextEl = html`<span>${t("btnShare")}</span>`;
 	ui.shareBtn = Button({
-		content: frag`${Icons.external(16)} ${ui.shareTextEl}`,
+		content: Icons.share(18),
 		variant: "padded",
 		color: "indigo",
 		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",
 		onclick: onShare,
 		title: t("btnShare"),
 	}) as HTMLButtonElement;
+	ui.shareBtn.setAttribute("aria-label", t("btnShare"));
 
 	ui.bmarkBtn = Button({
 		content: Icons.bookmark({ size: 18, fill: false }),
