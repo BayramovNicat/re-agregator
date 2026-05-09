@@ -21,18 +21,15 @@ RUN bun run build
 FROM base AS runner
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 app && \
-    adduser --system --uid 1001 --ingroup app app
+COPY --from=prisma --chown=1001:1001 /app/node_modules ./node_modules
+COPY --from=prisma --chown=1001:1001 /app/prisma ./prisma
+COPY --chown=1001:1001 src ./src
+COPY --from=build --chown=1001:1001 /app/public ./public
+COPY --chown=1001:1001 package.json tsconfig.json ./
 
-COPY --from=prisma --chown=app:app /app/node_modules ./node_modules
-COPY --from=prisma --chown=app:app /app/prisma ./prisma
-COPY --chown=app:app src ./src
-COPY --from=build --chown=app:app /app/public ./public
-COPY --chown=app:app package.json tsconfig.json ./
-
-USER app
+USER 1001:1001
 
 EXPOSE 3000
 
 # Run migrations then start server
-CMD bunx prisma migrate deploy && bun src/index.ts
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun src/index.ts"]
