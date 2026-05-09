@@ -20,7 +20,7 @@ export function renderPropertyDetailLayout(
 ): HTMLElement {
 	const { onExpand, onShare, onBookmark, onHide } = callbacks;
 
-	ui.gallery = Gallery({ onExpand, style: "height:460px" });
+	ui.gallery = Gallery({ onExpand, className: "flex-1 min-h-0" });
 
 	// Header elements
 	ui.locationEl = html`<div class="text-xs text-(--muted) truncate"></div>`;
@@ -60,8 +60,8 @@ export function renderPropertyDetailLayout(
 		</div>
 	`;
 
-	ui.mapCtEl = html`<div class="w-full h-90 bg-(--surface-3)"></div>`;
-	ui.mapSecEl = html`<div class="hidden border-t border-(--border)">
+	ui.mapCtEl = html`<div class="w-full h-64 bg-(--surface-3)"></div>`;
+	ui.mapSecEl = html`<div class="hidden border-t border-(--border) flex-1 min-h-0">
 		${ui.mapCtEl}
 	</div>`;
 
@@ -104,8 +104,9 @@ export function renderPropertyDetailLayout(
 	}) as HTMLButtonElement;
 
 	const leftCol = html`
-		<div class="flex-1 min-w-0 overflow-y-auto bg-(--surface) flex flex-col">
-			${ui.gallery} ${ui.mapSecEl}
+		<div class="flex-1 min-w-0 overflow-hidden bg-(--surface) flex flex-col">
+			<div class="flex-1 min-h-0 overflow-y-auto">${ui.gallery}</div>
+			<div class="flex-1 min-h-0 overflow-y-auto">${ui.mapSecEl}</div>
 		</div>
 	`;
 
