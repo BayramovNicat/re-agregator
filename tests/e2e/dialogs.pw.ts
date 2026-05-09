@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
-import { cheaperDeal, deal, mockApi } from "./fixtures";
+import { activeAlert, deal, mockApi } from "./fixtures";
 
 test.beforeEach(async ({ page }) => {
 	await mockApi(page);
 	await page.goto("/");
 	await expect(page.locator(".product-card")).toHaveCount(1);
+});
+
+test("saved view is hidden without bookmarks", async ({ page }) => {
+	await expect(page.getByRole("button", { name: /saved/i })).toHaveCount(0);
 });
 
 test("bookmark persists after reload and saved view opens", async ({ page }) => {
@@ -15,6 +19,20 @@ test("bookmark persists after reload and saved view opens", async ({ page }) => 
 	await expect(page.getByRole("button", { name: /saved 1/i })).toBeVisible();
 	await page.getByRole("button", { name: /saved 1/i }).click();
 	await expect(page.locator(".product-card")).toHaveCount(1);
+});
+
+test("saved view uses cached listing when refresh fails", async ({ page }) => {
+	await page.getByRole("button", { name: "Save" }).click();
+	await expect(page.getByRole("button", { name: /saved 1/i })).toBeVisible();
+
+	await page.unroute("**/api/deals/by-urls");
+	await page.route("**/api/deals/by-urls", async (route) => {
+		await route.fulfill({ status: 500, json: { error: "failed" } });
+	});
+	await page.getByRole("button", { name: /saved 1/i }).click();
+
+	await expect(page.locator(".product-card")).toHaveCount(1);
+	await expect(page.locator(".product-card").getByText("High Value Deal")).toBeVisible();
 });
 
 test("card opens property detail dialog", async ({ page }) => {
@@ -86,6 +104,22 @@ test("alerts dialog shows API failure and stays open", async ({ page }) => {
 
 	await expect(page.getByText("Alert failed")).toBeVisible();
 	await expect(dialog).toBeVisible();
+});
+
+test("alerts dialog lists and deletes active alert", async ({ page }) => {
+	const deletedAlerts: string[] = [];
+	await page.unroute("**/api/alerts**");
+	await mockApi(page, { alerts: [activeAlert], deletedAlerts });
+	await page.evaluate(() => localStorage.setItem("re-chatid", "123456789"));
+
+	await page.getByRole("button", { name: /alert me/i }).click();
+	const dialog = page.getByRole("dialog");
+	await expect(dialog.getByText("Active alerts")).toBeVisible();
+	await expect(dialog.getByText("Yasamal alert")).toBeVisible();
+
+	await dialog.getByRole("button", { name: "Delete alert" }).click({ force: true });
+	await expect.poll(() => deletedAlerts).toEqual(["token-1"]);
+	await expect(dialog.getByText("Yasamal alert")).toHaveCount(0);
 });
 
 test("gallery opens from card photo button", async ({ page }) => {

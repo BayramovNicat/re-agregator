@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build automated test coverage that proves Redeal works across backend APIs, frontend user flows, seeded real database behavior, and release checks.
+Build automated test coverage that exercises Redeal across backend APIs, representative mocked frontend user flows, seeded real database behavior, and release checks.
 
 Testing stack:
 
@@ -66,28 +66,30 @@ Behavior:
 - API tests skip gracefully if no server is running at `TEST_BASE_URL` or `http://localhost:3000`.
 - Seed-specific tests skip gracefully if seeded fixture data is not present.
 
-#### Playwright E2E tests
+#### Playwright browser tests with mocked APIs
 
 Files: `tests/e2e/app.pw.ts`, `search.pw.ts`, `dialogs.pw.ts`, `map.pw.ts`, `errors.pw.ts`, `mobile.pw.ts`
 
-Covered with mocked API:
+Covered UI behavior with mocked API responses:
 
 - Homepage renders first result.
-- Advanced filters open and clear.
+- Advanced filters open, clear, update URL params, render removable chips, and cover category/mortgage/description/boolean filters.
 - Location selector changes search API params and resets to all locations.
 - Threshold slider changes label and search API params.
 - Grid/list view switch.
-- Bookmark persists after reload and saved view opens.
+- Language switcher persists selected language.
+- Bookmark persists after reload, saved view opens, no-saved state is hidden, and saved view survives refresh failure via cached data.
 - Card opens property detail dialog.
 - Detail save, share, source link, and hide actions.
 - Hide removes listing.
-- Alerts dialog saves chat ID and shows API failure.
+- Alerts dialog saves chat ID, shows API failure, lists active alerts, and deletes an alert.
 - Gallery opens from card photo button, navigates, and closes with keyboard.
 - District stats dialog opens and renders heatmap data.
 - District stats search, avg-price sort aria state, and retry after API failure.
 - Scrape ops dialog opens, renders runs, starts scrape, and handles unauthorized run.
 - Heatmap dialog opens from Location Map and selects location.
-- Map view loads pins and switches back.
+- Trend panel renders for selected location and search remains usable after trend API failure.
+- Map view loads pins, switches back, and opens detail from a pin.
 - Empty search, search API error, and locations API failure states.
 - Mobile filters, detail, stats, and overflow coverage.
 
@@ -199,7 +201,7 @@ Current API areas:
 - Telegram webhook.
 - Brotli compression headers.
 
-API coverage covered:
+Selected API coverage:
 
 - Numeric deal filters, floor filters, boolean filters, description search, multiple locations.
 - Pagination duplicate-prevention and invalid limit/offset validation.
@@ -240,22 +242,35 @@ Current mocked API routes:
 - `/api/heatmap`
 - `/api/alerts`
 - `/api/scrape/runs`
+- `/api/scrape/run` in scrape-ops tests
 - `/health`
 
-E2E coverage covered:
+Selected mocked browser coverage:
 
 - Location selector selection/reset and search params.
 - Threshold slider label and search params.
-- Advanced filter params, active chips, and chip removal.
+- Advanced filter params, active chips, chip removal, category, active mortgage, description, and boolean filters.
 - Sort order and localStorage persistence.
-- Detail save, hide, and source link actions.
+- Language switcher localStorage persistence.
+- Saved view persistence, empty state, and cached fallback after `/api/deals/by-urls` failure.
+- Detail save, hide, share, and source link actions.
+- Alert create, API failure, list, and delete flows.
 - Gallery next button, keyboard navigation, and Escape close.
 - Heatmap circle selection and search refetch.
+- Trend panel render and trend failure resilience.
 - District stats render, search, sort aria state, failure, and retry.
 - Scrape ops rows, run-now request, and unauthorized token prompt.
-- Map view pin load and grid switch.
+- Map view pin load, grid switch, and pin-to-detail flow.
 - Empty search, search API error, and locations API failure.
 - Mobile filters/detail flow and horizontal overflow check.
+
+Remaining E2E limitations:
+
+- Browser tests mock API responses, so they do not prove real frontend/backend/database integration.
+- CI does not currently run a real-stack browser suite against seeded Postgres.
+- `/api/scrape/stream` SSE progress is not browser-tested.
+- Real scraper execution and Telegram network delivery are intentionally not automated.
+- Browser coverage is representative, not exhaustive for every route or visual branch.
 
 ## Layer 4: Seeded real database tests
 
@@ -407,6 +422,8 @@ Centralized in `tests/e2e/fixtures.ts`:
 
 - `deal`
 - `heatmapData`
+- `trendData`
+- `activeAlert`
 - `mockApi(page)`
 
 `mockApi(page)` supports overrides:
@@ -415,6 +432,7 @@ Centralized in `tests/e2e/fixtures.ts`:
 await mockApi(page, {
   undervalued: { data: [] },
   heatmapStatus: 500,
+  byUrlsStatus: 500,
 });
 ```
 
@@ -499,7 +517,7 @@ runs all seeded assertions.
 
 ### Phase 3: UI interaction depth
 
-Status: done.
+Status: baseline done; coverage expansion ongoing.
 
 Files:
 
@@ -552,10 +570,15 @@ Ongoing rules:
 
 ## Known limitations
 
-- Current E2E tests mock API, so they prove UI wiring but not real backend data.
-- Telegram real bot behavior is not automated.
-- Real scraper against bina.az is not automated, by design.
+- Current Playwright tests mock API responses, so they prove UI wiring but not real frontend/backend/database integration.
+- Seeded real database validation is API-level, not browser-level.
+- `/api/scrape/stream` SSE behavior is not automated.
+- Telegram real bot delivery/network behavior is not automated.
+- Real scraper execution against bina.az is not automated, by design.
+- Browser tests cover representative high-value routes and user flows, not every route or visual branch.
 
 ## Recommended next concrete tasks
 
-No open testing roadmap tasks. Add regression tests as bugs are fixed or features change.
+- Add a small real-stack Playwright smoke suite against seeded Postgres if UI/backend contract risk becomes high.
+- Add focused regression tests as bugs are fixed or features change.
+- Keep mocked browser coverage representative rather than exhaustive unless a flow is release-critical.

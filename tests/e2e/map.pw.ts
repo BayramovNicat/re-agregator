@@ -80,3 +80,18 @@ test("map view loads pins and switches back", async ({ page }) => {
 	await expect(page.locator(".product-card")).toHaveCount(1);
 });
 
+test("map pin opens property detail", async ({ page }) => {
+	await page.locator('button[title="Map view"]').click();
+	await expect(page.locator(".leaflet-container")).toBeVisible();
+	await expect(page.locator(".leaflet-overlay-pane path")).toHaveCount(1);
+
+	await page.locator(".leaflet-overlay-pane path").first().click({ force: true });
+	const dialog = page.locator("dialog#prop-detail-modal");
+	await expect(dialog).toBeVisible();
+	await expect(dialog.getByText("Bright test apartment")).toBeVisible();
+	await expect(dialog.getByRole("link", { name: /view listing/i })).toHaveAttribute(
+		"href",
+		deal.source_url,
+	);
+});
+

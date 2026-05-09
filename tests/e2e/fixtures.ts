@@ -64,6 +64,22 @@ export const heatmapData = [
 	},
 ];
 
+export const trendData = [
+	{ week: "2026-04-06T00:00:00.000Z", avg_ppsm: 1800 },
+	{ week: "2026-04-13T00:00:00.000Z", avg_ppsm: 1900 },
+	{ week: "2026-04-20T00:00:00.000Z", avg_ppsm: 2000 },
+];
+
+export const activeAlert = {
+	id: "alert-1",
+	chat_id: "123456789",
+	token: "token-1",
+	label: "Yasamal alert",
+	filters: { location: "Yasamal", threshold: 10, minPrice: 100000 },
+	is_active: true,
+	created_at: "2026-05-09T10:00:00.000Z",
+};
+
 type MockApiOptions = {
 	searchUrls?: string[];
 	undervalued?: unknown;
@@ -71,8 +87,15 @@ type MockApiOptions = {
 	heatmapStatus?: number;
 	alertsStatus?: number;
 	alertsError?: string;
+	alerts?: unknown[];
+	deletedAlerts?: string[];
 	locationsStatus?: number;
 	locations?: string[];
+	trend?: unknown;
+	trendStatus?: number;
+	mapPins?: unknown;
+	byUrls?: unknown;
+	byUrlsStatus?: number;
 };
 
 export async function mockApi(page: Page, options: MockApiOptions = {}) {
@@ -103,33 +126,43 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 		});
 	});
 	await page.route("**/api/deals/by-urls", async (route) => {
-		await route.fulfill({ json: { data: [deal] } });
+		if (options.byUrlsStatus && options.byUrlsStatus >= 400) {
+			await route.fulfill({ status: options.byUrlsStatus, json: { error: "failed" } });
+			return;
+		}
+		await route.fulfill({ json: options.byUrls ?? { data: [deal] } });
 	});
 	await page.route("**/api/deals/trend**", async (route) => {
-		await route.fulfill({ json: { location: "Yasamal", data: [] } });
+		if (options.trendStatus && options.trendStatus >= 400) {
+			await route.fulfill({ status: options.trendStatus, json: { error: "failed" } });
+			return;
+		}
+		await route.fulfill({ json: options.trend ?? { location: "Yasamal", data: trendData } });
 	});
 	await page.route("**/api/deals/map-pins**", async (route) => {
 		await route.fulfill({
-			json: {
-				count: 1,
-				data: [
-					{
-						source_url: deal.source_url,
-						lat: deal.latitude,
-						lng: deal.longitude,
-						price: deal.price,
-						price_per_sqm: deal.price_per_sqm,
-						area_sqm: deal.area_sqm,
-						floor: deal.floor,
-						total_floors: deal.total_floors,
-						rooms: deal.rooms,
-						location_name: deal.location_name,
-						image_url: deal.image_urls[0],
-						discount_percent: deal.discount_percent,
-						tier: deal.tier,
-					},
-				],
-			},
+			json:
+				options.mapPins ??
+				{
+					count: 1,
+					data: [
+						{
+							source_url: deal.source_url,
+							lat: deal.latitude,
+							lng: deal.longitude,
+							price: deal.price,
+							price_per_sqm: deal.price_per_sqm,
+							area_sqm: deal.area_sqm,
+							floor: deal.floor,
+							total_floors: deal.total_floors,
+							rooms: deal.rooms,
+							location_name: deal.location_name,
+							image_url: deal.image_urls[0],
+							discount_percent: deal.discount_percent,
+							tier: deal.tier,
+						},
+					],
+				},
 		});
 	});
 	await page.route("**/api/heatmap", async (route) => {
@@ -140,7 +173,12 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 	});
 	await page.route("**/api/alerts**", async (route) => {
 		if (route.request().method() === "GET") {
-			await route.fulfill({ json: { ok: true, alerts: [] } });
+			await route.fulfill({ json: { ok: true, alerts: options.alerts ?? [] } });
+			return;
+		}
+		if (route.request().method() === "DELETE") {
+			options.deletedAlerts?.push(route.request().url().split("/").pop() ?? "");
+			await route.fulfill({ json: { ok: true } });
 			return;
 		}
 		if (options.alertsStatus && options.alertsStatus >= 400) {

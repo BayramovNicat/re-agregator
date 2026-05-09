@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { cheaperDeal, deal, mockApi } from "./fixtures";
+import { cheaperDeal, deal, mockApi, trendData } from "./fixtures";
 
 test.beforeEach(async ({ page }) => {
 	await mockApi(page);
@@ -102,6 +102,44 @@ test("advanced filters update params and removable chips", async ({ page }) => {
 	await expect.poll(() => searchUrls.at(-1) ?? "").not.toContain("minPrice=100000");
 });
 
+test("advanced filters cover category, mortgage, description, and booleans", async ({ page }) => {
+	const searchUrls: string[] = [];
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		searchUrls.push(route.request().url());
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
+		});
+	});
+
+	await page.getByRole("button", { name: /advanced filters/i }).click();
+	await page.getByLabel("Category").selectOption("Yeni tikili");
+	await page.getByLabel("Active mortgage").selectOption("true");
+	await page.getByLabel("Description keyword").fill("corner");
+	await page.getByText("Has document").click();
+	await page.getByText("Urgent only").click();
+
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("category=Yeni+tikili");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("hasActiveMortgage=true");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("descriptionSearch=corner");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("hasDocument=true");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("isUrgent=true");
+	await expect(page.getByText("Category: Yeni tikili")).toBeVisible();
+	await expect(page.getByText("Active mortgage: Yes")).toBeVisible();
+
+	await page.getByRole("button", { name: /clear filters/i }).click();
+	await expect(page.getByLabel("Description keyword")).toHaveValue("");
+	await expect.poll(() => searchUrls.at(-1) ?? "").not.toContain("category=Yeni+tikili");
+});
+
 test("sort selection updates API params and persists", async ({ page }) => {
 	const searchUrls: string[] = [];
 	await page.unroute("**/api/deals/undervalued**");
@@ -128,5 +166,39 @@ test("sort selection updates API params and persists", async ({ page }) => {
 
 	await page.reload();
 	await expect(page.getByLabel("Sort by")).toHaveValue("price-asc");
+});
+
+test("trend panel renders and updates for selected location", async ({ page }) => {
+	const trendUrls: string[] = [];
+	await page.unroute("**/api/deals/trend**");
+	await page.route("**/api/deals/trend**", async (route) => {
+		const url = route.request().url();
+		trendUrls.push(url);
+		const location = new URL(url).searchParams.get("location") ?? "Yasamal";
+		await route.fulfill({ json: { location, data: trendData } });
+	});
+
+	await page.getByRole("combobox", { name: "Location" }).click();
+	await page.getByRole("option", { name: "Yasamal" }).click();
+	await expect.poll(() => trendUrls.at(-1) ?? "").toContain("location=Yasamal");
+	await expect(page.getByText(/Avg ₼\/m² trend/)).toBeVisible();
+	await expect(page.getByText("₼ 2,000/m²")).toBeVisible();
+	await expect(page.getByText("+11.1% vs 3w ago")).toBeVisible();
+});
+
+test("trend failure leaves search results usable", async ({ page }) => {
+	const trendUrls: string[] = [];
+	await page.unroute("**/api/deals/trend**");
+	await page.route("**/api/deals/trend**", async (route) => {
+		trendUrls.push(route.request().url());
+		await route.fulfill({ status: 500, json: { error: "failed" } });
+	});
+
+	await page.getByRole("combobox", { name: "Location" }).click();
+	await page.getByRole("option", { name: "Yasamal" }).click();
+
+	await expect.poll(() => trendUrls.at(-1) ?? "").toContain("location=Yasamal");
+	await expect(page.getByText("₼ 2,000/m²")).toHaveCount(0);
+	await expect(page.locator(".product-card")).toHaveCount(1);
 });
 
