@@ -59,7 +59,14 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 
 	const location = urlParams.get("location");
 	if (location) {
-		ui.locationSelect.setValue(location.split(",").filter(Boolean));
+		const sanitized = location
+			.split(",")
+			.filter((loc) => loc && /^[a-z0-9\-/_]*$/.test(loc));
+		if (sanitized.length > 0) {
+			ui.locationSelect.setValue(sanitized);
+		} else {
+			ui.locationSelect.setValue(["__all__"]);
+		}
 	} else {
 		ui.locationSelect.setValue(["__all__"]);
 	}

@@ -56,6 +56,7 @@ export function Dialog({
 				content: Icons.close(18),
 				variant: "ghost",
 				color: "muted",
+				ariaLabel: "Close dialog",
 				className:
 					"absolute top-5 right-5 size-8 flex items-center justify-center rounded-full hover:bg-(--surface-3) transition-colors z-[1001]",
 				onclick: (e) => {

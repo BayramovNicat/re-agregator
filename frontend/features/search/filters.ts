@@ -147,7 +147,14 @@ export function renderSearchFilters(
 						type: "number",
 						placeholder: config.placeholder,
 						className: "w-full",
-						oninput: onFilterChange,
+						min: "0",
+						oninput: (e) => {
+							const input = e.target as HTMLInputElement;
+							if (input.value && parseFloat(input.value) < 0) {
+								input.value = "";
+							}
+							onFilterChange();
+						},
 					});
 					return Field({
 						label: config.label,

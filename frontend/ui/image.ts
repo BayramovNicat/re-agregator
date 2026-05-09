@@ -108,6 +108,11 @@ export function Image({
 		props,
 	);
 
+	if (!src) {
+		img.style.display = "none";
+		return img;
+	}
+
 	img.dataset.src = src;
 
 	const handleLoad = () => {
