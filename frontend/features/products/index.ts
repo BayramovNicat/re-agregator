@@ -181,16 +181,23 @@ export function initProducts(container: HTMLElement): () => void {
 			{ t: "Overpriced", c: "var(--red)" },
 		];
 
-		const distStr = TIER_BADGES.filter((b) => tierCounts[b.t])
-			.map(
-				(b) =>
-					`<span style="color:${b.c}">${tierCounts[b.t]} ${tTier(b.t, true)}</span>`,
-			)
-			.join(' <span style="color:var(--border)">·</span> ');
+		const distNodes = TIER_BADGES.filter((b) => tierCounts[b.t]).flatMap(
+			(b, i) => {
+				const badge = frag`<span style="color:${b.c}">${tierCounts[b.t]} ${tTier(b.t, true)}</span>`;
+				return i === 0
+					? [" ", badge]
+					: [
+							" ",
+							frag`<span style="color:var(--border)">·</span>`,
+							" ",
+							badge,
+						];
+			},
+		);
 
-		const totalStr =
+		const totalNode =
 			state.currentTotal > state.allResults.length && !state.showingSaved
-				? ` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>`
+				? frag` <span style="color:var(--muted)">· ${fmt(state.currentTotal)} ${t("total")}</span>`
 				: "";
 
 		const label = state.showingSaved
@@ -202,7 +209,7 @@ export function initProducts(container: HTMLElement): () => void {
 				: t("result");
 
 		ui.resultsMeta.replaceChildren(
-			frag`<strong>${count}</strong> ${label}${totalStr}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
+			frag`<strong>${count}</strong> ${label}${totalNode}${distNodes.length ? frag` <span style="color:var(--border)">·</span>` : ""}${distNodes}`,
 		);
 	}
 

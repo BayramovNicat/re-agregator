@@ -46,10 +46,22 @@ export function cn(...inputs: ClassValue[]): string {
 	return twMerge(clsx(inputs));
 }
 
-const policy = window.trustedTypes?.createPolicy("redeal", {
+const trustedTypesPolicyOptions = {
 	createHTML: (s: string) => s,
 	createScriptURL: (s: string) => s,
-});
+};
+
+const createTrustedTypesPolicy = (name: string) => {
+	try {
+		return window.trustedTypes?.createPolicy(name, trustedTypesPolicyOptions);
+	} catch {
+		return undefined;
+	}
+};
+
+createTrustedTypesPolicy("default");
+
+const policy = createTrustedTypesPolicy("redeal");
 
 type RawHTML = {
 	__rawHtml: string;

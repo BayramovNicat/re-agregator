@@ -81,10 +81,9 @@ export async function showMapView(): Promise<void> {
 		state.lmap = await initLeaflet(mapContainer);
 		state.lmap.setView([40.396698, 49.8664491], 13);
 		state.pinGroup.addTo(state.lmap);
-	} else {
-		state.lmap.invalidateSize();
 	}
 
+	requestAnimationFrame(() => state.lmap?.invalidateSize());
 	void debouncedFetch();
 }
 
@@ -116,17 +115,23 @@ function updateResultsMeta(pins: MapPin[]) {
 		{ tier: "Overpriced", color: "var(--red)" },
 	];
 
-	const distStr = tierBadges
+	const distNodes = tierBadges
 		.filter((tb) => tierCounts[tb.tier])
-		.map(
-			(tb) =>
-				`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`,
-		)
-		.join(' <span style="color:var(--border)">·</span> ');
+		.flatMap((tb, i) => {
+			const badge = frag`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`;
+			return i === 0
+				? [" ", badge]
+				: [
+						" ",
+						frag`<span style="color:var(--border)">·</span>`,
+						" ",
+						badge,
+					];
+		});
 
 	meta.replaceChildren(
 		frag`<strong>${fmt(total, 0)}</strong> ${
 			total !== 1 ? t("results") : t("result")
-		}${distStr ? ` <span style="color:var(--border)">·</span> ${distStr}` : ""}`,
+		}${distNodes.length ? frag` <span style="color:var(--border)">·</span>` : ""}${distNodes}`,
 	);
 }
