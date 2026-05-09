@@ -116,6 +116,22 @@ export function timeAgo(s: string | null | undefined): string | null {
 	});
 }
 
+function getToastHost(): HTMLElement {
+	const openDialogs = document.querySelectorAll<HTMLDialogElement>("dialog[open]");
+	const dialog = openDialogs[openDialogs.length - 1];
+	if (!dialog) return ge("toasts");
+
+	let host = dialog.querySelector<HTMLElement>("[data-dialog-toasts]");
+	if (!host) {
+		host = document.createElement("div");
+		host.dataset.dialogToasts = "true";
+		host.className =
+			"fixed bottom-5 right-5 z-[10000] flex flex-col gap-2 pointer-events-none";
+		dialog.appendChild(host);
+	}
+	return host;
+}
+
 export function toast(msg: string, err = false): void {
 	const el = html`<div
 		class="bg-(--surface-3) border border-(--border) rounded-(--r) px-4 py-2.5 text-[13px] text-(--text-2) shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto animate-[fadeUp_0.2s_ease] ${
@@ -124,7 +140,7 @@ export function toast(msg: string, err = false): void {
 	>
 		${msg}
 	</div>`;
-	ge("toasts").appendChild(el);
+	getToastHost().appendChild(el);
 	setTimeout(() => el.remove(), 3800);
 }
 

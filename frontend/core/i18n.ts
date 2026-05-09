@@ -155,6 +155,7 @@ const translations = {
 		alertDeleted: "Alert deleted",
 		invalidChatId: "Enter a valid Telegram Chat ID (digits only)",
 		failedAlert: "Failed to create alert",
+		failedDeleteAlert: "Failed to delete alert",
 		botInstruction: "Open {bot} and send {start} to get your Chat ID.",
 		toastRemoved: "Removed from saved",
 		toastSaved: "★ Deal saved",
@@ -391,6 +392,7 @@ const translations = {
 		alertDeleted: "Bildiriş silindi",
 		invalidChatId: "Düzgün Telegram Chat ID daxil edin (yalnız rəqəmlər)",
 		failedAlert: "Bildiriş yaradılmadı",
+		failedDeleteAlert: "Bildiriş silinmədi",
 		botInstruction: "{bot} açın və Chat ID almaq üçün {start} göndərin.",
 		toastRemoved: "Saxlanılanlardan silindi",
 		toastSaved: "★ Elan saxlanıldı",
@@ -625,6 +627,7 @@ const translations = {
 		alertDeleted: "Уведомление удалено",
 		invalidChatId: "Введите корректный Telegram Chat ID (только цифры)",
 		failedAlert: "Не удалось создать уведомление",
+		failedDeleteAlert: "Не удалось удалить уведомление",
 		botInstruction:
 			"Откройте {bot} и отправьте {start}, чтобы получить свой Chat ID.",
 		toastRemoved: "Удалено из сохранённых",

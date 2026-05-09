@@ -59,15 +59,21 @@ export async function saveAlert(
 /**
  * Deletes an alert by token.
  */
-export async function deleteAlert(token: string): Promise<boolean> {
+export async function deleteAlert(
+	token: string,
+	chatId: string,
+): Promise<boolean> {
 	try {
-		const res = await fetch(`/api/alerts/${token}`, { method: "DELETE" });
+		const res = await fetch(
+			`/api/alerts/${token}?chat_id=${encodeURIComponent(chatId)}`,
+			{ method: "DELETE" },
+		);
 		if (!res.ok) throw new Error("Delete failed");
 		toast(t("alertDeleted"));
 		return true;
 	} catch (e) {
 		console.error("[Alerts] delete failed:", e);
-		toast(t("failedAlert"), true);
+		toast(t("failedDeleteAlert"), true);
 		return false;
 	}
 }

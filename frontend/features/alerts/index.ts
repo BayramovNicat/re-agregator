@@ -58,7 +58,7 @@ export function initAlerts(root: HTMLElement): () => void {
 	};
 
 	const handleDelete = async (token: string, rowEl: HTMLElement) => {
-		const success = await deleteAlert(token);
+		const success = await deleteAlert(token, ui.chatIdInput.value.trim());
 		if (success) {
 			rowEl.remove();
 			if (ui.itemsEl.children.length === 0) {

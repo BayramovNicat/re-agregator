@@ -55,14 +55,23 @@ export function initTooltip(root: HTMLElement = document.body): () => void {
 	};
 
 	const onScroll = () => hide();
+	const onPointerDown = () => hide();
+	const onClick = () => hide();
+	const observer = new MutationObserver(() => {
+		if (activeTarget && !activeTarget.isConnected) hide();
+	});
+	observer.observe(document.body, { childList: true, subtree: true });
 
 	add(window, "mouseover", onMouseOver);
 	add(window, "mouseout", onMouseOut);
+	add(window, "pointerdown", onPointerDown);
+	add(window, "click", onClick);
 	add(window, "scroll", onScroll);
 	add(window, "resize", onScroll);
 
 	return () => {
 		cleanup();
+		observer.disconnect();
 		el?.remove();
 		el = null;
 	};

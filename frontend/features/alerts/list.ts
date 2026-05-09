@@ -35,7 +35,7 @@ export function renderAlertList(
 			color: "red",
 			title: t("deleteAlert"),
 			className:
-				"shrink-0 size-8 opacity-0 group-hover:opacity-100 transition-opacity",
+				"shrink-0 size-8 justify-center opacity-0 group-hover:opacity-100 transition-opacity",
 			onclick: (e) => {
 				const rowEl = (e.currentTarget as HTMLElement).closest(
 					".group",
