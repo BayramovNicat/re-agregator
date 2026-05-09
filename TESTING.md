@@ -398,7 +398,7 @@ Complete testing checklist for all frontend functionality. Test in order; each s
 - [ ] Scrape runs list visible
 - [ ] Each run shows: timestamp, status, properties scraped
 - [ ] "Run Scrape" button triggers manual scrape
-- [ ] Scrape progress updates in real-time (SSE)
+- [ ] Manual scrape trigger returns success and run history updates
 
 ---
 

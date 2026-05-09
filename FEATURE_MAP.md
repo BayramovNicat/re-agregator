@@ -117,7 +117,7 @@ state = {
 | `/api/scrape/login` | POST | `{ password }` | `{ token: string }` |
 | `/api/scrape/logout` | POST | — | `{ success: boolean }` |
 | `/api/scrape/runs` | GET | — | `{ data: ScrapeRun[] }` |
-| `/api/scrape/run` | POST | — | SSE stream |
+| `/api/scrape/run` | POST | — | `{ ok: boolean }` |
 
 ### Health
 | Endpoint | Method | Returns |
@@ -199,7 +199,7 @@ Reusable components:
 
 ## Tier Classification
 
-Deal scoring in `src/services/analytics.service.ts`:
+Deal scoring in `src/modules/deals/deals.service.ts` and `src/utils/deals.ts`:
 
 ```typescript
 discount_percent = (location_avg_price_per_sqm - property_price_per_sqm) / location_avg_price_per_sqm * 100

@@ -11,7 +11,7 @@ Real estate deal aggregator for the Baku market. Continuously scrapes bina.az, s
 - **District statistics** — price trend charts and sorted location rankings
 - **Property detail** — image gallery, map location, deal score breakdown, and a direct link to the source listing
 - **Telegram alerts** — subscribe to a filter set and get notified when new matching deals appear
-- **Live scrape stream** — watch scraping progress in real time via Server-Sent Events
+- **Scrape admin** — trigger background scrape runs and review run history
 
 ## Stack
 
@@ -53,8 +53,17 @@ bun run dev
 | `bun run dev`       | Start with hot reload               |
 | `bun run start`     | Start for production                |
 | `bun run typecheck` | Type-check without emitting         |
+| `bun run db:migrate` | Apply Prisma migrations             |
 | `bun run db:push`   | Push schema to DB without migration |
 | `bun run db:studio` | Open Prisma Studio                  |
+| `bun run build`     | Build frontend assets               |
+| `bun run lint`      | Run Biome lint                      |
+| `bun run format`    | Format with Biome                   |
+| `bun run check`     | Run Biome check and write fixes     |
+| `bun run test`      | Run Bun tests                       |
+| `bun run test:e2e`  | Run Playwright E2E tests            |
+| `bun run verify`    | Run typecheck, tests, and E2E       |
+| `bun run verify:db` | Verify database connection/schema   |
 
 ## Deal Score Methodology
 
@@ -64,10 +73,10 @@ discount_percent = ((location_avg_price_per_sqm - property_price_per_sqm) / loca
 
 | Discount | Tier            |
 | -------- | --------------- |
-| ≥ 20%    | High Value Deal |
-| 10–19%   | Good Deal       |
-| 0–9%     | Fair Price      |
-| Negative | Overpriced      |
+| ≥ 20%        | High Value Deal |
+| 10–19%       | Good Deal       |
+| 0–9%         | Fair Price      |
+| Above avg    | Overpriced      |
 
 ## Documentation
 
@@ -102,7 +111,7 @@ Complete guides for testing, development, and architecture:
 | Metric | Value |
 |--------|-------|
 | Features | 21 major areas |
-| API Endpoints | 20 |
+| API Endpoints | 17 route paths / 18 methods |
 | Frontend Modules | 11 |
 | UI Components | 14 |
 | Database Tables | 3 |
@@ -121,9 +130,8 @@ Frontend (Vanilla TS)
   └─ ui/ (14 reusable components)
          ↓ HTTP (brotli compressed)
 Backend (Bun + Bun.serve)
-  ├─ routes/ (20 endpoints)
+  ├─ routes.ts (17 route paths / 18 methods)
   ├─ modules/ (deals, alerts, scrape, telegram)
-  ├─ services/ (analytics, telegram, alerts)
   └─ scrapers/ (bina.az)
          ↓ SQL
 Database (PostgreSQL + Prisma)
@@ -176,7 +184,7 @@ Database (PostgreSQL + Prisma)
 ### Admin
 - Password-protected scrape operations
 - Manual scrape trigger
-- Real-time progress via Server-Sent Events
+- Background scrape trigger with run history
 - Scrape run history
 
 ## Performance
@@ -237,12 +245,12 @@ bun run typecheck
 bun run db:studio
 
 # Database migrations
+bun run db:migrate
 bun run db:push
-bun run db:pull
 
 # Production build
-bun build frontend/main.ts
-bun run src/index.ts
+bun run build
+bun run start
 ```
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for complete development guide.

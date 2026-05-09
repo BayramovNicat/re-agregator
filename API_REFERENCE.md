@@ -468,21 +468,18 @@ List recent scrape runs.
 ---
 
 #### POST /api/scrape/run
-Trigger manual scrape (admin only).
+Trigger manual scrape (admin only). Starts scrape work in background.
 
 **Body:** None
 
-**Response:** Server-Sent Events (SSE) stream
-
-```
-data: {"status":"starting","message":"Initializing scraper..."}
-data: {"status":"scraping","page":1,"total_pages":40,"properties":23}
-data: {"status":"scraping","page":2,"total_pages":40,"properties":45}
-...
-data: {"status":"completed","total_properties":847,"new":23,"updated":156}
+**Response:**
+```json
+{
+  "ok": true
+}
 ```
 
-**Compression:** Not applicable (SSE)
+**Compression:** Brotli
 
 ---
 
@@ -529,10 +526,6 @@ src/
 │   └── telegram/
 │       ├── telegram.controller.ts
 │       └── telegram.service.ts
-├── services/
-│   ├── analytics.service.ts    # Deal scoring, tier classification
-│   ├── telegram.service.ts     # Telegram bot integration
-│   └── alert.service.ts        # Alert matching logic
 ├── scrapers/
 │   ├── base.scraper.ts         # Abstract scraper interface
 │   └── bina.scraper.ts         # bina.az implementation
@@ -617,10 +610,10 @@ Hourly Cron / Manual Trigger
     ↓
 scrape.service.ts: runScrape()
     ├─ Initialize bina.scraper
-    ├─ Fetch 40 pages (800ms delay)
+    ├─ Fetch 20 pages (800ms delay)
     ├─ Parse listings
     ├─ Normalize locations
-    ├─ Score properties (analytics.service)
+    ├─ Score properties (deals.service / deals utils)
     └─ Upsert into DB
     ↓
 alert.service.ts: matchAlerts()

@@ -43,7 +43,7 @@ Five complete documentation files created:
 - **Estimated time:** 10 minutes to read
 
 ### 4. **API_REFERENCE.md** (Complete API docs)
-- All 20 endpoints with full documentation
+- All 17 route paths / 18 methods with full documentation
 - Query parameters and response formats
 - Backend architecture and request flow
 - Database schema (3 tables, 5 indexes)
@@ -180,7 +180,7 @@ Five complete documentation files created:
 
 ### For API Integration
 → **API_REFERENCE.md**
-- All 20 endpoints with examples
+- All 17 route paths / 18 methods with examples
 - Database schema
 - Error handling
 
@@ -393,13 +393,13 @@ All documentation verified:
 ✅ **TESTING.md** - 21 features, 100+ test cases, smoke test
 ✅ **PROJECT_ANALYSIS.md** - Architecture, data flow, algorithms
 ✅ **FEATURE_MAP.md** - Dependencies, event bus, state management
-✅ **API_REFERENCE.md** - 20 endpoints, database schema, error handling
+✅ **API_REFERENCE.md** - 17 route paths / 18 methods, database schema, error handling
 ✅ **DEVELOPMENT.md** - Setup, common tasks, debugging, deployment
 ✅ **README.md** - Updated with documentation index and quick start
 
 **Total:** ~26,500 words, 48 tables, 43 code examples, 1,650 lines
 
-**Coverage:** 21/21 features, 20/20 endpoints, 6/6 common tasks, 10+ troubleshooting issues
+**Coverage:** 21/21 features, 20/17 route paths / 18 methods, 6/6 common tasks, 10+ troubleshooting issues
 
 **Time to read all:** ~1 hour
 **Time to smoke test:** 10 minutes

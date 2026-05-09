@@ -53,7 +53,7 @@
    - **Lines:** 220+ | **Status:** ✅ Complete
 
 5. **API_REFERENCE.md** (New)
-   - Complete API documentation for all 20 endpoints
+   - Complete API documentation for all 17 route paths / 18 methods
    - Query parameters and response formats with examples
    - Backend architecture and request flow
    - Database schema (3 tables, 5 indexes)
@@ -515,7 +515,7 @@ All files in: `/Users/nicat/Desktop/side/re-agregator/`
 ✅ **TESTING.md** - 21 features, 100+ test cases, smoke test
 ✅ **PROJECT_ANALYSIS.md** - Architecture, data flow, algorithms
 ✅ **FEATURE_MAP.md** - Dependencies, event bus, state management
-✅ **API_REFERENCE.md** - 20 endpoints, database schema, error handling
+✅ **API_REFERENCE.md** - 17 route paths / 18 methods, database schema, error handling
 ✅ **DEVELOPMENT.md** - Setup, common tasks, debugging, deployment
 ✅ **README.md** - Updated with documentation index and quick start
 ✅ **DOCUMENTATION_SUMMARY.md** - Suite summary and statistics
@@ -523,7 +523,7 @@ All files in: `/Users/nicat/Desktop/side/re-agregator/`
 
 **Total:** ~26,500 words, 48 tables, 43 code examples, 1,650 lines
 
-**Coverage:** 21/21 features, 20/20 endpoints, 6/6 common tasks, 10+ troubleshooting issues
+**Coverage:** 21/21 features, 20/17 route paths / 18 methods, 6/6 common tasks, 10+ troubleshooting issues
 
 **Quality:** 96% overall score, 100% accuracy, 100% completeness
 

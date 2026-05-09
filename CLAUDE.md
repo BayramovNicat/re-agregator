@@ -119,15 +119,15 @@ Real estate deal aggregator for the Baku market (bina.az). Bun + TypeScript + Po
 - Server entry point: `src/index.ts` — uses `Bun.serve()` with typed route handlers. No Express, no framework.
 - Database: Prisma with PostgreSQL. Client singleton at `src/utils/prisma.ts`. Use `bun run db:push` for schema changes during development.
 - Scrapers implement the abstract interface in `src/scrapers/base.scraper.ts`. Add new sources there.
-- All deal-scoring logic lives in `src/services/analytics.service.ts`. Thresholds and tier labels are defined in `classifyDeal()`.
+- Deal scoring query logic lives in `src/modules/deals/deals.service.ts`. Thresholds and tier labels are defined in `src/utils/deals.ts`.
 - Location names come from bina.az and are normalised in `src/utils/district-normalizer.ts` before being stored as `location_name`.
-- Static frontend files go in `public/`. The server serves them with a SPA fallback in the `fetch()` handler.
+- Frontend source lives in `frontend/`; `bun run build` outputs static files to `public/`. Server serves `public/` with SPA fallback.
 - Frontend source in `frontend/` — vanilla TypeScript, no framework. `main.ts` is the entry point.
 - Frontend split into: `core/` (state, types, i18n, events, utils), `features/` (products, search, header, map-view, district-stats, alerts, trend), `ui/` (components), `dialogs/` (property-detail, gallery, map, heatmap, description).
 - Run dev server: `bun run dev` (hot reload). Type-check: `bun run typecheck`.
 - All API responses use brotli compression when client supports it (`Accept-Encoding: br`).
-- Hourly cron scrape runs automatically on server start (40 pages, 800ms delay).
-- Telegram alert system: `src/services/telegram.service.ts` + `src/services/alert.service.ts`.
+- Hourly cron scrape runs automatically on server start (20 pages, 800ms delay).
+- Telegram alert system: `src/modules/telegram/` + `src/modules/alerts/`.
 
 ### Frontend Coding Style
 - All AI assistants must adhere to the rules defined in `.cursorrules` when editing the frontend. This includes using pure Vanilla TS, the `html` custom tag, and proper feature cleanup patterns.
@@ -153,7 +153,11 @@ Indexes on: `district`, `location_name`, `is_urgent`, `price_per_sqm`, `(locatio
 | GET | `/api/deals/map-pins` | Lat/lng pins for map view |
 | POST | `/api/deals/by-urls` | Fetch properties by URL list |
 | GET | `/api/heatmap` | District-level heatmap data |
-| GET | `/api/scrape/stream` | SSE live scrape progress |
+| GET | `/api/scrape/runs` | Scrape run history |
+| GET | `/api/scrape/session` | Admin session status |
+| POST | `/api/scrape/login` | Admin login |
+| POST | `/api/scrape/logout` | Admin logout |
+| POST | `/api/scrape/run` | Trigger background scrape |
 | GET | `/api/alerts?chat_id=X` | List Telegram alerts |
 | POST | `/api/alerts` | Create Telegram alert |
 | DELETE | `/api/alerts/:token` | Deactivate alert |

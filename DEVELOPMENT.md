@@ -52,8 +52,8 @@ bun test
 bun build frontend/main.ts
 
 # Database migrations
-bun run db:push          # Apply schema changes
-bun run db:pull          # Pull schema from DB
+bun run db:migrate       # Apply Prisma migrations
+bun run db:push          # Apply schema changes without migration
 bun run db:studio        # Open Prisma Studio (GUI)
 
 # Format code

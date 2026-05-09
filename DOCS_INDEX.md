@@ -31,7 +31,7 @@ Quick reference for all Redeal documentation. Start here.
 
 4. **[API_REFERENCE.md](API_REFERENCE.md)**
    - Complete API documentation
-   - All 20 endpoints with examples
+   - API route examples
    - Database schema
    - Error handling
    - **Time:** 15 minutes
@@ -168,7 +168,7 @@ Then follow **Section 21** in [TESTING.md](TESTING.md) for smoke test (10 min).
 │   ├── features/                # Feature modules
 │   └── ui/                      # Components
 │
-├── public/                      # Static assets
+├── public/                      # Built static assets
 ├── prisma/                      # Database schema
 └── .env                         # Environment variables
 ```
@@ -188,7 +188,7 @@ Then follow **Section 21** in [TESTING.md](TESTING.md) for smoke test (10 min).
 - [README.md](README.md) - Feature summary
 
 ### API
-- [API_REFERENCE.md](API_REFERENCE.md) - All 20 endpoints
+- [API_REFERENCE.md](API_REFERENCE.md) - API route reference
 - [FEATURE_MAP.md](FEATURE_MAP.md) - API summary table
 - [README.md](README.md) - Quick API reference
 
@@ -300,18 +300,18 @@ bun run typecheck        # Type check
 bun run format           # Format code
 
 # Database
-bun run db:push          # Apply schema changes
-bun run db:pull          # Pull schema from DB
+bun run db:migrate       # Apply Prisma migrations
+bun run db:push          # Apply schema changes without migration
 bun run db:studio        # Open Prisma Studio (GUI)
 
 # Testing
 bun test                 # Run tests (if any)
 
 # Building
-bun build frontend/main.ts  # Build frontend
+bun run build              # Build frontend
 
 # Production
-bun run src/index.ts     # Start server
+bun run start            # Start server
 ```
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) "Development Commands" for full list.

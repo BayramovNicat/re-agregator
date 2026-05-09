@@ -17,13 +17,12 @@
 **Entry:** `src/index.ts` — HTTP server with typed route handlers
 
 **Key Modules:**
-- `src/routes.ts` — Route definitions (20 endpoints)
+- `src/routes.ts` — Route definitions (17 route paths / 18 methods)
 - `src/modules/deals/` — Property search, scoring, filtering
 - `src/modules/alerts/` — Telegram alert CRUD
 - `src/modules/scrape/` — Admin scrape operations
 - `src/modules/telegram/` — Webhook handler
-- `src/services/analytics.service.ts` — Deal scoring logic (tier classification)
-- `src/services/telegram.service.ts` — Telegram bot integration
+- `src/utils/deals.ts` — Deal tier classification
 - `src/utils/prisma.ts` — DB client singleton
 - `src/utils/district-normalizer.ts` — Location name normalization
 - `src/middleware/brotli.js` — Response compression
@@ -35,9 +34,9 @@
 **Scrapers:**
 - `src/scrapers/base.scraper.ts` — Abstract interface
 - `src/scrapers/bina.scraper.ts` — bina.az implementation
-- Hourly cron runs 40 pages with 800ms delay
+- Hourly cron runs 20 pages with 800ms delay
 
-**API Surface:** 20 endpoints
+**API Surface:** 17 route paths / 18 methods
 - `/health` — Status + property count
 - `/api/deals/*` — Search, trend, map pins, heatmap
 - `/api/alerts/*` — CRUD alerts
@@ -125,8 +124,7 @@
 9. **Admin** (`features/admin.ts`)
    - Password-protected login
    - Scrape runs list
-   - Manual scrape trigger
-   - Real-time progress (SSE)
+   - Manual background scrape trigger
 
 10. **Header** (`features/header.ts`)
     - Logo
@@ -185,11 +183,11 @@
 
 ### Scrape Flow
 1. Hourly cron or manual trigger
-2. `bina.scraper.ts` fetches 40 pages from bina.az
+2. `bina.scraper.ts` fetches 20 pages from bina.az
 3. Parses listings, normalizes locations
 4. Scores each property (tier classification)
 5. Upserts into DB (source_url unique)
-6. SSE stream updates admin panel in real-time
+6. Scrape run history tracks status and results
 
 ### Map Flow
 1. User switches to map view
@@ -202,7 +200,7 @@
 
 ## Key Algorithms
 
-### Deal Scoring (`src/services/analytics.service.ts`)
+### Deal Scoring (`src/modules/deals/deals.service.ts`, `src/utils/deals.ts`)
 - Calculates `discount_percent` = (location_avg - property_price) / location_avg * 100
 - Classifies tier based on discount:
   - **High Value Deal** (green): discount > 15%
