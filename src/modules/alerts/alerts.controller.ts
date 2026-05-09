@@ -68,13 +68,20 @@ export async function createAlert(req: Request): Promise<Response> {
 }
 
 export async function deleteAlert(req: Request): Promise<Response> {
-	const token = new URL(req.url).pathname.split("/").pop() ?? "";
+	const url = new URL(req.url);
+	const token = url.pathname.split("/").pop() ?? "";
 	if (!token) {
 		return ResponseHelper.error("Token is required", 400);
 	}
+
+	const chatId = url.searchParams.get("chat_id") ?? "";
+	if (!/^\d+$/.test(chatId)) {
+		return ResponseHelper.error("chat_id must be a numeric Telegram chat ID", 400);
+	}
+
 	try {
 		const { count } = await prisma.alert.updateMany({
-			where: { token, is_active: true },
+			where: { token, chat_id: chatId, is_active: true },
 			data: { is_active: false },
 		});
 

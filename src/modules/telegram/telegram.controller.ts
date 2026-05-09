@@ -1,8 +1,16 @@
+import { TELEGRAM_WEBHOOK_SECRET } from "@/config.js";
 import { readJsonBody } from "@/utils/json-body.js";
 import { prisma } from "@/utils/prisma.js";
 import { sendMessage } from "./telegram.service.js";
 
 export async function handleWebhook(req: Request): Promise<Response> {
+	if (
+		TELEGRAM_WEBHOOK_SECRET &&
+		req.headers.get("x-telegram-bot-api-secret-token") !== TELEGRAM_WEBHOOK_SECRET
+	) {
+		return Response.json({ ok: false }, { status: 401 });
+	}
+
 	const parsed = await readJsonBody<Record<string, unknown>>(req);
 	if (!parsed.ok) return Response.json({ ok: true });
 

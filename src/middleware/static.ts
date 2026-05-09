@@ -81,7 +81,20 @@ const CACHE_DEFAULT = "public, max-age=86400";
 function resolveStaticPath(publicDir: string, pathname: string): string | null {
 	let decodedPath: string;
 	try {
+		// Decode once (handles %2e, %2f, %5c, etc.)
 		decodedPath = decodeURIComponent(pathname);
+		// Decode a second time to catch double-encoded traversal (%252e → %2e → .)
+		const doubleDecoded = decodeURIComponent(decodedPath);
+		if (doubleDecoded !== decodedPath) {
+			// Something was double-encoded; check the fully-decoded form too.
+			if (
+				doubleDecoded.includes("\\") ||
+				doubleDecoded.includes("..") ||
+				doubleDecoded.startsWith("//")
+			) {
+				return null;
+			}
+		}
 	} catch {
 		return null;
 	}

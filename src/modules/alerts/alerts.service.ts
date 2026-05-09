@@ -8,7 +8,14 @@ function fmt(n: number, d = 0): string {
 	return Number(n).toLocaleString("az-AZ", { maximumFractionDigits: d });
 }
 
-function formatListing(p: {
+function escapeTelegramHtml(value: string): string {
+	return value
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;");
+}
+
+export function formatListing(p: {
 	source_url: string;
 	price: number;
 	area_sqm: number;
@@ -24,7 +31,7 @@ function formatListing(p: {
 	discount_percent: number;
 	location_avg_price_per_sqm: number;
 }): string {
-	const loc = p.location_name ?? p.district;
+	const loc = escapeTelegramHtml(p.location_name ?? p.district);
 	const rooms = p.rooms ? `${p.rooms}BR` : "";
 	const floor =
 		p.floor != null && p.total_floors != null
@@ -96,7 +103,7 @@ export async function runAlerts(): Promise<void> {
 
 			if (data.length === 0) continue;
 
-			const label = alert.label ?? "your alert";
+			const label = escapeTelegramHtml(alert.label ?? "your alert");
 			const header = `🔔 <b>${data.length} new deal${data.length !== 1 ? "s" : ""}</b> matching "${label}"`;
 			const body = data.map(formatListing).join("\n\n");
 			const footer = `\n\nSend /stop to stop all alerts.`;

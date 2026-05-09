@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, test } from "bun:test";
+import { formatListing } from "../../src/modules/alerts/alerts.service.js";
 
 const baseUrl = process.env.TEST_BASE_URL ?? "http://localhost:3000";
 const isCi = process.env.CI === "true";
@@ -531,7 +532,7 @@ describe("public API", () => {
 		).toBe(true);
 	});
 
-	test("seeded alerts can be created, listed, and deleted", async () => {
+	test("seeded alerts can be created, listed, and deleted by owner", async () => {
 		if (skipIfNoSeed()) return;
 		const { res: createRes, body: created } = await postJson("/api/alerts", {
 			chat_id: "987654321",
@@ -549,10 +550,19 @@ describe("public API", () => {
 			),
 		).toBe(true);
 
-		const deleteRes = await fetch(`${baseUrl}/api/alerts/${(created as { token: string }).token}`, {
+		const token = (created as { token: string }).token;
+
+		// foreign chat_id cannot delete another user's alert
+		const foreignDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, {
 			method: "DELETE",
 		});
-		expect(deleteRes.status).toBe(200);
+		expect(foreignDelete.status).toBe(404);
+
+		// owner can delete their own alert
+		const ownerDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654321`, {
+			method: "DELETE",
+		});
+		expect(ownerDelete.status).toBe(200);
 	});
 
 	test("alerts reject invalid requests", async () => {
@@ -595,8 +605,8 @@ describe("public API", () => {
 		);
 		expect(alert?.label).toHaveLength(80);
 
-		const firstDelete = await fetch(`${baseUrl}/api/alerts/${token}`, { method: "DELETE" });
-		const secondDelete = await fetch(`${baseUrl}/api/alerts/${token}`, { method: "DELETE" });
+		const firstDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, { method: "DELETE" });
+		const secondDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, { method: "DELETE" });
 		expect(firstDelete.status).toBe(200);
 		expect(secondDelete.status).toBe(404);
 	});
@@ -661,5 +671,82 @@ describe("public API", () => {
 		expect(malformed.body).toMatchObject({ ok: true });
 		expect(withoutMessage.body).toMatchObject({ ok: true });
 		expect(unknownMessage.body).toMatchObject({ ok: true });
+	});
+
+	test("telegram webhook rejects wrong secret token", async () => {
+		if (skipIfNoServer()) return;
+
+		// Only meaningful when TELEGRAM_WEBHOOK_SECRET is set in the server env.
+		// Without it the server accepts all requests, so we skip the assertion.
+		if (!process.env.TELEGRAM_WEBHOOK_SECRET) {
+			console.warn("Skipping webhook secret test: TELEGRAM_WEBHOOK_SECRET not set");
+			return;
+		}
+
+		const noSecret = await postJson("/api/telegram/webhook", { update_id: 1 });
+		const wrongSecret = await fetch(`${baseUrl}/api/telegram/webhook`, {
+			method: "POST",
+			headers: {
+				"content-type": "application/json",
+				"x-telegram-bot-api-secret-token": "wrong-secret",
+			},
+			body: JSON.stringify({ update_id: 1 }),
+		});
+
+		expect(noSecret.res.status).toBe(401);
+		expect(wrongSecret.status).toBe(401);
+	});
+
+	test("alerts delete requires matching chat_id", async () => {
+		if (skipIfNoServer()) return;
+
+		// missing chat_id → 400
+		const noChatId = await fetch(`${baseUrl}/api/alerts/nonexistent-token`, { method: "DELETE" });
+		expect(noChatId.status).toBe(400);
+
+		// non-numeric chat_id → 400
+		const badChatId = await fetch(`${baseUrl}/api/alerts/nonexistent-token?chat_id=abc`, {
+			method: "DELETE",
+		});
+		expect(badChatId.status).toBe(400);
+	});
+});
+
+describe("XSS escaping — formatListing", () => {
+	const base = {
+		source_url: "https://bina.az/1",
+		price: 100000,
+		area_sqm: 80,
+		price_per_sqm: 1250,
+		district: "Nasimi",
+		rooms: 3,
+		floor: 5,
+		total_floors: 10,
+		has_document: true,
+		has_repair: false,
+		is_urgent: false,
+		discount_percent: 15,
+		location_avg_price_per_sqm: 1470,
+	};
+
+	test("escapes < > & in location_name", () => {
+		const result = formatListing({
+			...base,
+			location_name: "<script>alert(1)</script>",
+		});
+		expect(result).not.toContain("<script>");
+		expect(result).toContain("&lt;script&gt;");
+	});
+
+	test("escapes & in location_name", () => {
+		const result = formatListing({ ...base, location_name: "Baku & Beyond" });
+		expect(result).toContain("Baku &amp; Beyond");
+		expect(result).not.toMatch(/Baku & Beyond/);
+	});
+
+	test("falls back to district and escapes it", () => {
+		const result = formatListing({ ...base, location_name: null, district: "<Evil>" });
+		expect(result).not.toContain("<Evil>");
+		expect(result).toContain("&lt;Evil&gt;");
 	});
 });

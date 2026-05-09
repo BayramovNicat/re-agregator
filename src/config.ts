@@ -10,3 +10,4 @@ export const SCRAPE_ADMIN_SESSION_TTL_SECONDS = Number(
 );
 export const CSP =
 	"require-trusted-types-for 'script'; trusted-types redeal default;";
+export const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET ?? "";
