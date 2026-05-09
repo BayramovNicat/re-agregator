@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 
 const baseUrl = process.env.TEST_BASE_URL ?? "http://localhost:3000";
+const isCi = process.env.CI === "true";
 let serverAvailable = false;
 let seedAvailable = false;
 
@@ -25,7 +26,9 @@ beforeAll(async () => {
 
 function skipIfNoServer() {
 	if (!serverAvailable) {
-		console.warn(`Skipping API test: no server at ${baseUrl}`);
+		const message = `API test server unavailable at ${baseUrl}. Start the app before running API tests.`;
+		if (isCi) throw new Error(message);
+		console.warn(`Skipping API test: ${message}`);
 		return true;
 	}
 	return false;
@@ -34,7 +37,9 @@ function skipIfNoServer() {
 function skipIfNoSeed() {
 	if (skipIfNoServer()) return true;
 	if (!seedAvailable) {
-		console.warn("Skipping seeded API test: run `bun run verify:db` first.");
+		const message = "Seed data unavailable. Run `bun run verify:db` before API tests.";
+		if (isCi) throw new Error(message);
+		console.warn(`Skipping seeded API test: ${message}`);
 		return true;
 	}
 	return false;
