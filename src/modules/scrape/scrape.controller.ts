@@ -11,6 +11,25 @@ const SSE_HEADERS = {
 	Connection: "keep-alive",
 } as const;
 
+function parseBoundedInt(
+	q: URLSearchParams,
+	name: string,
+	min: number,
+	max: number,
+	defaultValue?: number,
+): number | undefined | Response {
+	const raw = q.get(name);
+	const parsed = parseQueryNum(raw);
+	const value = parsed ?? defaultValue;
+	if (
+		(raw !== null && parsed === undefined) ||
+		(value !== undefined && (!Number.isInteger(value) || value < min || value > max))
+	) {
+		return res.error(`"${name}" must be an integer between ${min} and ${max}`, 400);
+	}
+	return value;
+}
+
 function requireScrapeAdmin(req: Request): Response | null {
 	if (!SCRAPE_ADMIN_TOKEN) {
 		return IS_DEV
@@ -69,6 +88,14 @@ export function streamScrape(req: Request): Response {
 	if (authError) return authError;
 
 	const q = new URL(req.url).searchParams;
+	const maxPages = parseBoundedInt(q, "maxPages", 1, 100, 20);
+	if (maxPages instanceof Response) return maxPages;
+	const startPage = parseBoundedInt(q, "startPage", 1, 100);
+	if (startPage instanceof Response) return startPage;
+	const endPage = parseBoundedInt(q, "endPage", 1, 100);
+	if (endPage instanceof Response) return endPage;
+	const delayMs = parseBoundedInt(q, "delayMs", 250, 10_000, 800);
+	if (delayMs instanceof Response) return delayMs;
 	const encoder = new TextEncoder();
 
 	function encodeEvent(event: ScrapeProgressEvent): Uint8Array {
@@ -82,10 +109,10 @@ export function streamScrape(req: Request): Response {
 			};
 
 			const options = {
-				maxPages: parseQueryNum(q.get("maxPages")) ?? 20,
-				startPage: parseQueryNum(q.get("startPage")),
-				endPage: parseQueryNum(q.get("endPage")),
-				delayMs: parseQueryNum(q.get("delayMs")) ?? 800,
+				maxPages,
+				startPage,
+				endPage,
+				delayMs,
 				onProgress: send,
 			};
 
