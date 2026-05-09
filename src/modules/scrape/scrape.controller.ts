@@ -2,7 +2,7 @@ import { IS_DEV, SCRAPE_ADMIN_TOKEN } from "@/config.js";
 import { runAlerts } from "@/modules/alerts/alerts.service.js";
 import type { ScrapeProgressEvent } from "@/scrapers/base.scraper.js";
 import { parseQueryNum } from "@/utils/query.js";
-import * as res from "@/utils/response.js";
+import { ResponseHelper } from "@/utils/response.js";
 import { scrapeRunsService } from "./scrape-runs.service.js";
 
 const SSE_HEADERS = {
@@ -25,7 +25,7 @@ function parseBoundedInt(
 		(raw !== null && parsed === undefined) ||
 		(value !== undefined && (!Number.isInteger(value) || value < min || value > max))
 	) {
-		return res.error(`"${name}" must be an integer between ${min} and ${max}`, 400);
+		return ResponseHelper.error(`"${name}" must be an integer between ${min} and ${max}`, 400);
 	}
 	return value;
 }
@@ -34,11 +34,11 @@ function requireScrapeAdmin(req: Request): Response | null {
 	if (!SCRAPE_ADMIN_TOKEN) {
 		return IS_DEV
 			? null
-			: res.error("SCRAPE_ADMIN_TOKEN is not configured", 503);
+			: ResponseHelper.error("SCRAPE_ADMIN_TOKEN is not configured", 503);
 	}
 	const token = req.headers.get("x-scrape-admin-token") ?? "";
 	if (token === SCRAPE_ADMIN_TOKEN) return null;
-	return res.error("Unauthorized", 401);
+	return ResponseHelper.error("Unauthorized", 401);
 }
 
 export async function getScrapeRuns(req: Request): Promise<Response> {
@@ -52,15 +52,15 @@ export async function getScrapeRuns(req: Request): Promise<Response> {
 		limit < 1 ||
 		limit > 100
 	) {
-		return res.error('"limit" must be an integer between 1 and 100', 400);
+		return ResponseHelper.error('"limit" must be an integer between 1 and 100', 400);
 	}
 
 	try {
 		const runs = await scrapeRunsService.list(limit);
-		return res.json({ ok: true, runs });
+		return ResponseHelper.privateJson({ ok: true, runs });
 	} catch (err) {
 		console.error("[ScrapeController] getScrapeRuns:", err);
-		return res.error("Failed to fetch scrape runs");
+		return ResponseHelper.error("Failed to fetch scrape runs");
 	}
 }
 
@@ -80,7 +80,7 @@ export function runScrape(req: Request): Response {
 			console.error("[ScrapeController] runScrape:", err);
 		});
 
-	return res.json({ ok: true });
+	return ResponseHelper.privateJson({ ok: true });
 }
 
 export function streamScrape(req: Request): Response {

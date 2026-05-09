@@ -1,11 +1,11 @@
 import { readJsonBody } from "@/utils/json-body.js";
 import { prisma } from "@/utils/prisma.js";
-import * as res from "@/utils/response.js";
+import { ResponseHelper } from "@/utils/response.js";
 
 export async function getAlerts(req: Request): Promise<Response> {
 	const chatId = new URL(req.url).searchParams.get("chat_id") ?? "";
 	if (!/^\d+$/.test(chatId)) {
-		return res.error("chat_id must be a numeric Telegram chat ID", 400);
+		return ResponseHelper.error("chat_id must be a numeric Telegram chat ID", 400);
 	}
 	try {
 		const alerts = await prisma.alert.findMany({
@@ -19,17 +19,17 @@ export async function getAlerts(req: Request): Promise<Response> {
 			},
 			orderBy: { created_at: "desc" },
 		});
-		return res.json({ ok: true, alerts });
+		return ResponseHelper.privateJson({ ok: true, alerts });
 	} catch (err) {
 		console.error("[AlertsController] getAlerts:", err);
-		return res.error("Failed to fetch alerts");
+		return ResponseHelper.error("Failed to fetch alerts");
 	}
 }
 
 export async function createAlert(req: Request): Promise<Response> {
 	const parsed = await readJsonBody<Record<string, unknown>>(req);
 	if (!parsed.ok) {
-		return res.error(
+		return ResponseHelper.error(
 			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
 			parsed.status,
 		);
@@ -38,18 +38,18 @@ export async function createAlert(req: Request): Promise<Response> {
 	const body = parsed.data;
 	const chatId = String(body.chat_id ?? "").trim();
 	if (!/^\d+$/.test(chatId)) {
-		return res.error("chat_id must be a numeric Telegram chat ID", 400);
+		return ResponseHelper.error("chat_id must be a numeric Telegram chat ID", 400);
 	}
 
 	const filters = body.filters;
 	if (!filters || typeof filters !== "object" || Array.isArray(filters)) {
-		return res.error('"filters" object is required', 400);
+		return ResponseHelper.error('"filters" object is required', 400);
 	}
 
 	const f = filters as Record<string, unknown>;
 	const location = String(f.location ?? "").trim();
 	if (!location) {
-		return res.error('"filters.location" is required', 400);
+		return ResponseHelper.error('"filters.location" is required', 400);
 	}
 
 	const label = body.label ? String(body.label).slice(0, 80) : undefined;
@@ -59,17 +59,17 @@ export async function createAlert(req: Request): Promise<Response> {
 			data: { chat_id: chatId, label: label ?? null, filters: f },
 			select: { id: true, token: true },
 		});
-		return res.json({ ok: true, id: alert.id, token: alert.token });
+		return ResponseHelper.privateJson({ ok: true, id: alert.id, token: alert.token });
 	} catch (err) {
 		console.error("[AlertsController] createAlert:", err);
-		return res.error("Failed to create alert");
+		return ResponseHelper.error("Failed to create alert");
 	}
 }
 
 export async function deleteAlert(req: Request): Promise<Response> {
 	const token = new URL(req.url).pathname.split("/").pop() ?? "";
 	if (!token) {
-		return res.error("Token is required", 400);
+		return ResponseHelper.error("Token is required", 400);
 	}
 	try {
 		const { count } = await prisma.alert.updateMany({
@@ -78,12 +78,12 @@ export async function deleteAlert(req: Request): Promise<Response> {
 		});
 
 		if (count === 0) {
-			return res.error("Alert not found", 404);
+			return ResponseHelper.error("Alert not found", 404);
 		}
 
-		return res.json({ ok: true });
+		return ResponseHelper.privateJson({ ok: true });
 	} catch (err) {
 		console.error("[AlertsController] deleteAlert:", err);
-		return res.error("Failed to delete alert");
+		return ResponseHelper.error("Failed to delete alert");
 	}
 }

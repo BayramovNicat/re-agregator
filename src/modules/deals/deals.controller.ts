@@ -1,7 +1,7 @@
 import type { DealSort, PropertyFilters } from "@/types/index.js";
 import { readJsonBody } from "@/utils/json-body.js";
 import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
-import * as res from "@/utils/response.js";
+import { ResponseHelper } from "@/utils/response.js";
 import * as dealsService from "./deals.service.js";
 
 type TrendCacheEntry = {
@@ -15,21 +15,21 @@ const TREND_CACHE_MAX = 300;
 export async function getLocations(): Promise<Response> {
 	try {
 		const data = await dealsService.getLocations();
-		return res.json({ data }, 60, 30);
+		return ResponseHelper.publicJson({ data }, 60, 30);
 	} catch (err) {
 		console.error("[DealsController] getLocations:", err);
-		return res.error("Failed to fetch locations");
+		return ResponseHelper.error("Failed to fetch locations");
 	}
 }
 
 export async function getTrend(req: Request): Promise<Response> {
 	const location = new URL(req.url).searchParams.get("location");
 	if (!location) {
-		return res.error('Query parameter "location" is required', 400);
+		return ResponseHelper.error('Query parameter "location" is required', 400);
 	}
 	const cached = trendCache.get(location);
 	if (cached && Date.now() - cached.cachedAt < TREND_TTL_MS) {
-		return res.json({ location, data: cached.data }, 1800, 300);
+		return ResponseHelper.publicJson({ location, data: cached.data }, 1800, 300);
 	}
 	try {
 		const data = await dealsService.getPriceTrend(location);
@@ -38,34 +38,34 @@ export async function getTrend(req: Request): Promise<Response> {
 			if (oldest !== undefined) trendCache.delete(oldest);
 		}
 		trendCache.set(location, { data, cachedAt: Date.now() });
-		return res.json({ location, data }, 1800, 300);
+		return ResponseHelper.publicJson({ location, data }, 1800, 300);
 	} catch (err) {
 		console.error("[DealsController] getTrend:", err);
-		return res.error("Failed to fetch trend data");
+		return ResponseHelper.error("Failed to fetch trend data");
 	}
 }
 
 export async function getHeatmap(): Promise<Response> {
 	try {
 		const data = await dealsService.getHeatmapData();
-		return res.json({ data }, 900, 300);
+		return ResponseHelper.publicJson({ data }, 900, 300);
 	} catch (err) {
 		console.error("[DealsController] getHeatmap:", err);
-		return res.error("Failed to fetch heatmap data");
+		return ResponseHelper.error("Failed to fetch heatmap data");
 	}
 }
 
 export async function getDealsByUrls(req: Request): Promise<Response> {
 	const parsed = await readJsonBody<{ urls?: unknown }>(req);
 	if (!parsed.ok) {
-		return res.error(
+		return ResponseHelper.error(
 			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
 			parsed.status,
 		);
 	}
 	const urls = parsed.data?.urls;
 	if (!Array.isArray(urls) || urls.length === 0) {
-		return res.error('"urls" must be a non-empty array', 400);
+		return ResponseHelper.error('"urls" must be a non-empty array', 400);
 	}
 	const safeUrls = Array.from(
 		new Set(
@@ -77,14 +77,14 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 		),
 	).slice(0, 500);
 	if (safeUrls.length === 0) {
-		return res.json({ data: [] });
+		return ResponseHelper.publicJson({ data: [] });
 	}
 	try {
 		const data = await dealsService.getPropertiesByUrls(safeUrls);
-		return res.json({ data });
+		return ResponseHelper.publicJson({ data });
 	} catch (err) {
 		console.error("[DealsController] getDealsByUrls:", err);
-		return res.error("Failed to fetch properties");
+		return ResponseHelper.error("Failed to fetch properties");
 	}
 }
 
@@ -97,7 +97,7 @@ export async function getMapPins(req: Request): Promise<Response> {
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
 	if (Number.isNaN(thresholdPct) || thresholdPct < 0 || thresholdPct > 100) {
-		return res.error('"threshold" must be a number between 0 and 100', 400);
+		return ResponseHelper.error('"threshold" must be a number between 0 and 100', 400);
 	}
 
 	const filters = parsePropertyFilters(q);
@@ -108,10 +108,10 @@ export async function getMapPins(req: Request): Promise<Response> {
 			thresholdPercent: thresholdPct,
 			filters,
 		});
-		return res.json({ count: data.length, data });
+		return ResponseHelper.publicJson({ count: data.length, data });
 	} catch (err) {
 		console.error("[DealsController] getMapPins:", err);
-		return res.error("Failed to fetch map pins");
+		return ResponseHelper.error("Failed to fetch map pins");
 	}
 }
 
@@ -124,7 +124,7 @@ export async function getPriceDrops(req: Request): Promise<Response> {
 	const minDropsRaw = q.get("minDrops");
 	const minDropCount = minDropsRaw !== null ? Number(minDropsRaw) : 1;
 	if (!Number.isInteger(minDropCount) || minDropCount < 1) {
-		return res.error('"minDrops" must be a positive integer', 400);
+		return ResponseHelper.error('"minDrops" must be a positive integer', 400);
 	}
 
 	const pg = parsePaginationParams(q);
@@ -139,7 +139,7 @@ export async function getPriceDrops(req: Request): Promise<Response> {
 				offset: pg.offset,
 			},
 		);
-		return res.json({
+		return ResponseHelper.publicJson({
 			location: loc.raw,
 			minDropCount,
 			limit: pg.limit,
@@ -150,7 +150,7 @@ export async function getPriceDrops(req: Request): Promise<Response> {
 		});
 	} catch (err) {
 		console.error("[DealsController] getPriceDrops:", err);
-		return res.error("Failed to fetch price drop listings");
+		return ResponseHelper.error("Failed to fetch price drop listings");
 	}
 }
 
@@ -163,7 +163,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
 	if (Number.isNaN(thresholdPct) || thresholdPct < 0 || thresholdPct > 100) {
-		return res.error('"threshold" must be a number between 0 and 100', 400);
+		return ResponseHelper.error('"threshold" must be a number between 0 and 100', 400);
 	}
 
 	const pg = parsePaginationParams(q);
@@ -181,7 +181,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 			filterArgs,
 			pageArgs,
 		);
-		return res.json(
+		return ResponseHelper.publicJson(
 			{
 				location: loc.raw,
 				threshold_pct: thresholdPct,
@@ -196,7 +196,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 		);
 	} catch (err) {
 		console.error("[DealsController] getUndervaluedDeals:", err);
-		return res.error("Failed to fetch undervalued listings");
+		return ResponseHelper.error("Failed to fetch undervalued listings");
 	}
 }
 
@@ -205,7 +205,7 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 function parseLocationParams(q: URLSearchParams) {
 	const param = q.get("location");
 	if (!param) {
-		return { error: res.error('Query parameter "location" is required', 400) };
+		return { error: ResponseHelper.error('Query parameter "location" is required', 400) };
 	}
 
 	const isAll = param === "__all__";
@@ -213,7 +213,7 @@ function parseLocationParams(q: URLSearchParams) {
 
 	if (!isAll && list.length === 0) {
 		return {
-			error: res.error('Query parameter "location" cannot be empty', 400),
+			error: ResponseHelper.error('Query parameter "location" cannot be empty', 400),
 		};
 	}
 
@@ -258,7 +258,7 @@ const DEAL_SORTS = new Set<DealSort>([
 function parseDealSort(q: URLSearchParams) {
 	const raw = q.get("sort") ?? "disc";
 	if (!DEAL_SORTS.has(raw as DealSort)) {
-		return { error: res.error('"sort" must be a valid deal sort', 400) };
+		return { error: ResponseHelper.error('"sort" must be a valid deal sort', 400) };
 	}
 	return { value: raw as DealSort };
 }
@@ -268,7 +268,7 @@ function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {
 	const limit = limitRaw !== null ? Number(limitRaw) : defaultLimit;
 	if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
 		return {
-			error: res.error('"limit" must be an integer between 1 and 1000', 400),
+			error: ResponseHelper.error('"limit" must be an integer between 1 and 1000', 400),
 		};
 	}
 
@@ -276,7 +276,7 @@ function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {
 	const offset = offsetRaw !== null ? Number(offsetRaw) : 0;
 	if (!Number.isInteger(offset) || offset < 0) {
 		return {
-			error: res.error('"offset" must be a non-negative integer', 400),
+			error: ResponseHelper.error('"offset" must be a non-negative integer', 400),
 		};
 	}
 
