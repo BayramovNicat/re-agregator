@@ -21,11 +21,16 @@ RUN bun run build
 FROM base AS runner
 ENV NODE_ENV=production
 
-COPY --from=prisma /app/node_modules ./node_modules
-COPY --from=prisma /app/prisma ./prisma
-COPY src ./src
-COPY --from=build /app/public ./public
-COPY package.json tsconfig.json ./
+RUN addgroup --system --gid 1001 app && \
+    adduser --system --uid 1001 --ingroup app app
+
+COPY --from=prisma --chown=app:app /app/node_modules ./node_modules
+COPY --from=prisma --chown=app:app /app/prisma ./prisma
+COPY --chown=app:app src ./src
+COPY --from=build --chown=app:app /app/public ./public
+COPY --chown=app:app package.json tsconfig.json ./
+
+USER app
 
 EXPOSE 3000
 
