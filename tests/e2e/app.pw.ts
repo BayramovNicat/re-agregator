@@ -292,6 +292,22 @@ test("card opens property detail dialog", async ({ page }) => {
 	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
 });
 
+test("detail actions update saved state, source link, and hidden cards", async ({ page }) => {
+	await page.locator(".product-card").click();
+	const dialog = page.locator("dialog#prop-detail-modal");
+	await expect(dialog.getByText("Bright test apartment")).toBeVisible();
+	await expect(dialog.getByRole("link", { name: /view listing/i })).toHaveAttribute(
+		"href",
+		deal.source_url,
+	);
+
+	await dialog.getByRole("button", { name: "Save" }).click();
+	await expect(page.getByRole("button", { name: /saved 1/i })).toBeVisible();
+	await dialog.getByRole("button", { name: "Hide" }).click();
+	await expect(dialog).toBeHidden();
+	await expect(page.locator(".product-card")).toHaveCount(0);
+});
+
 test("hide removes listing", async ({ page }) => {
 	await page.getByRole("button", { name: "Hide" }).click();
 	await expect(page.locator(".product-card")).toHaveCount(0);
@@ -306,6 +322,25 @@ test("alerts dialog saves chat id", async ({ page }) => {
 	expect(await page.evaluate(() => localStorage.getItem("re-chatid"))).toBe(
 		"123456789",
 	);
+});
+
+test("alerts dialog shows API failure and stays open", async ({ page }) => {
+	await page.unroute("**/api/alerts**");
+	await page.route("**/api/alerts**", async (route) => {
+		if (route.request().method() === "GET") {
+			await route.fulfill({ json: { ok: true, alerts: [] } });
+			return;
+		}
+		await route.fulfill({ status: 500, json: { error: "Alert failed" } });
+	});
+
+	await page.getByRole("button", { name: /alert me/i }).click();
+	const dialog = page.getByRole("dialog");
+	await page.getByLabel("Telegram Chat ID").fill("123456789");
+	await dialog.getByRole("button", { name: /save alert/i }).click();
+
+	await expect(page.getByText("Alert failed")).toBeVisible();
+	await expect(dialog).toBeVisible();
 });
 
 test("gallery opens from card photo button", async ({ page }) => {
