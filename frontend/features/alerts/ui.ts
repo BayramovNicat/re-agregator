@@ -1,6 +1,6 @@
 import { t } from "@/core/i18n";
 import type { AlertFilters } from "@/core/types";
-import { html } from "@/core/utils";
+import { html, trust } from "@/core/utils";
 import { Button } from "@/ui/button";
 import { Dialog } from "@/ui/dialog";
 import { Field, Input } from "@/ui/input";
@@ -71,11 +71,13 @@ export function renderAlertsUI(
 		maxWidth: "440px",
 		className: "p-0 overflow-hidden",
 		title: t("telegramAlerts"),
-		description: t("botInstruction", {
-			bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue) font-semibold hover:underline">@BakuDealsBot</a>',
-			start:
-				'<code class="bg-(--surface-3) px-1.5 py-0.5 rounded text-[10px] font-mono">/start</code>',
-		}),
+		description: trust(
+			t("botInstruction", {
+				bot: '<a href="https://t.me/BakuDealsBot" target="_blank" rel="noopener" class="text-(--blue) font-semibold hover:underline">@BakuDealsBot</a>',
+				start:
+					'<code class="bg-(--surface-3) px-1.5 py-0.5 rounded text-[10px] font-mono">/start</code>',
+			}),
+		),
 		content: html`
 			<div class="p-6 overflow-y-auto min-h-0">
 				${ui.listEl}
