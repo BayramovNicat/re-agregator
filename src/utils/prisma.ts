@@ -8,18 +8,14 @@ import { type Prisma, PrismaClient } from "@prisma/client";
 
 const QUERY_TIMEOUT_MS = 30_000;
 
-function raceTimeout<T>(promise: Promise<T>): Promise<T> {
-	let timeoutId: ReturnType<typeof setTimeout>;
-	const timerPromise = new Promise<never>((_, reject) => {
-		timeoutId = setTimeout(
-			() => reject(new Error(`Prisma query exceeded ${QUERY_TIMEOUT_MS}ms`)),
-			QUERY_TIMEOUT_MS,
-		);
-	});
+function withStatementTimeout(databaseUrl: string | undefined): string | undefined {
+	if (!databaseUrl) return undefined;
 
-	return Promise.race([promise, timerPromise]).finally(() => {
-		clearTimeout(timeoutId);
-	});
+	const url = new URL(databaseUrl);
+	if (!url.searchParams.has("statement_timeout")) {
+		url.searchParams.set("statement_timeout", String(QUERY_TIMEOUT_MS));
+	}
+	return url.toString();
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -29,6 +25,11 @@ const globalForPrisma = globalThis as unknown as {
 const client =
 	globalForPrisma.prisma ??
 	new PrismaClient({
+		datasources: {
+			db: {
+				url: withStatementTimeout(process.env.DATABASE_URL),
+			},
+		},
 		log:
 			process.env.NODE_ENV === "development"
 				? ["error", "warn"]
@@ -39,37 +40,20 @@ if (process.env.NODE_ENV !== "production") {
 	globalForPrisma.prisma = client;
 }
 
-export const prisma = client.$extends({
-	query: {
-		$allModels: {
-			$allOperations({ args, query }) {
-				return raceTimeout(query(args));
-			},
-		},
-	},
-});
+export const prisma = client;
 
-/**
- * Timeout-wrapped $queryRaw. Use instead of prisma.$queryRaw for all raw
- * SELECT queries — the ORM extension above does not cover raw operations.
- */
 export function queryRaw<T = unknown>(
 	query: TemplateStringsArray | Prisma.Sql,
 	...values: unknown[]
 ): Promise<T> {
 	// biome-ignore lint/suspicious/noExplicitAny: Prisma's $queryRaw requires dynamic invocation
-	return raceTimeout((client.$queryRaw as any)(query, ...values) as Promise<T>);
+	return (client.$queryRaw as any)(query, ...values) as Promise<T>;
 }
 
-/**
- * Timeout-wrapped $executeRaw. Use instead of prisma.$executeRaw for all raw
- * INSERT/UPDATE/DELETE queries — the ORM extension above does not cover raw operations.
- */
 export function executeRaw(
 	query: TemplateStringsArray | Prisma.Sql,
 	...values: unknown[]
 ): Promise<number> {
 	// biome-ignore lint/suspicious/noExplicitAny: Prisma's $executeRaw requires dynamic invocation
-	const call = (client.$executeRaw as any)(query, ...values) as Promise<number>;
-	return raceTimeout(call);
+	return (client.$executeRaw as any)(query, ...values) as Promise<number>;
 }

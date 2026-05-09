@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { readJsonBody } from "@/utils/json-body.js";
 import { prisma } from "@/utils/prisma.js";
 import { ResponseHelper } from "@/utils/response.js";
@@ -46,7 +47,7 @@ export async function createAlert(req: Request): Promise<Response> {
 		return ResponseHelper.error('"filters" object is required', 400);
 	}
 
-	const f = filters as Record<string, unknown>;
+	const f = filters as Prisma.JsonObject;
 	const location = String(f.location ?? "").trim();
 	if (!location) {
 		return ResponseHelper.error('"filters.location" is required', 400);
