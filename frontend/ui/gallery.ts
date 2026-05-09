@@ -106,10 +106,9 @@ export function Gallery({
 			<div
 				class="${cn(
 					"relative bg-black overflow-hidden outline-none group/gv",
-					fullscreen ? "h-full w-full" : "",
+					fullscreen ? "h-full w-full" : "h-full",
 					className,
 				)}"
-				style="${fullscreen ? "" : "height:320px"}"
 				tabindex="0"
 				role="region"
 				aria-label="${t("gallery")}"

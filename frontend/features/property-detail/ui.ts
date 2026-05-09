@@ -61,7 +61,7 @@ export function renderPropertyDetailLayout(
 	`;
 
 	ui.mapCtEl = html`<div class="w-full h-full bg-(--surface-3)"></div>`;
-	ui.mapSecEl = html`<div class="hidden border-t border-(--border) flex-1 min-h-0">
+	ui.mapSecEl = html`<div class="flex-1 min-h-0 border-t border-(--border) hidden">
 		${ui.mapCtEl}
 	</div>`;
 
@@ -105,8 +105,8 @@ export function renderPropertyDetailLayout(
 
 	const leftCol = html`
 		<div class="flex-1 min-w-0 overflow-hidden bg-(--surface) flex flex-col">
-			<div class="h-1/2 min-h-0 overflow-y-auto">${ui.gallery}</div>
-			<div class="h-1/2 min-h-0 overflow-y-auto">${ui.mapSecEl}</div>
+			<div class="flex-1 min-h-0 overflow-hidden">${ui.gallery}</div>
+			<div class="flex-1 min-h-0 overflow-hidden">${ui.mapSecEl}</div>
 		</div>
 	`;
 
