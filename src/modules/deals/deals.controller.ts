@@ -100,7 +100,12 @@ export async function getMapPins(req: Request): Promise<Response> {
 		return ResponseHelper.error('"threshold" must be a number between 0 and 100', 400);
 	}
 
-	const filters = parsePropertyFilters(q);
+	let filters: PropertyFilters;
+	try {
+		filters = parsePropertyFilters(q);
+	} catch (err) {
+		return ResponseHelper.error((err as Error).message, 400);
+	}
 
 	try {
 		const data = await dealsService.getMapPins({
@@ -171,7 +176,13 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const sort = parseDealSort(q);
 	if (sort.error) return sort.error;
 
-	const filterArgs = parsePropertyFilters(q);
+	let filterArgs: PropertyFilters;
+	try {
+		filterArgs = parsePropertyFilters(q);
+	} catch (err) {
+		return ResponseHelper.error((err as Error).message, 400);
+	}
+
 	const pageArgs = { limit: pg.limit, offset: pg.offset, sort: sort.value };
 
 	try {
@@ -221,19 +232,51 @@ function parseLocationParams(q: URLSearchParams) {
 }
 
 function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
+	const minPrice = parseQueryNum(q.get("minPrice"));
+	const maxPrice = parseQueryNum(q.get("maxPrice"));
+	const minPriceSqm = parseQueryNum(q.get("minPriceSqm"));
+	const maxPriceSqm = parseQueryNum(q.get("maxPriceSqm"));
+	const minArea = parseQueryNum(q.get("minArea"));
+	const maxArea = parseQueryNum(q.get("maxArea"));
+	const minRooms = parseQueryNum(q.get("minRooms"));
+	const maxRooms = parseQueryNum(q.get("maxRooms"));
+	const minFloor = parseQueryNum(q.get("minFloor"));
+	const maxFloor = parseQueryNum(q.get("maxFloor"));
+	const minTotalFloors = parseQueryNum(q.get("minTotalFloors"));
+	const maxTotalFloors = parseQueryNum(q.get("maxTotalFloors"));
+
+	if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
+		throw new Error('"minPrice" cannot be greater than "maxPrice"');
+	}
+	if (minPriceSqm !== undefined && maxPriceSqm !== undefined && minPriceSqm > maxPriceSqm) {
+		throw new Error('"minPriceSqm" cannot be greater than "maxPriceSqm"');
+	}
+	if (minArea !== undefined && maxArea !== undefined && minArea > maxArea) {
+		throw new Error('"minArea" cannot be greater than "maxArea"');
+	}
+	if (minRooms !== undefined && maxRooms !== undefined && minRooms > maxRooms) {
+		throw new Error('"minRooms" cannot be greater than "maxRooms"');
+	}
+	if (minFloor !== undefined && maxFloor !== undefined && minFloor > maxFloor) {
+		throw new Error('"minFloor" cannot be greater than "maxFloor"');
+	}
+	if (minTotalFloors !== undefined && maxTotalFloors !== undefined && minTotalFloors > maxTotalFloors) {
+		throw new Error('"minTotalFloors" cannot be greater than "maxTotalFloors"');
+	}
+
 	return {
-		minPrice: parseQueryNum(q.get("minPrice")),
-		maxPrice: parseQueryNum(q.get("maxPrice")),
-		minPriceSqm: parseQueryNum(q.get("minPriceSqm")),
-		maxPriceSqm: parseQueryNum(q.get("maxPriceSqm")),
-		minArea: parseQueryNum(q.get("minArea")),
-		maxArea: parseQueryNum(q.get("maxArea")),
-		minRooms: parseQueryNum(q.get("minRooms")),
-		maxRooms: parseQueryNum(q.get("maxRooms")),
-		minFloor: parseQueryNum(q.get("minFloor")),
-		maxFloor: parseQueryNum(q.get("maxFloor")),
-		minTotalFloors: parseQueryNum(q.get("minTotalFloors")),
-		maxTotalFloors: parseQueryNum(q.get("maxTotalFloors")),
+		minPrice,
+		maxPrice,
+		minPriceSqm,
+		maxPriceSqm,
+		minArea,
+		maxArea,
+		minRooms,
+		maxRooms,
+		minFloor,
+		maxFloor,
+		minTotalFloors,
+		maxTotalFloors,
 		hasDocument: parseQueryBool(q.get("hasDocument")),
 		hasMortgage: parseQueryBool(q.get("hasMortgage")),
 		hasRepair: parseQueryBool(q.get("hasRepair")),

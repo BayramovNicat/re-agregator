@@ -95,12 +95,12 @@ export function MultiSelect({
 	const dropdown = html`
 		<div
 			role="listbox"
-			class="absolute top-full left-0 right-0 mt-1.5 bg-(--surface) border border-(--border) rounded-(--r-sm) shadow-[0_8px_24px_rgba(0,0,0,0.3)] z-50 overflow-hidden hidden animate-[fadeUp_0.2s_ease]"
+			class="absolute top-full left-0 right-0 mt-1.5 bg-(--surface) border border-(--border) rounded-(--r-sm) shadow-[0_8px_24px_rgba(0,0,0,0.3)] z-50 overflow-hidden hidden animate-[fadeUp_0.2s_ease] pointer-events-auto"
 		>
 			<div class="p-2 border-b border-(--border)">
 				<div class="relative">
 					<span
-						class="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--muted)"
+						class="absolute left-2.5 top-1/2 -translate-y-1/2 text-(--muted) pointer-events-none"
 					>
 						${Icons.search(12)}
 					</span>
