@@ -40,6 +40,21 @@ test("card opens property detail dialog", async ({ page }) => {
 	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
 });
 
+test("card opens property detail from keyboard", async ({ page }) => {
+	const card = page.locator(".product-card").first();
+	await card.focus();
+	await page.keyboard.press("Enter");
+	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+});
+
+test("list row opens property detail from keyboard", async ({ page }) => {
+	await page.getByRole("button", { name: /list view/i }).click();
+	const row = page.locator(".product-card").first();
+	await row.focus();
+	await page.keyboard.press("Space");
+	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+});
+
 test("detail actions update saved state, source link, and hidden cards", async ({ page }) => {
 	await page.locator(".product-card").click();
 	const dialog = page.locator("dialog#prop-detail-modal");

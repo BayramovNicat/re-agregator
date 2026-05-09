@@ -95,3 +95,16 @@ test("map pin opens property detail", async ({ page }) => {
 	);
 });
 
+test("map pin hover shows tooltip and hides it on mouseout", async ({ page }) => {
+	await page.locator('button[title="Map view"]').click();
+	const pin = page.locator(".leaflet-overlay-pane path").first();
+	await expect(pin).toBeVisible();
+
+	await pin.hover({ force: true });
+	await expect(page.locator(".leaflet-tooltip")).toContainText("₼ 120,000");
+	await expect(page.locator(".leaflet-tooltip")).toContainText("-25%");
+
+	await page.mouse.move(0, 0);
+	await expect(page.locator(".leaflet-tooltip")).toHaveCount(0);
+});
+
