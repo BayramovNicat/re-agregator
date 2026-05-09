@@ -1,3 +1,4 @@
+import { resolve, sep } from "node:path";
 import { brotliCompressSync } from "node:zlib";
 import { CSP, IS_DEV } from "@/config.js";
 
@@ -77,6 +78,28 @@ const CACHE_IMMUTABLE =
 const CACHE_REVALIDATE = "public, no-cache, must-revalidate";
 const CACHE_DEFAULT = "public, max-age=86400";
 
+function resolveStaticPath(publicDir: string, pathname: string): string | null {
+	let decodedPath: string;
+	try {
+		decodedPath = decodeURIComponent(pathname);
+	} catch {
+		return null;
+	}
+
+	if (
+		decodedPath.includes("\\") ||
+		decodedPath.includes("..") ||
+		decodedPath.startsWith("//")
+	) {
+		return null;
+	}
+
+	const root = resolve(publicDir);
+	const target = resolve(root, `.${decodedPath}`);
+	if (target !== root && !target.startsWith(`${root}${sep}`)) return null;
+	return target;
+}
+
 export async function serveStatic(
 	req: Request,
 	publicDir: string,
@@ -87,7 +110,7 @@ export async function serveStatic(
 
 	const asset = brAssets.get(pathname);
 	if (!IS_DEV && acceptsBr && asset) {
-		return new Response(asset.data, {
+		return new Response(new Uint8Array(asset.data), {
 			headers: {
 				"Content-Type": asset.contentType,
 				"Content-Encoding": "br",
@@ -98,7 +121,10 @@ export async function serveStatic(
 		});
 	}
 
-	const file = Bun.file(`${publicDir}${pathname}`);
+	const staticPath = resolveStaticPath(publicDir, pathname);
+	if (staticPath === null) return new Response("Not Found", { status: 404 });
+
+	const file = Bun.file(staticPath);
 	if (await file.exists()) {
 		const headers: Record<string, string> = {
 			"Content-Security-Policy": CSP,
