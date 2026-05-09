@@ -1,15 +1,12 @@
+import { readJsonBody } from "@/utils/json-body.js";
 import { prisma } from "@/utils/prisma.js";
 import { sendMessage } from "./telegram.service.js";
 
 export async function handleWebhook(req: Request): Promise<Response> {
-	let body: Record<string, unknown>;
-	try {
-		body = (await req.json()) as Record<string, unknown>;
-	} catch {
-		return Response.json({ ok: true });
-	}
+	const parsed = await readJsonBody<Record<string, unknown>>(req);
+	if (!parsed.ok) return Response.json({ ok: true });
 
-	const message = body?.message as Record<string, unknown> | undefined;
+	const message = parsed.data?.message as Record<string, unknown> | undefined;
 	if (!message) return Response.json({ ok: true });
 
 	const chatId = String((message.chat as Record<string, unknown>)?.id ?? "");

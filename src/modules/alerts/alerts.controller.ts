@@ -1,3 +1,4 @@
+import { readJsonBody } from "@/utils/json-body.js";
 import { prisma } from "@/utils/prisma.js";
 import * as res from "@/utils/response.js";
 
@@ -26,13 +27,15 @@ export async function getAlerts(req: Request): Promise<Response> {
 }
 
 export async function createAlert(req: Request): Promise<Response> {
-	let body: Record<string, unknown>;
-	try {
-		body = (await req.json()) as Record<string, unknown>;
-	} catch {
-		return res.error("Invalid JSON body", 400);
+	const parsed = await readJsonBody<Record<string, unknown>>(req);
+	if (!parsed.ok) {
+		return res.error(
+			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
+			parsed.status,
+		);
 	}
 
+	const body = parsed.data;
 	const chatId = String(body.chat_id ?? "").trim();
 	if (!/^\d+$/.test(chatId)) {
 		return res.error("chat_id must be a numeric Telegram chat ID", 400);

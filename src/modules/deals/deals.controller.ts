@@ -1,4 +1,5 @@
 import type { DealSort, PropertyFilters } from "@/types/index.js";
+import { readJsonBody } from "@/utils/json-body.js";
 import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
 import * as res from "@/utils/response.js";
 import * as dealsService from "./deals.service.js";
@@ -55,13 +56,14 @@ export async function getHeatmap(): Promise<Response> {
 }
 
 export async function getDealsByUrls(req: Request): Promise<Response> {
-	let body: { urls?: unknown } = {};
-	try {
-		body = (await req.json()) as { urls?: unknown };
-	} catch {
-		return res.error("Invalid JSON body", 400);
+	const parsed = await readJsonBody<{ urls?: unknown }>(req);
+	if (!parsed.ok) {
+		return res.error(
+			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
+			parsed.status,
+		);
 	}
-	const urls = body?.urls;
+	const urls = parsed.data?.urls;
 	if (!Array.isArray(urls) || urls.length === 0) {
 		return res.error('"urls" must be a non-empty array', 400);
 	}
