@@ -21,6 +21,9 @@ import {
 
 const GRAPHQL_URL = "https://bina.az/graphql";
 const ITEM_BASE_URL = "https://bina.az/items";
+const FETCH_TIMEOUT_MS = 15_000;
+const MAX_FETCH_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 500;
 
 /** Filter params for "apartments for sale in Baku" */
 const DEFAULT_FILTER = { categoryId: "1", cityId: "1", leased: false };
@@ -67,6 +70,14 @@ function randomHeaders(): Record<string, string> {
 		"sec-fetch-mode": "cors",
 		"sec-fetch-site": "same-origin",
 	};
+}
+
+function shouldRetry(status: number): boolean {
+	return status === 429 || status >= 500;
+}
+
+async function delay(ms: number): Promise<void> {
+	await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ── GraphQL response shapes ───────────────────────────────────────────────────
@@ -353,6 +364,34 @@ export class BinaScraper extends BaseScraper {
 		return result;
 	}
 
+	private async fetchGraphQL(body: string): Promise<Response> {
+		let lastError: unknown;
+
+		for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
+			try {
+				const resp = await fetch(GRAPHQL_URL, {
+					method: "POST",
+					headers: randomHeaders(),
+					body,
+					signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+				});
+
+				if (!resp.ok && shouldRetry(resp.status) && attempt < MAX_FETCH_ATTEMPTS) {
+					await delay(RETRY_BASE_DELAY_MS * attempt);
+					continue;
+				}
+
+				return resp;
+			} catch (error) {
+				lastError = error;
+				if (attempt === MAX_FETCH_ATTEMPTS) break;
+				await delay(RETRY_BASE_DELAY_MS * attempt);
+			}
+		}
+
+		throw lastError;
+	}
+
 	/**
 	 * Executes a GraphQL query and returns data, throwing on hard errors.
 	 */
@@ -360,11 +399,7 @@ export class BinaScraper extends BaseScraper {
 		query: string,
 		variables?: Record<string, unknown>,
 	): Promise<T> {
-		const resp = await fetch(GRAPHQL_URL, {
-			method: "POST",
-			headers: randomHeaders(),
-			body: JSON.stringify({ query, variables }),
-		});
+		const resp = await this.fetchGraphQL(JSON.stringify({ query, variables }));
 
 		if (!resp.ok) {
 			throw new Error(
@@ -390,11 +425,7 @@ export class BinaScraper extends BaseScraper {
 	private async gqlRaw<T extends Record<string, unknown>>(
 		query: string,
 	): Promise<T> {
-		const resp = await fetch(GRAPHQL_URL, {
-			method: "POST",
-			headers: randomHeaders(),
-			body: JSON.stringify({ query }),
-		});
+		const resp = await this.fetchGraphQL(JSON.stringify({ query }));
 
 		if (!resp.ok) {
 			throw new Error(
