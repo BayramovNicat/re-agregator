@@ -15,15 +15,11 @@ export function toThumbUrl(src: string): string {
 interface TrustedHTML {
 	__brand: "TrustedHTML";
 }
-interface TrustedScript {
-	__brand: "TrustedScript";
-}
 interface TrustedScriptURL {
 	__brand: "TrustedScriptURL";
 }
 interface TrustedTypePolicy {
 	createHTML(html: string): TrustedHTML;
-	createScript(script: string): TrustedScript;
 	createScriptURL(url: string): TrustedScriptURL;
 }
 interface TrustedTypePolicyFactory {
@@ -31,11 +27,9 @@ interface TrustedTypePolicyFactory {
 		name: string,
 		options: {
 			createHTML?: (html: string) => string;
-			createScript?: (script: string) => string;
 			createScriptURL?: (url: string) => string;
 		},
 	): TrustedTypePolicy;
-	readonly defaultPolicy?: TrustedTypePolicy;
 }
 
 declare global {
@@ -54,32 +48,17 @@ export function cn(...inputs: ClassValue[]): string {
 
 const policy = window.trustedTypes?.createPolicy("redeal", {
 	createHTML: (s: string) => s,
-	createScript: (s: string) => s,
 	createScriptURL: (s: string) => s,
 });
 
-// A default policy is used by the browser when a string is passed to a sink
-// directly (e.g. by 3rd party libs like Leaflet, or Service Worker registration).
-if (window.trustedTypes && !window.trustedTypes.defaultPolicy) {
-	window.trustedTypes.createPolicy("default", {
-		createHTML: (s: string) => s,
-		createScript: (s: string) => s,
-		createScriptURL: (s: string) => s,
-	});
-}
-
-/**
- * Wraps a string in a TrustedHTML object if the browser supports it.
- * @param html The raw HTML string.
- */
-export const trust = (html: string): string | TrustedHTML => {
-	return policy ? policy.createHTML(html) : html;
+type RawHTML = {
+	__rawHtml: string;
 };
 
-/**
- * Wraps a string in a TrustedScriptURL object if the browser supports it.
- * @param url The raw script URL.
- */
+export const trust = (html: string): RawHTML => {
+	return { __rawHtml: html };
+};
+
 export const trustScriptURL = (url: string): string | TrustedScriptURL => {
 	return policy ? policy.createScriptURL(url) : url;
 };
@@ -211,6 +190,19 @@ export function tTier(tier: string, short = false): string {
 
 const _template = document.createElement("template");
 
+const escapeHtml = (value: unknown): string => {
+	return String(value ?? "")
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+};
+
+const isRawHTML = (val: unknown): val is RawHTML => {
+	return typeof val === "object" && val !== null && "__rawHtml" in val;
+};
+
 const _parse = (
 	strings: TemplateStringsArray,
 	values: unknown[],
@@ -229,7 +221,11 @@ const _parse = (
 			return val.map(processValue).join("");
 		}
 
-		return String(val ?? "");
+		if (isRawHTML(val)) {
+			return val.__rawHtml;
+		}
+
+		return escapeHtml(val);
 	};
 
 	const rawHtml = strings.reduce((result, str, i) => {
