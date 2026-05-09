@@ -61,7 +61,9 @@ export function renderPropertyDetailLayout(
 	`;
 
 	ui.mapCtEl = html`<div class="w-full h-full bg-(--surface-3)"></div>`;
-	ui.mapSecEl = html`<div class="flex-1 min-h-0 border-t border-(--border) hidden">
+	ui.mapSecEl = html`<div
+		class="flex-1 min-h-0 border-t border-(--border) hidden h-full"
+	>
 		${ui.mapCtEl}
 	</div>`;
 
