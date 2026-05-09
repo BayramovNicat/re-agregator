@@ -42,4 +42,5 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 !.claude/settings.json
 !.claude/commands/
 !.claude/commands/*.md
-.claude/settings.local.json.playwright-mcp/
+.claude/settings.local.json
+.playwright-mcp/
