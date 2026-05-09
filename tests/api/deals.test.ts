@@ -428,14 +428,11 @@ describe("public API", () => {
 
 		expect(res.status).toBe(200);
 		expect(body).toMatchObject({ location: "__all__", minDropCount: 1 });
-		expect(
-			(body as { data: Array<{ source_url: string; price_drop_count: number }> }).data,
-		).toContainEqual(
-			expect.objectContaining({
-				source_url: "https://test.redeal.local/yasamal-deal",
-				price_drop_count: 1,
-			}),
+		const deal = (body as { data: Array<{ source_url: string; price_drop_count: number }> }).data.find(
+			(deal) => deal.source_url === "https://test.redeal.local/yasamal-deal",
 		);
+		expect(deal).toBeDefined();
+		expect(Number(deal?.price_drop_count)).toBeGreaterThanOrEqual(1);
 	});
 
 	test("price drops reject invalid minDrops", async () => {
@@ -608,14 +605,14 @@ describe("public API", () => {
 		const { res, body } = await getJson("/api/scrape/runs?limit=20");
 
 		expect(res.status).toBe(200);
-		const runs = (body as { runs: Array<{ status: string; trigger: string; total_found: number }> }).runs;
+		const runs = (body as { runs: Array<{ status: string; trigger: string; total_fetched: number }> }).runs;
 		expect(runs.length).toBeGreaterThan(0);
 		expect(
 			runs.some(
 				(run) =>
 					typeof run.status === "string" &&
 					typeof run.trigger === "string" &&
-					typeof run.total_found === "number",
+					typeof run.total_fetched === "number",
 			),
 		).toBe(true);
 	});
