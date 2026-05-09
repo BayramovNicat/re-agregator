@@ -188,9 +188,9 @@ export function Gallery({
 	const _createSlide = (_: string, i: number): HTMLElement => {
 		return html`
 			<div
-				class="absolute inset-0 flex items-center justify-center transition-opacity ${
-					fullscreen ? "duration-400 p-4" : "duration-300"
-				}"
+				class="absolute inset-0 flex items-center justify-center transition-opacity ${fullscreen
+					? "duration-400"
+					: "duration-300"}"
 				style="opacity: 0; visibility: hidden"
 			>
 				<img
@@ -198,7 +198,7 @@ export function Gallery({
 					alt="${t("propPhotoAlt", { n: i + 1, total: count })}"
 					draggable="false"
 					class="${cn(
-						"max-h-full max-w-full object-contain select-none pointer-events-none",
+						"h-full w-full object-contain select-none pointer-events-none",
 						fullscreen && "shadow-2xl rounded-sm",
 					)}"
 				/>
