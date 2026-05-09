@@ -393,6 +393,63 @@ test("scrape ops dialog opens with empty runs", async ({ page }) => {
 	await expect(page.getByRole("dialog").getByText("No scrape runs yet").first()).toBeVisible();
 });
 
+test("scrape ops renders run rows and starts scrape", async ({ page }) => {
+	const runRequests: string[] = [];
+	await page.unroute("**/api/scrape/runs**");
+	await page.route("**/api/scrape/runs**", async (route) => {
+		await route.fulfill({
+			json: {
+				ok: true,
+				runs: [
+					{
+						id: 1,
+						status: "completed",
+						trigger: "manual",
+						started_at: "2026-05-09T10:00:00.000Z",
+						finished_at: "2026-05-09T10:01:00.000Z",
+						duration_ms: 60000,
+						total_found: 12,
+						total_fetched: 10,
+						total_persisted: 8,
+						total_skipped: 2,
+						total_errors: 0,
+						platform_results: [{ platform: "bina", fetched: 10, persisted: 8 }],
+					},
+				],
+			},
+		});
+	});
+	await page.route("**/api/scrape/run", async (route) => {
+		runRequests.push(route.request().headers()["x-scrape-admin-token"] ?? "");
+		await route.fulfill({ json: { ok: true } });
+	});
+
+	await page.evaluate(() => localStorage.setItem("redeal:scrape-admin-token", "test-token"));
+	await page.getByRole("button", { name: "Scrape Ops" }).click();
+	const dialog = page.getByRole("dialog");
+	await expect(dialog.getByText("completed")).toBeVisible();
+	await expect(dialog.getByText("manual")).toBeVisible();
+	await expect(dialog.getByText("bina: 8/10")).toBeVisible();
+
+	await dialog.getByRole("button", { name: "Run now" }).click();
+	await expect.poll(() => runRequests).toEqual(["test-token"]);
+});
+
+test("scrape ops prompts for token after unauthorized run", async ({ page }) => {
+	await page.route("**/api/scrape/run", async (route) => {
+		await route.fulfill({ status: 401, json: { error: "Unauthorized" } });
+	});
+	page.on("dialog", async (dialog) => {
+		expect(dialog.message()).toBe("Enter scrape admin token");
+		await dialog.dismiss();
+	});
+
+	await page.getByRole("button", { name: "Scrape Ops" }).click();
+	const dialog = page.getByRole("dialog");
+	await dialog.getByRole("button", { name: "Run now" }).click();
+	await expect(dialog.getByText("Scrape admin token required")).toBeVisible();
+});
+
 test("heatmap dialog opens from location map", async ({ page }) => {
 	await page.getByRole("button", { name: "Location Map" }).click();
 	await expect(page.locator("dialog#heatmap-modal")).toBeVisible();
@@ -466,9 +523,61 @@ test("map view loads pins and switches back", async ({ page }) => {
 	await expect(page.locator(".product-card")).toHaveCount(1);
 });
 
-test("mobile layout smoke", async ({ page }) => {
+test("empty search response shows no results", async ({ page }) => {
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		await route.fulfill({
+			json: {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 0,
+				total: 0,
+				data: [],
+			},
+		});
+	});
+
+	await page.locator("#discount-threshold").fill("5");
+	await expect(page.getByText("No results found")).toBeVisible();
+	await expect(page.locator(".product-card")).toHaveCount(0);
+});
+
+test("search API error shows toast and no cards", async ({ page }) => {
+	await page.unroute("**/api/deals/undervalued**");
+	await page.route("**/api/deals/undervalued**", async (route) => {
+		await route.fulfill({ status: 500, json: { error: "Search failed" } });
+	});
+
+	await page.locator("#discount-threshold").fill("5");
+	await expect(page.getByText("Search failed")).toBeVisible();
+	await expect(page.locator(".product-card")).toHaveCount(0);
+});
+
+test("locations API failure shows failed option", async ({ page }) => {
+	await page.unroute("**/api/deals/locations");
+	await page.route("**/api/deals/locations", async (route) => {
+		await route.fulfill({ status: 500, json: { error: "failed" } });
+	});
+	await page.reload();
+
+	await page.getByRole("combobox", { name: "Location" }).click();
+	await expect(page.getByRole("option", { name: "Failed to load locations" })).toBeVisible();
+});
+
+test("mobile layout supports filters and detail without overflow", async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
 	await expect(page.getByText("Redeal")).toBeVisible();
 	await expect(page.locator(".product-card")).toHaveCount(1);
-	await expect(page.getByRole("button", { name: /advanced filters/i })).toBeVisible();
+
+	await page.getByRole("button", { name: /advanced filters/i }).click();
+	await expect(page.locator("#minPrice")).toBeVisible();
+	await page.locator(".product-card").click();
+	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+
+	const hasOverflow = await page.evaluate(
+		() => document.documentElement.scrollWidth > window.innerWidth,
+	);
+	expect(hasOverflow).toBe(false);
 });
