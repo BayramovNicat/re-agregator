@@ -259,7 +259,7 @@ Selected mocked browser coverage:
 - Heatmap circle selection and search refetch.
 - Trend panel render and trend failure resilience.
 - District stats render, search, sort aria state, failure, and retry.
-- Scrape ops rows, run-now request, and unauthorized token prompt.
+- Admin sign-in, scrape ops visibility, rows, run-now request, and unauthorized password prompt.
 - Map view pin load, grid switch, and pin-to-detail flow.
 - Empty search, search API error, and locations API failure.
 - Mobile filters/detail flow and horizontal overflow check.
@@ -268,7 +268,6 @@ Remaining E2E limitations:
 
 - Browser tests mock API responses, so they do not prove real frontend/backend/database integration.
 - CI does not currently run a real-stack browser suite against seeded Postgres.
-- `/api/scrape/stream` SSE progress is not browser-tested.
 - Real scraper execution and Telegram network delivery are intentionally not automated.
 - Browser coverage is representative, not exhaustive for every route or visual branch.
 
@@ -572,7 +571,6 @@ Ongoing rules:
 
 - Current Playwright tests mock API responses, so they prove UI wiring but not real frontend/backend/database integration.
 - Seeded real database validation is API-level, not browser-level.
-- `/api/scrape/stream` SSE behavior is not automated.
 - Telegram real bot delivery/network behavior is not automated.
 - Real scraper execution against bina.az is not automated, by design.
 - Browser tests cover representative high-value routes and user flows, not every route or visual branch.

@@ -14,9 +14,11 @@ import {
 	getUndervaluedDeals,
 } from "@/modules/deals/deals.controller.js";
 import {
+	getScrapeAdminSessionStatus,
 	getScrapeRuns,
+	loginScrapeAdmin,
+	logoutScrapeAdmin,
 	runScrape,
-	streamScrape,
 } from "@/modules/scrape/scrape.controller.js";
 import { handleWebhook } from "@/modules/telegram/telegram.controller.js";
 import { prisma } from "@/utils/prisma.js";
@@ -56,8 +58,10 @@ export const routes = {
 	"/api/deals/map-pins": { GET: br(getMapPins) },
 	"/api/deals/by-urls": { POST: br(getDealsByUrls) },
 	"/api/heatmap": { GET: br(getHeatmap) },
-	"/api/scrape/stream": { GET: streamScrape },
 	"/api/scrape/runs": { GET: br(getScrapeRuns) },
+	"/api/scrape/session": { GET: br(getScrapeAdminSessionStatus) },
+	"/api/scrape/login": { POST: br(loginScrapeAdmin) },
+	"/api/scrape/logout": { POST: br(logoutScrapeAdmin) },
 	"/api/scrape/run": { POST: br(runScrape) },
 	"/api/alerts": { GET: br(getAlerts), POST: br(createAlert) },
 	"/api/alerts/:token": { DELETE: br(deleteAlert) },

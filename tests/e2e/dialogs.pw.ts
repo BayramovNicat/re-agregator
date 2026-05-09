@@ -216,7 +216,47 @@ test("district stats retries after heatmap failure", async ({ page }) => {
 	await expect(dialog.getByRole("cell", { name: "Yasamal" })).toBeVisible();
 });
 
+test("admin route signs in and logs out", async ({ page }) => {
+	const loginRequests: string[] = [];
+	let logoutRequests = 0;
+	let authenticated = false;
+	await page.route("**/api/scrape/session", async (route) => {
+		await route.fulfill({
+			json: { ok: true, authenticated, csrfToken: authenticated ? "csrf-test" : undefined },
+		});
+	});
+	await page.route("**/api/scrape/login", async (route) => {
+		const body = (await route.request().postDataJSON()) as { password?: string };
+		loginRequests.push(body.password ?? "");
+		authenticated = true;
+		await route.fulfill({ json: { ok: true, csrfToken: "csrf-test" } });
+	});
+	await page.route("**/api/scrape/logout", async (route) => {
+		logoutRequests += 1;
+		authenticated = false;
+		await route.fulfill({ json: { ok: true } });
+	});
+	await page.goto("/admin");
+	await page.getByPlaceholder("Admin password").fill("secret");
+	await page.getByRole("button", { name: "Sign in" }).click();
+	await expect.poll(() => loginRequests).toEqual(["secret"]);
+	await expect(page).toHaveURL(/\/$/);
+	await page.goto("/admin");
+	await expect(page.getByText("Signed in. Scrape Ops is enabled.")).toBeVisible();
+	await page.getByRole("button", { name: "Log out" }).click();
+	await expect.poll(() => logoutRequests).toBe(1);
+	await expect(page.getByPlaceholder("Admin password")).toBeVisible();
+});
+
+test("scrape ops is hidden when signed out", async ({ page }) => {
+	await expect(page.getByRole("button", { name: "Scrape Ops" })).toHaveCount(0);
+});
+
 test("scrape ops dialog opens with empty runs", async ({ page }) => {
+	await page.route("**/api/scrape/session", async (route) => {
+		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+	});
+	await page.reload();
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
 	await expect(page.getByRole("dialog").getByText("Scrape runs", { exact: true })).toBeVisible();
 	await expect(page.getByRole("dialog").getByText("No scrape runs yet").first()).toBeVisible();
@@ -224,6 +264,10 @@ test("scrape ops dialog opens with empty runs", async ({ page }) => {
 
 test("scrape ops renders run rows and starts scrape", async ({ page }) => {
 	const runRequests: string[] = [];
+	await page.route("**/api/scrape/session", async (route) => {
+		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+	});
+	await page.reload();
 	await page.unroute("**/api/scrape/runs**");
 	await page.route("**/api/scrape/runs**", async (route) => {
 		await route.fulfill({
@@ -249,11 +293,10 @@ test("scrape ops renders run rows and starts scrape", async ({ page }) => {
 		});
 	});
 	await page.route("**/api/scrape/run", async (route) => {
-		runRequests.push(route.request().headers()["x-scrape-admin-token"] ?? "");
+		runRequests.push(route.request().headers()["x-scrape-csrf-token"] ?? "");
 		await route.fulfill({ json: { ok: true } });
 	});
 
-	await page.evaluate(() => localStorage.setItem("redeal:scrape-admin-token", "test-token"));
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
 	const dialog = page.getByRole("dialog");
 	await expect(dialog.getByText("completed")).toBeVisible();
@@ -261,21 +304,25 @@ test("scrape ops renders run rows and starts scrape", async ({ page }) => {
 	await expect(dialog.getByText("bina: 8/10")).toBeVisible();
 
 	await dialog.getByRole("button", { name: "Run now" }).click();
-	await expect.poll(() => runRequests).toEqual(["test-token"]);
+	await expect.poll(() => runRequests).toEqual(["csrf-test"]);
 });
 
-test("scrape ops prompts for token after unauthorized run", async ({ page }) => {
+test("scrape ops prompts for password after unauthorized run", async ({ page }) => {
+	await page.route("**/api/scrape/session", async (route) => {
+		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+	});
+	await page.reload();
 	await page.route("**/api/scrape/run", async (route) => {
 		await route.fulfill({ status: 401, json: { error: "Unauthorized" } });
 	});
 	page.on("dialog", async (dialog) => {
-		expect(dialog.message()).toBe("Enter scrape admin token");
+		expect(dialog.message()).toBe("Enter scrape admin password");
 		await dialog.dismiss();
 	});
 
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByRole("button", { name: "Run now" }).click();
-	await expect(dialog.getByText("Scrape admin token required")).toBeVisible();
+	await expect(dialog.getByText("Scrape admin password required")).toBeVisible();
 });
 

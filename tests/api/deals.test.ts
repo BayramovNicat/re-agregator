@@ -49,10 +49,14 @@ async function getJson(path: string) {
 	return { res, body };
 }
 
-async function postJson(path: string, body: unknown) {
+async function postJson(
+	path: string,
+	body: unknown,
+	headers: Record<string, string> = {},
+) {
 	const res = await fetch(`${baseUrl}${path}`, {
 		method: "POST",
-		headers: { "content-type": "application/json" },
+		headers: { "content-type": "application/json", ...headers },
 		body: typeof body === "string" ? body : JSON.stringify(body),
 	});
 	let parsed: unknown = null;
@@ -590,6 +594,26 @@ describe("public API", () => {
 		const secondDelete = await fetch(`${baseUrl}/api/alerts/${token}`, { method: "DELETE" });
 		expect(firstDelete.status).toBe(200);
 		expect(secondDelete.status).toBe(404);
+	});
+
+	test("manual scrape requires admin session", async () => {
+		if (skipIfNoServer()) return;
+		const { res } = await postJson("/api/scrape/run", {});
+		expect([401, 503]).toContain(res.status);
+	});
+
+	test("manual scrape rejects legacy admin token header", async () => {
+		if (skipIfNoServer()) return;
+		const { res } = await postJson("/api/scrape/run", {}, {
+			"x-scrape-admin-token": "test-token",
+		});
+		expect([401, 503]).toContain(res.status);
+	});
+
+	test("scrape stream endpoint is removed", async () => {
+		if (skipIfNoServer()) return;
+		const { res } = await getJson("/api/scrape/stream?maxPages=1");
+		expect(res.status).toBe(404);
 	});
 
 	test("scrape runs reject invalid limits", async () => {

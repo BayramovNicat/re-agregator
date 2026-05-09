@@ -1,6 +1,12 @@
 import type { ScrapeRun } from "./types";
 
-const ADMIN_TOKEN_KEY = "redeal:scrape-admin-token";
+let csrfToken = "";
+
+type ScrapeAdminSession = {
+	authenticated?: boolean;
+	csrfToken?: string;
+	error?: string;
+};
 
 export async function fetchScrapeRuns(limit = 20): Promise<ScrapeRun[]> {
 	const res = await fetch(
@@ -11,22 +17,57 @@ export async function fetchScrapeRuns(limit = 20): Promise<ScrapeRun[]> {
 	return data.runs ?? [];
 }
 
-export async function runScrapeNow(token: string): Promise<void> {
+export async function fetchScrapeAdminSession(): Promise<boolean> {
+	const res = await fetch("/api/scrape/session", { credentials: "same-origin" });
+	const data = (await res.json()) as ScrapeAdminSession;
+	if (!res.ok) {
+		csrfToken = "";
+		return false;
+	}
+	csrfToken = data.authenticated ? (data.csrfToken ?? "") : "";
+	return Boolean(csrfToken);
+}
+
+export async function loginScrapeAdmin(password: string): Promise<void> {
+	const res = await fetch("/api/scrape/login", {
+		method: "POST",
+		credentials: "same-origin",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ password }),
+	});
+	const data = (await res.json()) as ScrapeAdminSession;
+	if (!res.ok) {
+		csrfToken = "";
+		throw new Error(data.error ?? "Unauthorized");
+	}
+	csrfToken = data.csrfToken ?? "";
+}
+
+export async function logoutScrapeAdmin(): Promise<void> {
+	const res = await fetch("/api/scrape/logout", {
+		method: "POST",
+		credentials: "same-origin",
+	});
+	csrfToken = "";
+	if (!res.ok) {
+		const data = (await res.json()) as { error?: string };
+		throw new Error(data.error ?? "Failed to logout");
+	}
+}
+
+export async function runScrapeNow(): Promise<void> {
 	const res = await fetch("/api/scrape/run", {
 		method: "POST",
-		headers: { "x-scrape-admin-token": token },
+		credentials: "same-origin",
+		headers: csrfToken ? { "x-scrape-csrf-token": csrfToken } : undefined,
 	});
 	const data = (await res.json()) as { error?: string };
 	if (!res.ok) {
-		if (res.status === 401) localStorage.removeItem(ADMIN_TOKEN_KEY);
+		if (res.status === 401 || res.status === 403) csrfToken = "";
 		throw new Error(data.error ?? "Failed to start scrape");
 	}
 }
 
-export function getScrapeAdminToken(): string {
-	return localStorage.getItem(ADMIN_TOKEN_KEY) ?? "";
-}
-
-export function setScrapeAdminToken(token: string): void {
-	localStorage.setItem(ADMIN_TOKEN_KEY, token);
+export function hasScrapeAdminSession(): boolean {
+	return Boolean(csrfToken);
 }

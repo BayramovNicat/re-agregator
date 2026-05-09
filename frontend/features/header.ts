@@ -1,4 +1,5 @@
 import { getLang, setLang, t } from "@/core/i18n";
+import { fetchScrapeAdminSession } from "@/features/scrape-ops/api";
 import { cn, html, makeEventManager } from "@/core/utils";
 import { Button } from "@/ui/button";
 import { Icons } from "@/ui/icons";
@@ -162,11 +163,12 @@ export function initHeader(container: HTMLElement): () => void {
 		}
 	});
 
+	const adminActions = html`<span></span>`;
 	const header = html`
 		<header class="flex items-center justify-between py-4 border-b border-(--border) mb-6">
 			${logo}
 			<div class="flex items-center gap-2">
-				${StatsButton()} ${ScrapeOpsButton()}
+				${StatsButton()} ${adminActions}
 				<div class="w-px h-4 bg-(--border) mx-1"></div>
 				${LangSwitcher(evm)}
 			</div>
@@ -174,6 +176,9 @@ export function initHeader(container: HTMLElement): () => void {
 	`;
 
 	container.appendChild(header);
+	void fetchScrapeAdminSession().then((authenticated) => {
+		if (authenticated) adminActions.replaceChildren(ScrapeOpsButton());
+	});
 
 	return () => {
 		evm.cleanup();

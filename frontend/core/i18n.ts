@@ -218,8 +218,8 @@ const translations = {
 		scrapeRunStarted: "Started",
 		scrapeRunFinished: "Finished",
 		scrapeRunOptions: "Options",
-		scrapeAdminTokenPrompt: "Enter scrape admin token",
-		scrapeAdminTokenRequired: "Scrape admin token required",
+		scrapeAdminPasswordPrompt: "Enter scrape admin password",
+		scrapeAdminPasswordRequired: "Scrape admin password required",
 		searchDistrict: "Search district...",
 
 		// Property detail modal
@@ -452,8 +452,8 @@ const translations = {
 		scrapeRunStarted: "Başlanıb",
 		scrapeRunFinished: "Bitib",
 		scrapeRunOptions: "Seçimlər",
-		scrapeAdminTokenPrompt: "Scrape admin tokenini daxil edin",
-		scrapeAdminTokenRequired: "Scrape admin tokeni lazımdır",
+		scrapeAdminPasswordPrompt: "Scrape admin şifrəsini daxil edin",
+		scrapeAdminPasswordRequired: "Scrape admin şifrəsi lazımdır",
 		searchDistrict: "Rayon axtar...",
 
 		// Property detail modal
@@ -687,8 +687,8 @@ const translations = {
 		scrapeRunStarted: "Начат",
 		scrapeRunFinished: "Завершён",
 		scrapeRunOptions: "Параметры",
-		scrapeAdminTokenPrompt: "Введите scrape admin token",
-		scrapeAdminTokenRequired: "Нужен scrape admin token",
+		scrapeAdminPasswordPrompt: "Введите пароль scrape admin",
+		scrapeAdminPasswordRequired: "Нужен пароль scrape admin",
 		searchDistrict: "Поиск района...",
 
 		// Property detail modal

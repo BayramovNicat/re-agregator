@@ -121,6 +121,8 @@ export async function serveStatic(
 		});
 	}
 
+	if (pathname.startsWith("/api/")) return new Response("Not Found", { status: 404 });
+
 	const staticPath = resolveStaticPath(publicDir, pathname);
 	if (staticPath === null) return new Response("Not Found", { status: 404 });
 

@@ -6,10 +6,11 @@ import { EmptyState } from "@/ui/empty-state";
 import { Icons } from "@/ui/icons";
 import { StatBox } from "@/ui/stat-box";
 import {
+	fetchScrapeAdminSession,
 	fetchScrapeRuns,
-	getScrapeAdminToken,
+	hasScrapeAdminSession,
+	loginScrapeAdmin,
 	runScrapeNow,
-	setScrapeAdminToken,
 } from "./api";
 import type { ScrapeRun } from "./types";
 
@@ -84,6 +85,7 @@ export function initScrapeOps(root: HTMLElement): () => void {
 
 export function openScrapeOps(): void {
 	ui.modal?.showModal();
+	void fetchScrapeAdminSession();
 	void loadRuns();
 }
 
@@ -108,31 +110,24 @@ async function loadRuns(): Promise<void> {
 async function handleRunNow(): Promise<void> {
 	if (state.running) return;
 
-	const token = getScrapeAdminToken();
-
 	state.running = true;
 	setRunButtonState();
 	ui.error.classList.add("hidden");
 
 	try {
-		await runScrapeNow(token);
+		if (!hasScrapeAdminSession()) await promptScrapeAdminLogin();
+		await runScrapeNow();
 		await loadRuns();
 	} catch (err) {
-		if (err instanceof Error && err.message === "Unauthorized") {
-			const nextToken =
-				window.prompt(t("scrapeAdminTokenPrompt"))?.trim() ?? "";
-			if (nextToken) {
-				setScrapeAdminToken(nextToken);
-				try {
-					await runScrapeNow(nextToken);
-					await loadRuns();
-					return;
-				} catch (retryErr) {
-					ui.error.textContent =
-						retryErr instanceof Error ? retryErr.message : t("scrapeRunError");
-				}
-			} else {
-				ui.error.textContent = t("scrapeAdminTokenRequired");
+		if (err instanceof Error && (err.message === "Unauthorized" || err.message === "Forbidden")) {
+			try {
+				await promptScrapeAdminLogin();
+				await runScrapeNow();
+				await loadRuns();
+				return;
+			} catch (retryErr) {
+				ui.error.textContent =
+					retryErr instanceof Error ? retryErr.message : t("scrapeRunError");
 			}
 		} else {
 			ui.error.textContent =
@@ -143,6 +138,12 @@ async function handleRunNow(): Promise<void> {
 		state.running = false;
 		setRunButtonState();
 	}
+}
+
+async function promptScrapeAdminLogin(): Promise<void> {
+	const password = window.prompt(t("scrapeAdminPasswordPrompt"))?.trim() ?? "";
+	if (!password) throw new Error(t("scrapeAdminPasswordRequired"));
+	await loginScrapeAdmin(password);
 }
 
 function setRunButtonState(): void {

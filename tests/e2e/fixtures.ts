@@ -193,6 +193,9 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 	await page.route("**/api/scrape/runs**", async (route) => {
 		await route.fulfill({ json: { ok: true, runs: [] } });
 	});
+	await page.route("**/api/scrape/session", async (route) => {
+		await route.fulfill({ json: { ok: true, authenticated: false } });
+	});
 	await page.route("**/health", async (route) => {
 		await route.fulfill({ json: { status: "ok", timestamp: new Date().toISOString(), properties: 1 } });
 	});

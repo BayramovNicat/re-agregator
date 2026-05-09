@@ -19,29 +19,37 @@ window.__ICONS = Icons;
 const root = document.getElementById("app") as HTMLElement;
 if (!root) throw new Error("Root element #app not found");
 
-const headerArea = html`<header></header>`;
-const searchArea = html`<section></section>`;
-const trendArea = html`<section></section>`;
-const productsArea = html`<main id="products-area"></main>`;
+const cleanups: (() => void)[] = [];
 
-root.appendChild(html`
-	<div class="w-full px-5 pt-0 pb-20">
-		${headerArea}
-		${searchArea}
-		${trendArea}
-		${productsArea}
-	</div>
-`);
+if (window.location.pathname === "/admin") {
+	const adminArea = html`<main></main>`;
+	root.appendChild(html`<div class="w-full px-5 pt-0 pb-20">${adminArea}</div>`);
+	const { initAdmin } = await import("@/features/admin");
+	cleanups.push(initAdmin(adminArea), initTooltip(root));
+} else {
+	const headerArea = html`<header></header>`;
+	const searchArea = html`<section></section>`;
+	const trendArea = html`<section></section>`;
+	const productsArea = html`<main id="products-area"></main>`;
 
-// Critical features are initialized immediately for the first paint.
-const cleanups: (() => void)[] = [
-	initProducts(productsArea),
-	initTrend(trendArea),
-	initSearch(searchArea),
-	initHeader(headerArea),
-	initTooltip(root),
-	initAlerts(root),
-];
+	root.appendChild(html`
+		<div class="w-full px-5 pt-0 pb-20">
+			${headerArea}
+			${searchArea}
+			${trendArea}
+			${productsArea}
+		</div>
+	`);
+
+	cleanups.push(
+		initProducts(productsArea),
+		initTrend(trendArea),
+		initSearch(searchArea),
+		initHeader(headerArea),
+		initTooltip(root),
+		initAlerts(root),
+	);
+}
 
 // Heavy features are loaded on demand.
 

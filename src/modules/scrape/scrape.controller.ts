@@ -1,44 +1,45 @@
-import { IS_DEV, SCRAPE_ADMIN_TOKEN } from "@/config.js";
 import { runAlerts } from "@/modules/alerts/alerts.service.js";
-import type { ScrapeProgressEvent } from "@/scrapers/base.scraper.js";
+import {
+	adminPasswordConfigured,
+	clearScrapeAdminSessionResponse,
+	createScrapeAdminSessionResponse,
+	getScrapeAdminSession,
+	requireScrapeAdminMutation,
+	verifyScrapeAdminPassword,
+} from "@/modules/scrape/scrape-admin-auth.js";
 import { parseQueryNum } from "@/utils/query.js";
 import { ResponseHelper } from "@/utils/response.js";
 import { scrapeRunsService } from "./scrape-runs.service.js";
 
-const SSE_HEADERS = {
-	"Content-Type": "text/event-stream",
-	"Cache-Control": "no-cache",
-	Connection: "keep-alive",
-} as const;
-
-function parseBoundedInt(
-	q: URLSearchParams,
-	name: string,
-	min: number,
-	max: number,
-	defaultValue?: number,
-): number | undefined | Response {
-	const raw = q.get(name);
-	const parsed = parseQueryNum(raw);
-	const value = parsed ?? defaultValue;
-	if (
-		(raw !== null && parsed === undefined) ||
-		(value !== undefined && (!Number.isInteger(value) || value < min || value > max))
-	) {
-		return ResponseHelper.error(`"${name}" must be an integer between ${min} and ${max}`, 400);
+export async function loginScrapeAdmin(req: Request): Promise<Response> {
+	if (!adminPasswordConfigured()) {
+		return ResponseHelper.error("SCRAPE_ADMIN_PASSWORD is not configured", 503);
 	}
-	return value;
+
+	let body: { password?: unknown } = {};
+	try {
+		body = (await req.json()) as { password?: unknown };
+	} catch {
+		return ResponseHelper.error("Invalid JSON body", 400);
+	}
+
+	if (typeof body.password !== "string" || !verifyScrapeAdminPassword(body.password)) {
+		return ResponseHelper.error("Unauthorized", 401);
+	}
+
+	return createScrapeAdminSessionResponse();
 }
 
-function requireScrapeAdmin(req: Request): Response | null {
-	if (!SCRAPE_ADMIN_TOKEN) {
-		return IS_DEV
-			? null
-			: ResponseHelper.error("SCRAPE_ADMIN_TOKEN is not configured", 503);
+export function logoutScrapeAdmin(): Response {
+	return clearScrapeAdminSessionResponse();
+}
+
+export async function getScrapeAdminSessionStatus(req: Request): Promise<Response> {
+	if (!adminPasswordConfigured()) {
+		return ResponseHelper.privateJson({ ok: true, authenticated: false });
 	}
-	const token = req.headers.get("x-scrape-admin-token") ?? "";
-	if (token === SCRAPE_ADMIN_TOKEN) return null;
-	return ResponseHelper.error("Unauthorized", 401);
+	const session = await getScrapeAdminSession(req);
+	return ResponseHelper.privateJson({ ok: true, ...session });
 }
 
 export async function getScrapeRuns(req: Request): Promise<Response> {
@@ -64,8 +65,8 @@ export async function getScrapeRuns(req: Request): Promise<Response> {
 	}
 }
 
-export function runScrape(req: Request): Response {
-	const authError = requireScrapeAdmin(req);
+export async function runScrape(req: Request): Promise<Response> {
+	const authError = await requireScrapeAdminMutation(req);
 	if (authError) return authError;
 
 	scrapeRunsService
@@ -81,58 +82,4 @@ export function runScrape(req: Request): Response {
 		});
 
 	return ResponseHelper.privateJson({ ok: true });
-}
-
-export function streamScrape(req: Request): Response {
-	const authError = requireScrapeAdmin(req);
-	if (authError) return authError;
-
-	const q = new URL(req.url).searchParams;
-	const maxPages = parseBoundedInt(q, "maxPages", 1, 100, 20);
-	if (maxPages instanceof Response) return maxPages;
-	const startPage = parseBoundedInt(q, "startPage", 1, 100);
-	if (startPage instanceof Response) return startPage;
-	const endPage = parseBoundedInt(q, "endPage", 1, 100);
-	if (endPage instanceof Response) return endPage;
-	const delayMs = parseBoundedInt(q, "delayMs", 250, 10_000, 800);
-	if (delayMs instanceof Response) return delayMs;
-	const encoder = new TextEncoder();
-
-	function encodeEvent(event: ScrapeProgressEvent): Uint8Array {
-		return encoder.encode(`data: ${JSON.stringify(event)}\n\n`);
-	}
-
-	const stream = new ReadableStream({
-		async start(controller) {
-			const send = (event: ScrapeProgressEvent) => {
-				controller.enqueue(encodeEvent(event));
-			};
-
-			const options = {
-				maxPages,
-				startPage,
-				endPage,
-				delayMs,
-				onProgress: send,
-			};
-
-			try {
-				console.log("[ScrapeController] Streaming scrape triggered", {
-					maxPages: options.maxPages,
-				});
-				const run = await scrapeRunsService.run("manual", options, send);
-				if (run.status === "success") {
-					await runAlerts();
-				}
-			} catch (err) {
-				const message = err instanceof Error ? err.message : String(err);
-				console.error("[ScrapeController] streamScrape:", err);
-				send({ type: "error", platform: "server", message });
-			} finally {
-				controller.close();
-			}
-		},
-	});
-
-	return new Response(stream, { headers: SSE_HEADERS });
 }
