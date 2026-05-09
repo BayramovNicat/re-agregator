@@ -2,11 +2,6 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getLang, type TranslationKey, t } from "./i18n";
 
-/**
- * Rewrites a full-resolution URL to its 460×345 thumbnail variant.
- * @param src The original full-resolution image URL.
- * @returns The thumbnail URL.
- */
 export function toThumbUrl(src: string): string {
 	return src.replace("/uploads/full/", "/uploads/f460x345/");
 }
@@ -38,10 +33,6 @@ declare global {
 	}
 }
 
-/**
- * Merges Tailwind classes using clsx and twMerge to handle conflicts.
- * @param inputs CSS classes, conditions, or arrays.
- */
 export function cn(...inputs: ClassValue[]): string {
 	return twMerge(clsx(inputs));
 }
@@ -75,10 +66,6 @@ export const trustScriptURL = (url: string): string | TrustedScriptURL => {
 	return policy ? policy.createScriptURL(url) : url;
 };
 
-/**
- * Initializes the global toasts container in the DOM.
- * @param root The element to append the container to.
- */
 export function renderToastsContainer(root: HTMLElement): void {
 	const el = document.createElement("div");
 	el.id = "toasts";
@@ -87,20 +74,10 @@ export function renderToastsContainer(root: HTMLElement): void {
 	root.appendChild(el);
 }
 
-/**
- * Short for document.getElementById.
- * @param id The element ID.
- * @returns The element cast to HTMLElement.
- */
 export function ge(id: string): HTMLElement {
 	return document.getElementById(id) as HTMLElement;
 }
 
-/**
- * Removes the 'hidden' class and optionally sets a specific display style.
- * @param target ID string or HTMLElement.
- * @param d Optional display style (e.g. "flex", "block").
- */
 export function show(target: string | HTMLElement, d?: string): void {
 	const e = typeof target === "string" ? ge(target) : target;
 	if (e) {
@@ -109,18 +86,11 @@ export function show(target: string | HTMLElement, d?: string): void {
 	}
 }
 
-/**
- * Hides an element by setting display: none.
- * @param target ID string or HTMLElement.
- */
 export function hide(target: string | HTMLElement): void {
 	const e = typeof target === "string" ? ge(target) : target;
 	if (e) e.style.display = "none";
 }
 
-/**
- * Returns the RFC 5646 locale string based on the current application language.
- */
 export function getLocale(): string {
 	const lang = getLang();
 	if (lang === "az") return "az-AZ";
@@ -128,20 +98,10 @@ export function getLocale(): string {
 	return "en-GB";
 }
 
-/**
- * Formats a number for the current locale.
- * @param n Number or string to format.
- * @param d Maximum fraction digits.
- */
 export function fmt(n: number | string, d = 0): string {
 	return Number(n).toLocaleString(getLocale(), { maximumFractionDigits: d });
 }
 
-/**
- * Returns a human-readable relative time string (e.g. "5 min ago").
- * Falls back to a localized date string for older dates.
- * @param s ISO date string.
- */
 export function timeAgo(s: string | null | undefined): string | null {
 	if (!s) return null;
 	const sec = Math.floor((Date.now() - new Date(s).getTime()) / 1000);
@@ -156,11 +116,6 @@ export function timeAgo(s: string | null | undefined): string | null {
 	});
 }
 
-/**
- * Displays a transient toast notification in the corner of the screen.
- * @param msg The message to display.
- * @param err Whether to style it as an error.
- */
 export function toast(msg: string, err = false): void {
 	const el = html`<div
 		class="bg-(--surface-3) border border-(--border) rounded-(--r) px-4 py-2.5 text-[13px] text-(--text-2) shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto animate-[fadeUp_0.2s_ease] ${
@@ -173,9 +128,6 @@ export function toast(msg: string, err = false): void {
 	setTimeout(() => el.remove(), 3800);
 }
 
-/**
- * Formats a floor string (e.g. "5/9" or just "5" if total is missing).
- */
 export function fmtFloor(
 	f: number | null | undefined,
 	t: number | null | undefined,
@@ -184,11 +136,6 @@ export function fmtFloor(
 	return f?.toString() ?? "—";
 }
 
-/**
- * Translates a property tier name (e.g. "Good Deal").
- * @param tier Internal tier string.
- * @param short Whether to return the abbreviated form.
- */
 export function tTier(tier: string, short = false): string {
 	const map: Record<string, TranslationKey> = {
 		"High Value Deal": short ? "tierHighShort" : "tierHigh",
@@ -281,10 +228,6 @@ export function html<T extends HTMLElement = HTMLElement>(
 	return el as T;
 }
 
-/**
- * Tagged template literal for creating a DocumentFragment.
- * Useful for rendering multiple top-level elements or text nodes.
- */
 export const frag = (
 	strings: TemplateStringsArray,
 	...values: unknown[]
@@ -316,13 +259,6 @@ export function makeEventManager() {
 	return { add, cleanup };
 }
 
-/**
- * Short for "Create Element" or "Configure Element".
- * Assigns properties and dataset to an element.
- * @param el The element to configure.
- * @param props Properties and dataset to apply.
- * @returns The configured element.
- */
 export function ce<T extends HTMLElement>(
 	el: T,
 	props: Omit<Partial<T>, "style"> & {
@@ -340,12 +276,6 @@ export function ce<T extends HTMLElement>(
 	Object.assign(el, rest);
 	return el;
 }
-/**
- * Standard debounce implementation.
- * @param fn The function to debounce.
- * @param ms Delay in milliseconds.
- * @returns A debounced version of the function.
- */
 export function debounce<T extends unknown[]>(
 	fn: (...args: T) => unknown,
 	ms: number,
