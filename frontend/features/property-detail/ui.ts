@@ -108,7 +108,7 @@ export function renderPropertyDetailLayout(
 	const leftCol = html`
 		<div class="flex-1 min-w-0 overflow-hidden bg-(--surface) flex flex-col">
 			<div class="flex-1 min-h-0 overflow-hidden">${ui.gallery}</div>
-			<div class="flex-1 min-h-0 overflow-hidden">${ui.mapSecEl}</div>
+			${ui.mapSecEl}
 		</div>
 	`;
 
@@ -177,7 +177,7 @@ export function renderPropertyDetailLayout(
 		id: "prop-detail-modal",
 		maxWidth: "1150px",
 		showClose: true,
-		className: "text-(--text) flex-1 min-h-0",
+		className: "text-(--text) h-full flex-1 min-h-0",
 		content: html`
 			<div class="flex flex-col md:flex-row h-full min-h-0">
 				${leftCol} ${rightCol}
