@@ -427,7 +427,15 @@ export async function getPriceDropDeals(
 	const baseQuery = Prisma.sql`
 		FROM "Property" p
 		LEFT JOIN loc_avg la ON la.location_name = p.location_name
-		LEFT JOIN history h ON h.property_id = p.id
+		LEFT JOIN (
+			SELECT property_id, json_agg(json_build_object(
+				'price', price,
+				'price_per_sqm', price_per_sqm,
+				'recorded_at', recorded_at
+			) ORDER BY recorded_at ASC) AS entries
+			FROM "PriceHistory"
+			GROUP BY property_id
+		) h ON h.property_id = p.id
 		WHERE ${locCondition}
 			AND p.price_drop_count >= ${minDropCount}
 	`;
