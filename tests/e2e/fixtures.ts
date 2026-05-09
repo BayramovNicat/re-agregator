@@ -41,22 +41,65 @@ export const cheaperDeal = {
 	image_urls: [],
 };
 
-export async function mockApi(page: Page, options: { searchUrls?: string[] } = {}) {
+export const heatmapData = [
+	{
+		location_name: "Yasamal",
+		avg_price_per_sqm: 2000,
+		count: 10,
+		lat: 40.377,
+		lng: 49.837,
+		recent_avg: 2100,
+		prior_avg: 2000,
+		trend: "up",
+	},
+	{
+		location_name: "Nərimanov",
+		avg_price_per_sqm: 2500,
+		count: 8,
+		lat: 40.409,
+		lng: 49.867,
+		recent_avg: 2450,
+		prior_avg: 2500,
+		trend: "down",
+	},
+];
+
+type MockApiOptions = {
+	searchUrls?: string[];
+	undervalued?: unknown;
+	heatmap?: unknown;
+	heatmapStatus?: number;
+	alertsStatus?: number;
+	alertsError?: string;
+	locationsStatus?: number;
+	locations?: string[];
+};
+
+export async function mockApi(page: Page, options: MockApiOptions = {}) {
+	await page.route("https://*.basemaps.cartocdn.com/**", async (route) => {
+		await route.fulfill({ status: 204, body: "" });
+	});
 	await page.route("**/api/deals/locations", async (route) => {
-		await route.fulfill({ json: { data: ["Yasamal", "Nərimanov"] } });
+		if (options.locationsStatus && options.locationsStatus >= 400) {
+			await route.fulfill({ status: options.locationsStatus, json: { error: "failed" } });
+			return;
+		}
+		await route.fulfill({ json: { data: options.locations ?? ["Yasamal", "Nərimanov"] } });
 	});
 	await page.route("**/api/deals/undervalued**", async (route) => {
 		options.searchUrls?.push(route.request().url());
 		await route.fulfill({
-			json: {
-				location: "__all__",
-				threshold_pct: 10,
-				limit: 200,
-				offset: 0,
-				count: 1,
-				total: 1,
-				data: [deal],
-			},
+			json:
+				options.undervalued ??
+				{
+					location: "__all__",
+					threshold_pct: 10,
+					limit: 200,
+					offset: 0,
+					count: 1,
+					total: 1,
+					data: [deal],
+				},
 		});
 	});
 	await page.route("**/api/deals/by-urls", async (route) => {
@@ -91,35 +134,20 @@ export async function mockApi(page: Page, options: { searchUrls?: string[] } = {
 	});
 	await page.route("**/api/heatmap", async (route) => {
 		await route.fulfill({
-			json: {
-				data: [
-					{
-						location_name: "Yasamal",
-						avg_price_per_sqm: 2000,
-						count: 10,
-						lat: 40.377,
-						lng: 49.837,
-						recent_avg: 2100,
-						prior_avg: 2000,
-						trend: "up",
-					},
-					{
-						location_name: "Nərimanov",
-						avg_price_per_sqm: 2500,
-						count: 8,
-						lat: 40.409,
-						lng: 49.867,
-						recent_avg: 2450,
-						prior_avg: 2500,
-						trend: "down",
-					},
-				],
-			},
+			status: options.heatmapStatus ?? 200,
+			json: options.heatmap ?? { data: heatmapData },
 		});
 	});
 	await page.route("**/api/alerts**", async (route) => {
 		if (route.request().method() === "GET") {
 			await route.fulfill({ json: { ok: true, alerts: [] } });
+			return;
+		}
+		if (options.alertsStatus && options.alertsStatus >= 400) {
+			await route.fulfill({
+				status: options.alertsStatus,
+				json: { error: options.alertsError ?? "Alert failed" },
+			});
 			return;
 		}
 		await route.fulfill({ json: { ok: true, id: "alert-1", token: "token-1" } });

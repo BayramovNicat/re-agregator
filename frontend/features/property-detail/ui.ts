@@ -1,5 +1,5 @@
 import { t } from "@/core/i18n";
-import { html } from "@/core/utils";
+import { frag, html } from "@/core/utils";
 import { Button } from "@/ui/button";
 import { Dialog } from "@/ui/dialog";
 import { Gallery } from "@/ui/gallery";
@@ -77,7 +77,7 @@ export function renderPropertyDetailLayout(
 
 	ui.shareTextEl = html`<span>${t("btnShare")}</span>`;
 	ui.shareBtn = Button({
-		content: Icons.external(16),
+		content: frag`${Icons.external(16)} ${ui.shareTextEl}`,
 		variant: "padded",
 		color: "indigo",
 		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",

@@ -16,7 +16,7 @@ export default defineConfig({
 		...devices["Desktop Chrome"],
 	},
 	webServer: {
-		command: "bun run dev",
+		command: "bun run build && NODE_ENV=development bun src/index.ts",
 		url: baseURL,
 		reuseExistingServer: true,
 		timeout: 120_000,

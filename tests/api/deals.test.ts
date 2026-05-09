@@ -81,6 +81,17 @@ describe("public API", () => {
 		expect(Array.isArray((body as { data?: unknown }).data)).toBe(true);
 	});
 
+	test("API responses support brotli compression", async () => {
+		if (skipIfNoServer()) return;
+		const res = await fetch(`${baseUrl}/api/deals/locations`, {
+			headers: { "accept-encoding": "br" },
+		});
+
+		expect(res.status).toBe(200);
+		expect(res.headers.get("content-encoding")).toBe("br");
+		expect(res.headers.get("vary")).toContain("Accept-Encoding");
+	});
+
 	test("undervalued deals returns paginated shape", async () => {
 		if (skipIfNoServer()) return;
 		const { res, body } = await getJson(
@@ -135,6 +146,22 @@ describe("public API", () => {
 		expect(Array.isArray((body as { data?: unknown }).data)).toBe(true);
 	});
 
+	test("map pins reject missing location and invalid threshold", async () => {
+		if (skipIfNoServer()) return;
+
+		const missingLocation = await getJson("/api/deals/map-pins");
+		const invalidThreshold = await getJson(
+			"/api/deals/map-pins?location=__all__&threshold=abc",
+		);
+		const highThreshold = await getJson(
+			"/api/deals/map-pins?location=__all__&threshold=101",
+		);
+
+		expect(missingLocation.res.status).toBe(400);
+		expect(invalidThreshold.res.status).toBe(400);
+		expect(highThreshold.res.status).toBe(400);
+	});
+
 	test("trend requires location", async () => {
 		if (skipIfNoServer()) return;
 		const { res } = await getJson("/api/deals/trend");
@@ -142,15 +169,16 @@ describe("public API", () => {
 		expect(res.status).toBe(400);
 	});
 
-	test("by-urls rejects empty URL list", async () => {
+	test("by-urls rejects invalid requests", async () => {
 		if (skipIfNoServer()) return;
-		const res = await fetch(`${baseUrl}/api/deals/by-urls`, {
-			method: "POST",
-			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ urls: [] }),
-		});
 
-		expect(res.status).toBe(400);
+		const invalidJson = await postJson("/api/deals/by-urls", "{");
+		const emptyUrls = await postJson("/api/deals/by-urls", { urls: [] });
+		const missingUrls = await postJson("/api/deals/by-urls", {});
+
+		expect(invalidJson.res.status).toBe(400);
+		expect(emptyUrls.res.status).toBe(400);
+		expect(missingUrls.res.status).toBe(400);
 	});
 
 	test("seeded location filter returns only selected location", async () => {
@@ -282,11 +310,15 @@ describe("public API", () => {
 		const { res, body } = await getJson(
 			"/api/deals/undervalued?location=__all__&threshold=0&hasActiveMortgage=true&notLastFloor=true&limit=20&offset=0",
 		);
+		const inactiveMortgage = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&hasActiveMortgage=false&limit=20&offset=0",
+		);
 		const urgent = await getJson(
 			"/api/deals/undervalued?location=__all__&threshold=0&isUrgent=true&limit=20&offset=0",
 		);
 
 		expect(res.status).toBe(200);
+		expect(inactiveMortgage.res.status).toBe(200);
 		expect(urgent.res.status).toBe(200);
 		const data = (
 			body as {
@@ -302,6 +334,11 @@ describe("public API", () => {
 			),
 		).toBe(true);
 		expect(
+			(inactiveMortgage.body as { data: Array<{ has_active_mortgage: boolean }> }).data.every(
+				(deal) => deal.has_active_mortgage === false,
+			),
+		).toBe(true);
+		expect(
 			(urgent.body as { data: Array<{ is_urgent: boolean }> }).data.every(
 				(deal) => deal.is_urgent === true,
 			),
@@ -313,17 +350,26 @@ describe("public API", () => {
 		const search = await getJson(
 			"/api/deals/undervalued?location=__all__&threshold=0&descriptionSearch=corner&limit=20&offset=0",
 		);
+		const seaView = await getJson(
+			"/api/deals/undervalued?location=__all__&threshold=0&descriptionSearch=sea%20view&limit=20&offset=0",
+		);
 		const multi = await getJson(
 			"/api/deals/undervalued?location=Yasamal,N%C9%99rimanov&threshold=0&limit=20&offset=0",
 		);
 
 		expect(search.res.status).toBe(200);
+		expect(seaView.res.status).toBe(200);
 		expect(multi.res.status).toBe(200);
 		const searchData = (search.body as { data: Array<{ description: string | null }> }).data;
 		expect(searchData.length).toBeGreaterThan(0);
 		expect(
 			searchData.every((deal) => deal.description?.toLowerCase().includes("corner")),
 		).toBe(true);
+		expect(
+			(seaView.body as { data: Array<{ source_url: string }> }).data.map(
+				(deal) => deal.source_url,
+			),
+		).toContain("https://test.redeal.local/yasamal-null-fields");
 		const locations = (multi.body as { data: Array<{ location_name: string }> }).data.map(
 			(deal) => deal.location_name,
 		);
@@ -349,12 +395,15 @@ describe("public API", () => {
 		expect(firstUrl).not.toBe(secondUrl);
 	});
 
-	test("undervalued deals reject invalid pagination", async () => {
+	test("undervalued deals reject invalid pagination and empty location", async () => {
 		if (skipIfNoServer()) return;
 		for (const query of ["limit=0", "limit=1001", "limit=abc", "offset=-1", "offset=abc"]) {
 			const { res } = await getJson(`/api/deals/undervalued?location=__all__&${query}`);
 			expect(res.status).toBe(400);
 		}
+
+		const emptyLocation = await getJson("/api/deals/undervalued?location=");
+		expect(emptyLocation.res.status).toBe(400);
 	});
 
 	test("seeded sort by price ascending is ordered", async () => {
@@ -419,6 +468,10 @@ describe("public API", () => {
 		expect(data.map((row) => row.location_name)).toEqual(
 			expect.arrayContaining(["Yasamal", "Nərimanov"]),
 		);
+		expect(data.find((row) => row.location_name === "Yasamal")).toMatchObject({
+			avg_price_per_sqm: 1875,
+			count: 4,
+		});
 		expect(
 			data.every(
 				(row) =>
@@ -462,6 +515,9 @@ describe("public API", () => {
 		).data;
 		expect(allData.length).toBeGreaterThan(0);
 		expect(allData.every((pin) => typeof pin.lat === "number" && typeof pin.lng === "number")).toBe(true);
+		expect(
+			(all.body as { data: Array<{ source_url: string }> }).data.map((pin) => pin.source_url),
+		).not.toContain("https://test.redeal.local/yasamal-null-fields");
 		expect(
 			yasamalData.every(
 				(pin) => pin.location_name === "Yasamal" && pin.discount_percent >= 10,
