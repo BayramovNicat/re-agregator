@@ -204,7 +204,7 @@ function renderRun(run: ScrapeRun): HTMLElement {
 					${meta}
 					<div class="text-sm font-semibold text-(--text) truncate">${fmtDuration(run.duration_ms)}</div>
 				</div>
-				<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs shrink-0 lg:min-w-[420px]">
+				<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs shrink-0 lg:min-w-105">
 					${StatBox({ label: t("scrapeRunFetched"), value: run.total_fetched })}
 					${StatBox({ label: t("scrapeRunPersisted"), value: run.total_persisted })}
 					${StatBox({ label: t("scrapeRunSkipped"), value: run.total_skipped })}
