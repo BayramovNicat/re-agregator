@@ -30,7 +30,9 @@ async function waitForHealth() {
 		await Bun.sleep(250);
 	}
 
-	throw new Error(`Server did not become healthy at ${baseUrl}: ${String(lastError)}`);
+	throw new Error(
+		`Server did not become healthy at ${baseUrl}: ${String(lastError)}`,
+	);
 }
 
 await run(["bun", "run", "db:push"]);

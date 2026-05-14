@@ -59,7 +59,6 @@ export function renderSearchFilters(
 	});
 	ui.discountRange = rangeWrapper.inputElement;
 
-
 	ui.advancedCount = html`<span
 		class="bg-(--accent-solid) text-white rounded-full px-1.5 py-px text-xs font-semibold"
 	></span>`;

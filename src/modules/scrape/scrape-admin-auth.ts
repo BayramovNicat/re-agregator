@@ -25,7 +25,10 @@ function randomToken(): string {
 function base64UrlEncode(bytes: Uint8Array): string {
 	let binary = "";
 	for (const byte of bytes) binary += String.fromCharCode(byte);
-	return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "");
+	return btoa(binary)
+		.replaceAll("+", "-")
+		.replaceAll("/", "_")
+		.replaceAll("=", "");
 }
 
 function base64UrlEncodeString(value: string): string {
@@ -58,7 +61,11 @@ async function signingKey(): Promise<CryptoKey | null> {
 async function sign(value: string): Promise<string | null> {
 	const key = await signingKey();
 	if (!key) return null;
-	const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+	const signature = await crypto.subtle.sign(
+		"HMAC",
+		key,
+		encoder.encode(value),
+	);
 	return base64UrlEncode(new Uint8Array(signature));
 }
 
@@ -142,13 +149,14 @@ function clearCookies(headers: Headers): void {
 		"Set-Cookie",
 		serializeCookie(SESSION_COOKIE, "", { httpOnly: true, maxAge: 0 }),
 	);
-	headers.append(
-		"Set-Cookie",
-		serializeCookie(CSRF_COOKIE, "", { maxAge: 0 }),
-	);
+	headers.append("Set-Cookie", serializeCookie(CSRF_COOKIE, "", { maxAge: 0 }));
 }
 
-function jsonWithHeaders(body: unknown, headers: Headers, status = 200): Response {
+function jsonWithHeaders(
+	body: unknown,
+	headers: Headers,
+	status = 200,
+): Response {
 	headers.set("Cache-Control", "no-store");
 	return Response.json(body, { status, headers });
 }
@@ -168,12 +176,15 @@ export function adminPasswordConfigured(): boolean {
 }
 
 export function verifyScrapeAdminPassword(password: string): boolean {
-	return Boolean(SCRAPE_ADMIN_PASSWORD) && safeEqual(password, SCRAPE_ADMIN_PASSWORD);
+	return (
+		Boolean(SCRAPE_ADMIN_PASSWORD) && safeEqual(password, SCRAPE_ADMIN_PASSWORD)
+	);
 }
 
 export async function createScrapeAdminSessionResponse(): Promise<Response> {
 	const session = await createSessionCookieValue();
-	if (!session) return ResponseHelper.error("SCRAPE_ADMIN_PASSWORD is not configured", 503);
+	if (!session)
+		return ResponseHelper.error("SCRAPE_ADMIN_PASSWORD is not configured", 503);
 	const csrf = randomToken();
 	const headers = new Headers();
 	appendCookies(headers, session, csrf);
@@ -197,7 +208,9 @@ export async function getScrapeAdminSession(req: Request): Promise<{
 	return { authenticated: true, csrfToken: getCookie(req, CSRF_COOKIE) };
 }
 
-export async function requireScrapeAdminSession(req: Request): Promise<Response | null> {
+export async function requireScrapeAdminSession(
+	req: Request,
+): Promise<Response | null> {
 	if (!adminPasswordConfigured()) {
 		return ResponseHelper.error("SCRAPE_ADMIN_PASSWORD is not configured", 503);
 	}
@@ -215,7 +228,9 @@ export async function requireScrapeAdminSameOriginSession(
 	return null;
 }
 
-export async function requireScrapeAdminMutation(req: Request): Promise<Response | null> {
+export async function requireScrapeAdminMutation(
+	req: Request,
+): Promise<Response | null> {
 	const authError = await requireScrapeAdminSameOriginSession(req);
 	if (authError) return authError;
 	const csrfCookie = getCookie(req, CSRF_COOKIE);

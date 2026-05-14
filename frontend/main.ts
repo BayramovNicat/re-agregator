@@ -23,7 +23,9 @@ const cleanups: (() => void)[] = [];
 
 if (window.location.pathname === "/admin") {
 	const adminArea = html`<main></main>`;
-	root.appendChild(html`<div class="w-full px-5 pt-0 pb-20">${adminArea}</div>`);
+	root.appendChild(
+		html`<div class="w-full px-5 pt-0 pb-20">${adminArea}</div>`,
+	);
 	const { initAdmin } = await import("@/features/admin");
 	cleanups.push(initAdmin(adminArea), initTooltip(root));
 } else {
@@ -64,7 +66,9 @@ async function ensureGallery(): Promise<void> {
 
 // Property Detail & Gallery (Grouped)
 bus.once(EVENTS.PROPERTY_OPEN, async (p) => {
-	const { initPropertyDetail } = await import("@/features/property-detail/index");
+	const { initPropertyDetail } = await import(
+		"@/features/property-detail/index"
+	);
 	cleanups.push(initPropertyDetail(root));
 	await ensureGallery();
 	bus.emit(EVENTS.PROPERTY_OPEN, p);

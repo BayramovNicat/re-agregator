@@ -19,7 +19,7 @@ test("location parameter sanitization - invalid locations blocked", () => {
 	const invalidLocations = [
 		"<script>alert('xss')</script>",
 		"baki/test'; DROP TABLE--",
-		"baki/test\"><img src=x onerror=alert(1)>",
+		'baki/test"><img src=x onerror=alert(1)>',
 	];
 	const sanitize = (loc: string) => /^[a-z0-9\-/_]*$/.test(loc);
 

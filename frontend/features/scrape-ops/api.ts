@@ -18,7 +18,9 @@ export async function fetchScrapeRuns(limit = 20): Promise<ScrapeRun[]> {
 }
 
 export async function fetchScrapeAdminSession(): Promise<boolean> {
-	const res = await fetch("/api/scrape/session", { credentials: "same-origin" });
+	const res = await fetch("/api/scrape/session", {
+		credentials: "same-origin",
+	});
 	const data = (await res.json()) as ScrapeAdminSession;
 	if (!res.ok) {
 		csrfToken = "";

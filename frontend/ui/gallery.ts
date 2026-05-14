@@ -188,9 +188,9 @@ export function Gallery({
 	const _createSlide = (_: string, i: number): HTMLElement => {
 		return html`
 			<div
-				class="absolute inset-0 flex items-center justify-center transition-opacity ${fullscreen
-					? "duration-400"
-					: "duration-300"}"
+				class="absolute inset-0 flex items-center justify-center transition-opacity ${
+					fullscreen ? "duration-400" : "duration-300"
+				}"
 				style="opacity: 0; visibility: hidden"
 			>
 				<img

@@ -15,7 +15,9 @@ beforeAll(async () => {
 		const seedRes = await fetch(`${baseUrl}/api/deals/by-urls`, {
 			method: "POST",
 			headers: { "content-type": "application/json" },
-			body: JSON.stringify({ urls: ["https://test.redeal.local/yasamal-deal"] }),
+			body: JSON.stringify({
+				urls: ["https://test.redeal.local/yasamal-deal"],
+			}),
 		});
 		const seedBody = (await seedRes.json()) as { data?: unknown[] };
 		seedAvailable = seedRes.ok && (seedBody.data?.length ?? 0) > 0;
@@ -38,7 +40,8 @@ function skipIfNoServer() {
 function skipIfNoSeed() {
 	if (skipIfNoServer()) return true;
 	if (!seedAvailable) {
-		const message = "Seed data unavailable. Run `bun run verify:db` before API tests.";
+		const message =
+			"Seed data unavailable. Run `bun run verify:db` before API tests.";
 		if (isCi) throw new Error(message);
 		console.warn(`Skipping seeded API test: ${message}`);
 		return true;
@@ -238,7 +241,9 @@ describe("public API", () => {
 
 		expect(res.status).toBe(200);
 		const data = (
-			body as { data: Array<{ source_url: string; price: string; rooms: number }> }
+			body as {
+				data: Array<{ source_url: string; price: string; rooms: number }>;
+			}
 		).data;
 		expect(data.map((deal) => deal.source_url)).toContain(
 			"https://test.redeal.local/yasamal-deal",
@@ -258,7 +263,13 @@ describe("public API", () => {
 
 		expect(res.status).toBe(200);
 		const data = (
-			body as { data: Array<{ source_url: string; price_per_sqm: string; area_sqm: string }> }
+			body as {
+				data: Array<{
+					source_url: string;
+					price_per_sqm: string;
+					area_sqm: string;
+				}>;
+			}
 		).data;
 		expect(data.map((deal) => deal.source_url)).toContain(
 			"https://test.redeal.local/yasamal-deal",
@@ -282,14 +293,20 @@ describe("public API", () => {
 
 		expect(res.status).toBe(200);
 		const data = (
-			body as { data: Array<{ source_url: string; floor: number; total_floors: number }> }
+			body as {
+				data: Array<{
+					source_url: string;
+					floor: number;
+					total_floors: number;
+				}>;
+			}
 		).data;
 		expect(data.map((deal) => deal.source_url)).toContain(
 			"https://test.redeal.local/narimanov-deal",
 		);
-		expect(data.every((deal) => deal.floor === 3 && deal.total_floors === 16)).toBe(
-			true,
-		);
+		expect(
+			data.every((deal) => deal.floor === 3 && deal.total_floors === 16),
+		).toBe(true);
 	});
 
 	test("seeded mortgage filters support true and false", async () => {
@@ -304,14 +321,14 @@ describe("public API", () => {
 		expect(mortgageTrue.res.status).toBe(200);
 		expect(mortgageFalse.res.status).toBe(200);
 		expect(
-			(mortgageTrue.body as { data: Array<{ has_mortgage: boolean }> }).data.every(
-				(deal) => deal.has_mortgage === true,
-			),
+			(
+				mortgageTrue.body as { data: Array<{ has_mortgage: boolean }> }
+			).data.every((deal) => deal.has_mortgage === true),
 		).toBe(true);
 		expect(
-			(mortgageFalse.body as { data: Array<{ has_mortgage: boolean }> }).data.every(
-				(deal) => deal.has_mortgage === false,
-			),
+			(
+				mortgageFalse.body as { data: Array<{ has_mortgage: boolean }> }
+			).data.every((deal) => deal.has_mortgage === false),
 		).toBe(true);
 	});
 
@@ -332,7 +349,12 @@ describe("public API", () => {
 		expect(urgent.res.status).toBe(200);
 		const data = (
 			body as {
-				data: Array<{ source_url: string; has_active_mortgage: boolean; floor: number; total_floors: number }>;
+				data: Array<{
+					source_url: string;
+					has_active_mortgage: boolean;
+					floor: number;
+					total_floors: number;
+				}>;
 			}
 		).data;
 		expect(data.map((deal) => deal.source_url)).toContain(
@@ -340,13 +362,16 @@ describe("public API", () => {
 		);
 		expect(
 			data.every(
-				(deal) => deal.has_active_mortgage === true && deal.floor < deal.total_floors,
+				(deal) =>
+					deal.has_active_mortgage === true && deal.floor < deal.total_floors,
 			),
 		).toBe(true);
 		expect(
-			(inactiveMortgage.body as { data: Array<{ has_active_mortgage: boolean }> }).data.every(
-				(deal) => deal.has_active_mortgage === false,
-			),
+			(
+				inactiveMortgage.body as {
+					data: Array<{ has_active_mortgage: boolean }>;
+				}
+			).data.every((deal) => deal.has_active_mortgage === false),
 		).toBe(true);
 		expect(
 			(urgent.body as { data: Array<{ is_urgent: boolean }> }).data.every(
@@ -370,19 +395,23 @@ describe("public API", () => {
 		expect(search.res.status).toBe(200);
 		expect(seaView.res.status).toBe(200);
 		expect(multi.res.status).toBe(200);
-		const searchData = (search.body as { data: Array<{ description: string | null }> }).data;
+		const searchData = (
+			search.body as { data: Array<{ description: string | null }> }
+		).data;
 		expect(searchData.length).toBeGreaterThan(0);
 		expect(
-			searchData.every((deal) => deal.description?.toLowerCase().includes("corner")),
+			searchData.every((deal) =>
+				deal.description?.toLowerCase().includes("corner"),
+			),
 		).toBe(true);
 		expect(
 			(seaView.body as { data: Array<{ source_url: string }> }).data.map(
 				(deal) => deal.source_url,
 			),
 		).toContain("https://test.redeal.local/yasamal-null-fields");
-		const locations = (multi.body as { data: Array<{ location_name: string }> }).data.map(
-			(deal) => deal.location_name,
-		);
+		const locations = (
+			multi.body as { data: Array<{ location_name: string }> }
+		).data.map((deal) => deal.location_name);
 		expect(locations).toContain("Yasamal");
 		expect(locations).toContain("Nərimanov");
 	});
@@ -398,8 +427,10 @@ describe("public API", () => {
 
 		expect(first.res.status).toBe(200);
 		expect(second.res.status).toBe(200);
-		const firstUrl = (first.body as { data: Array<{ source_url: string }> }).data[0]?.source_url;
-		const secondUrl = (second.body as { data: Array<{ source_url: string }> }).data[0]?.source_url;
+		const firstUrl = (first.body as { data: Array<{ source_url: string }> })
+			.data[0]?.source_url;
+		const secondUrl = (second.body as { data: Array<{ source_url: string }> })
+			.data[0]?.source_url;
 		expect(firstUrl).toBeString();
 		expect(secondUrl).toBeString();
 		expect(firstUrl).not.toBe(secondUrl);
@@ -407,8 +438,16 @@ describe("public API", () => {
 
 	test("undervalued deals reject invalid pagination and empty location", async () => {
 		if (skipIfNoServer()) return;
-		for (const query of ["limit=0", "limit=1001", "limit=abc", "offset=-1", "offset=abc"]) {
-			const { res } = await getJson(`/api/deals/undervalued?location=__all__&${query}`);
+		for (const query of [
+			"limit=0",
+			"limit=1001",
+			"limit=abc",
+			"offset=-1",
+			"offset=abc",
+		]) {
+			const { res } = await getJson(
+				`/api/deals/undervalued?location=__all__&${query}`,
+			);
 			expect(res.status).toBe(400);
 		}
 
@@ -423,8 +462,8 @@ describe("public API", () => {
 		);
 
 		expect(res.status).toBe(200);
-		const prices = (body as { data: Array<{ price: string }> }).data.map((deal) =>
-			Number(deal.price),
+		const prices = (body as { data: Array<{ price: string }> }).data.map(
+			(deal) => Number(deal.price),
 		);
 		expect(prices.length).toBeGreaterThan(1);
 		expect(prices).toEqual([...prices].sort((a, b) => a - b));
@@ -438,7 +477,9 @@ describe("public API", () => {
 
 		expect(res.status).toBe(200);
 		expect(body).toMatchObject({ location: "__all__", minDropCount: 1 });
-		const deal = (body as { data: Array<{ source_url: string; price_drop_count: number }> }).data.find(
+		const deal = (
+			body as { data: Array<{ source_url: string; price_drop_count: number }> }
+		).data.find(
 			(deal) => deal.source_url === "https://test.redeal.local/yasamal-deal",
 		);
 		expect(deal).toBeDefined();
@@ -497,7 +538,11 @@ describe("public API", () => {
 		const { res, body } = await getJson("/api/deals/trend?location=Yasamal");
 
 		expect(res.status).toBe(200);
-		const data = (body as { data: Array<{ week: string; avg_ppsm: number; listing_count: number }> }).data;
+		const data = (
+			body as {
+				data: Array<{ week: string; avg_ppsm: number; listing_count: number }>;
+			}
+		).data;
 		expect(data.length).toBeGreaterThan(0);
 		expect(
 			data.every(
@@ -511,19 +556,32 @@ describe("public API", () => {
 
 	test("seeded map pins filter by threshold and location", async () => {
 		if (skipIfNoSeed()) return;
-		const all = await getJson("/api/deals/map-pins?location=__all__&threshold=0");
-		const yasamal = await getJson("/api/deals/map-pins?location=Yasamal&threshold=10");
+		const all = await getJson(
+			"/api/deals/map-pins?location=__all__&threshold=0",
+		);
+		const yasamal = await getJson(
+			"/api/deals/map-pins?location=Yasamal&threshold=10",
+		);
 
 		expect(all.res.status).toBe(200);
 		expect(yasamal.res.status).toBe(200);
-		const allData = (all.body as { data: Array<{ lat: number; lng: number }> }).data;
+		const allData = (all.body as { data: Array<{ lat: number; lng: number }> })
+			.data;
 		const yasamalData = (
-			yasamal.body as { data: Array<{ location_name: string; discount_percent: number }> }
+			yasamal.body as {
+				data: Array<{ location_name: string; discount_percent: number }>;
+			}
 		).data;
 		expect(allData.length).toBeGreaterThan(0);
-		expect(allData.every((pin) => typeof pin.lat === "number" && typeof pin.lng === "number")).toBe(true);
 		expect(
-			(all.body as { data: Array<{ source_url: string }> }).data.map((pin) => pin.source_url),
+			allData.every(
+				(pin) => typeof pin.lat === "number" && typeof pin.lng === "number",
+			),
+		).toBe(true);
+		expect(
+			(all.body as { data: Array<{ source_url: string }> }).data.map(
+				(pin) => pin.source_url,
+			),
 		).not.toContain("https://test.redeal.local/yasamal-null-fields");
 		expect(
 			yasamalData.every(
@@ -553,15 +611,21 @@ describe("public API", () => {
 		const token = (created as { token: string }).token;
 
 		// foreign chat_id cannot delete another user's alert
-		const foreignDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, {
-			method: "DELETE",
-		});
+		const foreignDelete = await fetch(
+			`${baseUrl}/api/alerts/${token}?chat_id=987654322`,
+			{
+				method: "DELETE",
+			},
+		);
 		expect(foreignDelete.status).toBe(404);
 
 		// owner can delete their own alert
-		const ownerDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654321`, {
-			method: "DELETE",
-		});
+		const ownerDelete = await fetch(
+			`${baseUrl}/api/alerts/${token}?chat_id=987654321`,
+			{
+				method: "DELETE",
+			},
+		);
 		expect(ownerDelete.status).toBe(200);
 	});
 
@@ -574,7 +638,9 @@ describe("public API", () => {
 			chat_id: "abc",
 			filters: { location: "Yasamal" },
 		});
-		const missingFilters = await postJson("/api/alerts", { chat_id: "987654321" });
+		const missingFilters = await postJson("/api/alerts", {
+			chat_id: "987654321",
+		});
 		const missingLocation = await postJson("/api/alerts", {
 			chat_id: "987654321",
 			filters: { threshold: 10 },
@@ -600,13 +666,19 @@ describe("public API", () => {
 
 		const list = await getJson("/api/alerts?chat_id=987654322");
 		expect(list.res.status).toBe(200);
-		const alert = (list.body as { alerts: Array<{ token: string; label: string }> }).alerts.find(
-			(item) => item.token === token,
-		);
+		const alert = (
+			list.body as { alerts: Array<{ token: string; label: string }> }
+		).alerts.find((item) => item.token === token);
 		expect(alert?.label).toHaveLength(80);
 
-		const firstDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, { method: "DELETE" });
-		const secondDelete = await fetch(`${baseUrl}/api/alerts/${token}?chat_id=987654322`, { method: "DELETE" });
+		const firstDelete = await fetch(
+			`${baseUrl}/api/alerts/${token}?chat_id=987654322`,
+			{ method: "DELETE" },
+		);
+		const secondDelete = await fetch(
+			`${baseUrl}/api/alerts/${token}?chat_id=987654322`,
+			{ method: "DELETE" },
+		);
 		expect(firstDelete.status).toBe(200);
 		expect(secondDelete.status).toBe(404);
 	});
@@ -619,9 +691,13 @@ describe("public API", () => {
 
 	test("manual scrape rejects legacy admin token header", async () => {
 		if (skipIfNoServer()) return;
-		const { res } = await postJson("/api/scrape/run", {}, {
-			"x-scrape-admin-token": "test-token",
-		});
+		const { res } = await postJson(
+			"/api/scrape/run",
+			{},
+			{
+				"x-scrape-admin-token": "test-token",
+			},
+		);
 		expect([401, 503]).toContain(res.status);
 	});
 
@@ -644,7 +720,11 @@ describe("public API", () => {
 		const { res, body } = await getJson("/api/scrape/runs?limit=20");
 
 		expect(res.status).toBe(200);
-		const runs = (body as { runs: Array<{ status: string; trigger: string; total_fetched: number }> }).runs;
+		const runs = (
+			body as {
+				runs: Array<{ status: string; trigger: string; total_fetched: number }>;
+			}
+		).runs;
 		expect(runs.length).toBeGreaterThan(0);
 		expect(
 			runs.some(
@@ -660,7 +740,9 @@ describe("public API", () => {
 		if (skipIfNoServer()) return;
 
 		const malformed = await postJson("/api/telegram/webhook", "{");
-		const withoutMessage = await postJson("/api/telegram/webhook", { update_id: 1 });
+		const withoutMessage = await postJson("/api/telegram/webhook", {
+			update_id: 1,
+		});
 		const unknownMessage = await postJson("/api/telegram/webhook", {
 			message: { chat: { id: 987654321 }, text: "hello" },
 		});
@@ -679,7 +761,9 @@ describe("public API", () => {
 		// Only meaningful when TELEGRAM_WEBHOOK_SECRET is set in the server env.
 		// Without it the server accepts all requests, so we skip the assertion.
 		if (!process.env.TELEGRAM_WEBHOOK_SECRET) {
-			console.warn("Skipping webhook secret test: TELEGRAM_WEBHOOK_SECRET not set");
+			console.warn(
+				"Skipping webhook secret test: TELEGRAM_WEBHOOK_SECRET not set",
+			);
 			return;
 		}
 
@@ -701,13 +785,18 @@ describe("public API", () => {
 		if (skipIfNoServer()) return;
 
 		// missing chat_id → 400
-		const noChatId = await fetch(`${baseUrl}/api/alerts/nonexistent-token`, { method: "DELETE" });
+		const noChatId = await fetch(`${baseUrl}/api/alerts/nonexistent-token`, {
+			method: "DELETE",
+		});
 		expect(noChatId.status).toBe(400);
 
 		// non-numeric chat_id → 400
-		const badChatId = await fetch(`${baseUrl}/api/alerts/nonexistent-token?chat_id=abc`, {
-			method: "DELETE",
-		});
+		const badChatId = await fetch(
+			`${baseUrl}/api/alerts/nonexistent-token?chat_id=abc`,
+			{
+				method: "DELETE",
+			},
+		);
 		expect(badChatId.status).toBe(400);
 	});
 });
@@ -745,7 +834,11 @@ describe("XSS escaping — formatListing", () => {
 	});
 
 	test("falls back to district and escapes it", () => {
-		const result = formatListing({ ...base, location_name: null, district: "<Evil>" });
+		const result = formatListing({
+			...base,
+			location_name: null,
+			district: "<Evil>",
+		});
 		expect(result).not.toContain("<Evil>");
 		expect(result).toContain("&lt;Evil&gt;");
 	});

@@ -119,7 +119,10 @@ async function handleRunNow(): Promise<void> {
 		await runScrapeNow();
 		await loadRuns();
 	} catch (err) {
-		if (err instanceof Error && (err.message === "Unauthorized" || err.message === "Forbidden")) {
+		if (
+			err instanceof Error &&
+			(err.message === "Unauthorized" || err.message === "Forbidden")
+		) {
 			try {
 				await promptScrapeAdminLogin();
 				await runScrapeNow();

@@ -21,7 +21,10 @@ export const deal = {
 	price_drop_count: 1,
 	posted_date: new Date().toISOString(),
 	description: "Bright test apartment",
-	image_urls: ["https://example.com/image-1.jpg", "https://example.com/image-2.jpg"],
+	image_urls: [
+		"https://example.com/image-1.jpg",
+		"https://example.com/image-2.jpg",
+	],
 	latitude: 40.377,
 	longitude: 49.837,
 	price_history: [
@@ -104,65 +107,74 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 	});
 	await page.route("**/api/deals/locations", async (route) => {
 		if (options.locationsStatus && options.locationsStatus >= 400) {
-			await route.fulfill({ status: options.locationsStatus, json: { error: "failed" } });
+			await route.fulfill({
+				status: options.locationsStatus,
+				json: { error: "failed" },
+			});
 			return;
 		}
-		await route.fulfill({ json: { data: options.locations ?? ["Yasamal", "Nərimanov"] } });
+		await route.fulfill({
+			json: { data: options.locations ?? ["Yasamal", "Nərimanov"] },
+		});
 	});
 	await page.route("**/api/deals/undervalued**", async (route) => {
 		options.searchUrls?.push(route.request().url());
 		await route.fulfill({
-			json:
-				options.undervalued ??
-				{
-					location: "__all__",
-					threshold_pct: 10,
-					limit: 200,
-					offset: 0,
-					count: 1,
-					total: 1,
-					data: [deal],
-				},
+			json: options.undervalued ?? {
+				location: "__all__",
+				threshold_pct: 10,
+				limit: 200,
+				offset: 0,
+				count: 1,
+				total: 1,
+				data: [deal],
+			},
 		});
 	});
 	await page.route("**/api/deals/by-urls", async (route) => {
 		if (options.byUrlsStatus && options.byUrlsStatus >= 400) {
-			await route.fulfill({ status: options.byUrlsStatus, json: { error: "failed" } });
+			await route.fulfill({
+				status: options.byUrlsStatus,
+				json: { error: "failed" },
+			});
 			return;
 		}
 		await route.fulfill({ json: options.byUrls ?? { data: [deal] } });
 	});
 	await page.route("**/api/deals/trend**", async (route) => {
 		if (options.trendStatus && options.trendStatus >= 400) {
-			await route.fulfill({ status: options.trendStatus, json: { error: "failed" } });
+			await route.fulfill({
+				status: options.trendStatus,
+				json: { error: "failed" },
+			});
 			return;
 		}
-		await route.fulfill({ json: options.trend ?? { location: "Yasamal", data: trendData } });
+		await route.fulfill({
+			json: options.trend ?? { location: "Yasamal", data: trendData },
+		});
 	});
 	await page.route("**/api/deals/map-pins**", async (route) => {
 		await route.fulfill({
-			json:
-				options.mapPins ??
-				{
-					count: 1,
-					data: [
-						{
-							source_url: deal.source_url,
-							lat: deal.latitude,
-							lng: deal.longitude,
-							price: deal.price,
-							price_per_sqm: deal.price_per_sqm,
-							area_sqm: deal.area_sqm,
-							floor: deal.floor,
-							total_floors: deal.total_floors,
-							rooms: deal.rooms,
-							location_name: deal.location_name,
-							image_url: deal.image_urls[0],
-							discount_percent: deal.discount_percent,
-							tier: deal.tier,
-						},
-					],
-				},
+			json: options.mapPins ?? {
+				count: 1,
+				data: [
+					{
+						source_url: deal.source_url,
+						lat: deal.latitude,
+						lng: deal.longitude,
+						price: deal.price,
+						price_per_sqm: deal.price_per_sqm,
+						area_sqm: deal.area_sqm,
+						floor: deal.floor,
+						total_floors: deal.total_floors,
+						rooms: deal.rooms,
+						location_name: deal.location_name,
+						image_url: deal.image_urls[0],
+						discount_percent: deal.discount_percent,
+						tier: deal.tier,
+					},
+				],
+			},
 		});
 	});
 	await page.route("**/api/heatmap", async (route) => {
@@ -188,7 +200,9 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 			});
 			return;
 		}
-		await route.fulfill({ json: { ok: true, id: "alert-1", token: "token-1" } });
+		await route.fulfill({
+			json: { ok: true, id: "alert-1", token: "token-1" },
+		});
 	});
 	await page.route("**/api/scrape/runs**", async (route) => {
 		await route.fulfill({ json: { ok: true, runs: [] } });
@@ -197,6 +211,12 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 		await route.fulfill({ json: { ok: true, authenticated: false } });
 	});
 	await page.route("**/health", async (route) => {
-		await route.fulfill({ json: { status: "ok", timestamp: new Date().toISOString(), properties: 1 } });
+		await route.fulfill({
+			json: {
+				status: "ok",
+				timestamp: new Date().toISOString(),
+				properties: 1,
+			},
+		});
 	});
 }

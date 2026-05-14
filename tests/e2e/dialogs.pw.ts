@@ -11,7 +11,9 @@ test("saved view is hidden without bookmarks", async ({ page }) => {
 	await expect(page.getByRole("button", { name: /saved/i })).toHaveCount(0);
 });
 
-test("bookmark persists after reload and saved view opens", async ({ page }) => {
+test("bookmark persists after reload and saved view opens", async ({
+	page,
+}) => {
 	await page.getByRole("button", { name: "Save" }).click();
 	await expect(page.getByRole("button", { name: /saved 1/i })).toBeVisible();
 
@@ -32,19 +34,25 @@ test("saved view uses cached listing when refresh fails", async ({ page }) => {
 	await page.getByRole("button", { name: /saved 1/i }).click();
 
 	await expect(page.locator(".product-card")).toHaveCount(1);
-	await expect(page.locator(".product-card").getByText("High Value Deal")).toBeVisible();
+	await expect(
+		page.locator(".product-card").getByText("High Value Deal"),
+	).toBeVisible();
 });
 
 test("card opens property detail dialog", async ({ page }) => {
 	await page.locator(".product-card").click();
-	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("Bright test apartment"),
+	).toBeVisible();
 });
 
 test("card opens property detail from keyboard", async ({ page }) => {
 	const card = page.locator(".product-card").first();
 	await card.focus();
 	await page.keyboard.press("Enter");
-	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("Bright test apartment"),
+	).toBeVisible();
 });
 
 test("list row opens property detail from keyboard", async ({ page }) => {
@@ -52,20 +60,26 @@ test("list row opens property detail from keyboard", async ({ page }) => {
 	const row = page.locator(".product-card").first();
 	await row.focus();
 	await page.keyboard.press("Space");
-	await expect(page.getByRole("dialog").getByText("Bright test apartment")).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("Bright test apartment"),
+	).toBeVisible();
 });
 
-test("detail actions update saved state, source link, and hidden cards", async ({ page }) => {
+test("detail actions update saved state, source link, and hidden cards", async ({
+	page,
+}) => {
 	await page.locator(".product-card").click();
 	const dialog = page.locator("dialog#prop-detail-modal");
 	await expect(dialog.getByText("Bright test apartment")).toBeVisible();
-	await expect(dialog.getByRole("link", { name: /view listing/i })).toHaveAttribute(
-		"href",
-		deal.source_url,
-	);
+	await expect(
+		dialog.getByRole("link", { name: /view listing/i }),
+	).toHaveAttribute("href", deal.source_url);
 
 	await page.evaluate(() => {
-		Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+		Object.defineProperty(navigator, "share", {
+			configurable: true,
+			value: undefined,
+		});
 		Object.defineProperty(navigator, "clipboard", {
 			configurable: true,
 			value: {
@@ -80,7 +94,9 @@ test("detail actions update saved state, source link, and hidden cards", async (
 	await expect(page.getByRole("button", { name: /saved 1/i })).toBeVisible();
 	await dialog.getByRole("button", { name: "Share" }).click();
 	await expect(dialog.getByText("Link copied!")).toBeVisible();
-	expect(await page.evaluate(() => localStorage.getItem("copied-url"))).toBe(deal.source_url);
+	expect(await page.evaluate(() => localStorage.getItem("copied-url"))).toBe(
+		deal.source_url,
+	);
 	await dialog.getByRole("button", { name: "Hide" }).click();
 	await expect(dialog).toBeHidden();
 	await expect(page.locator(".product-card")).toHaveCount(0);
@@ -93,7 +109,9 @@ test("hide removes listing", async ({ page }) => {
 
 test("alerts dialog saves chat id", async ({ page }) => {
 	await page.getByRole("button", { name: /alert me/i }).click();
-	await expect(page.getByRole("dialog").getByText("Telegram alerts")).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("Telegram alerts"),
+	).toBeVisible();
 	await page.getByLabel("Telegram Chat ID").fill("123456789");
 	await page.getByRole("button", { name: /save alert/i }).click();
 	await expect(page.getByRole("dialog")).toBeHidden();
@@ -132,19 +150,29 @@ test("alerts dialog lists and deletes active alert", async ({ page }) => {
 	await expect(dialog.getByText("Active alerts")).toBeVisible();
 	await expect(dialog.getByText("Yasamal alert")).toBeVisible();
 
-	await dialog.getByRole("button", { name: "Delete alert" }).click({ force: true });
+	await dialog
+		.getByRole("button", { name: "Delete alert" })
+		.click({ force: true });
 	await expect.poll(() => deletedAlerts).toEqual(["token-1"]);
 	await expect(dialog.getByText("Yasamal alert")).toHaveCount(0);
 });
 
 test("gallery opens from card photo button", async ({ page }) => {
-	await page.locator(".product-card").getByRole("button", { name: "Photos" }).click();
-	await expect(page.getByRole("dialog").getByRole("region", { name: "Gallery" })).toBeVisible();
+	await page
+		.locator(".product-card")
+		.getByRole("button", { name: "Photos" })
+		.click();
+	await expect(
+		page.getByRole("dialog").getByRole("region", { name: "Gallery" }),
+	).toBeVisible();
 	await expect(page.getByRole("button", { name: "Next photo" })).toBeVisible();
 });
 
 test("gallery navigates and closes with keyboard", async ({ page }) => {
-	await page.locator(".product-card").getByRole("button", { name: "Photos" }).click();
+	await page
+		.locator(".product-card")
+		.getByRole("button", { name: "Photos" })
+		.click();
 	const dialog = page.getByRole("dialog");
 	await expect(dialog.getByText("1 / 2")).toBeVisible();
 
@@ -160,12 +188,20 @@ test("gallery navigates and closes with keyboard", async ({ page }) => {
 
 test("district stats dialog opens with heatmap data", async ({ page }) => {
 	await page.getByRole("button", { name: "Stats" }).click();
-	await expect(page.getByRole("dialog").getByText("District Stats")).toBeVisible();
-	await expect(page.getByRole("dialog").getByRole("cell", { name: "Yasamal" })).toBeVisible();
-	await expect(page.getByRole("columnheader", { name: /Avg ₼\/m²/i })).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("District Stats"),
+	).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByRole("cell", { name: "Yasamal" }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("columnheader", { name: /Avg ₼\/m²/i }),
+	).toBeVisible();
 });
 
-test("district stats search filters rows and avg sort toggles", async ({ page }) => {
+test("district stats search filters rows and avg sort toggles", async ({
+	page,
+}) => {
 	await page.getByRole("button", { name: "Stats" }).click();
 	const dialog = page.locator("dialog#district-stats-modal");
 	await expect(dialog.getByRole("cell", { name: "Yasamal" })).toBeVisible();
@@ -222,11 +258,17 @@ test("admin route signs in and logs out", async ({ page }) => {
 	let authenticated = false;
 	await page.route("**/api/scrape/session", async (route) => {
 		await route.fulfill({
-			json: { ok: true, authenticated, csrfToken: authenticated ? "csrf-test" : undefined },
+			json: {
+				ok: true,
+				authenticated,
+				csrfToken: authenticated ? "csrf-test" : undefined,
+			},
 		});
 	});
 	await page.route("**/api/scrape/login", async (route) => {
-		const body = (await route.request().postDataJSON()) as { password?: string };
+		const body = (await route.request().postDataJSON()) as {
+			password?: string;
+		};
 		loginRequests.push(body.password ?? "");
 		authenticated = true;
 		await route.fulfill({ json: { ok: true, csrfToken: "csrf-test" } });
@@ -242,7 +284,9 @@ test("admin route signs in and logs out", async ({ page }) => {
 	await expect.poll(() => loginRequests).toEqual(["secret"]);
 	await expect(page).toHaveURL(/\/$/);
 	await page.goto("/admin");
-	await expect(page.getByText("Signed in. Scrape Ops is enabled.")).toBeVisible();
+	await expect(
+		page.getByText("Signed in. Scrape Ops is enabled."),
+	).toBeVisible();
 	await page.getByRole("button", { name: "Log out" }).click();
 	await expect.poll(() => logoutRequests).toBe(1);
 	await expect(page.getByPlaceholder("Admin password")).toBeVisible();
@@ -254,18 +298,26 @@ test("scrape ops is hidden when signed out", async ({ page }) => {
 
 test("scrape ops dialog opens with empty runs", async ({ page }) => {
 	await page.route("**/api/scrape/session", async (route) => {
-		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+		await route.fulfill({
+			json: { ok: true, authenticated: true, csrfToken: "csrf-test" },
+		});
 	});
 	await page.reload();
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
-	await expect(page.getByRole("dialog").getByText("Scrape runs", { exact: true })).toBeVisible();
-	await expect(page.getByRole("dialog").getByText("No scrape runs yet").first()).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("Scrape runs", { exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("dialog").getByText("No scrape runs yet").first(),
+	).toBeVisible();
 });
 
 test("scrape ops renders run rows and starts scrape", async ({ page }) => {
 	const runRequests: string[] = [];
 	await page.route("**/api/scrape/session", async (route) => {
-		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+		await route.fulfill({
+			json: { ok: true, authenticated: true, csrfToken: "csrf-test" },
+		});
 	});
 	await page.reload();
 	await page.unroute("**/api/scrape/runs**");
@@ -307,9 +359,13 @@ test("scrape ops renders run rows and starts scrape", async ({ page }) => {
 	await expect.poll(() => runRequests).toEqual(["csrf-test"]);
 });
 
-test("scrape ops prompts for password after unauthorized run", async ({ page }) => {
+test("scrape ops prompts for password after unauthorized run", async ({
+	page,
+}) => {
 	await page.route("**/api/scrape/session", async (route) => {
-		await route.fulfill({ json: { ok: true, authenticated: true, csrfToken: "csrf-test" } });
+		await route.fulfill({
+			json: { ok: true, authenticated: true, csrfToken: "csrf-test" },
+		});
 	});
 	await page.reload();
 	await page.route("**/api/scrape/run", async (route) => {
@@ -323,6 +379,7 @@ test("scrape ops prompts for password after unauthorized run", async ({ page }) 
 	await page.getByRole("button", { name: "Scrape Ops" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByRole("button", { name: "Run now" }).click();
-	await expect(dialog.getByText("Scrape admin password required")).toBeVisible();
+	await expect(
+		dialog.getByText("Scrape admin password required"),
+	).toBeVisible();
 });
-

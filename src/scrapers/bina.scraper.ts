@@ -376,7 +376,11 @@ export class BinaScraper extends BaseScraper {
 					signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 				});
 
-				if (!resp.ok && shouldRetry(resp.status) && attempt < MAX_FETCH_ATTEMPTS) {
+				if (
+					!resp.ok &&
+					shouldRetry(resp.status) &&
+					attempt < MAX_FETCH_ATTEMPTS
+				) {
 					await delay(RETRY_BASE_DELAY_MS * attempt);
 					continue;
 				}

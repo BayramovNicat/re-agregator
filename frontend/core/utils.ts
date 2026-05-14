@@ -117,7 +117,8 @@ export function timeAgo(s: string | null | undefined): string | null {
 }
 
 function getToastHost(): HTMLElement {
-	const openDialogs = document.querySelectorAll<HTMLDialogElement>("dialog[open]");
+	const openDialogs =
+		document.querySelectorAll<HTMLDialogElement>("dialog[open]");
 	const dialog = openDialogs[openDialogs.length - 1];
 	if (!dialog) return ge("toasts");
 

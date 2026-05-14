@@ -6,7 +6,8 @@ import { sendMessage } from "./telegram.service.js";
 export async function handleWebhook(req: Request): Promise<Response> {
 	if (
 		TELEGRAM_WEBHOOK_SECRET &&
-		req.headers.get("x-telegram-bot-api-secret-token") !== TELEGRAM_WEBHOOK_SECRET
+		req.headers.get("x-telegram-bot-api-secret-token") !==
+			TELEGRAM_WEBHOOK_SECRET
 	) {
 		return Response.json({ ok: false }, { status: 401 });
 	}

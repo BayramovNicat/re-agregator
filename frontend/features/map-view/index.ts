@@ -121,12 +121,7 @@ function updateResultsMeta(pins: MapPin[]) {
 			const badge = frag`<span style="color:${tb.color}">${tierCounts[tb.tier]} ${tTier(tb.tier, true)}</span>`;
 			return i === 0
 				? [" ", badge]
-				: [
-						" ",
-						frag`<span style="color:var(--border)">·</span>`,
-						" ",
-						badge,
-					];
+				: [" ", frag`<span style="color:var(--border)">·</span>`, " ", badge];
 		});
 
 	meta.replaceChildren(

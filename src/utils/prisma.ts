@@ -8,7 +8,9 @@ import { type Prisma, PrismaClient } from "@prisma/client";
 
 const QUERY_TIMEOUT_MS = 30_000;
 
-function withStatementTimeout(databaseUrl: string | undefined): string | undefined {
+function withStatementTimeout(
+	databaseUrl: string | undefined,
+): string | undefined {
 	if (!databaseUrl) return undefined;
 
 	const url = new URL(databaseUrl);
@@ -30,10 +32,7 @@ const client =
 				url: withStatementTimeout(process.env.DATABASE_URL),
 			},
 		},
-		log:
-			process.env.NODE_ENV === "development"
-				? ["error", "warn"]
-				: ["error"],
+		log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
 	});
 
 if (process.env.NODE_ENV !== "production") {

@@ -38,10 +38,14 @@ test("location selector updates search params", async ({ page }) => {
 	const location = page.getByRole("combobox", { name: "Location" });
 	await location.click();
 	await page.getByRole("option", { name: "Yasamal" }).click();
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=Yasamal");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("location=Yasamal");
 
 	await page.getByRole("option", { name: "All locations" }).click();
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("location=__all__");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("location=__all__");
 });
 
 test("threshold slider updates label and search params", async ({ page }) => {
@@ -97,12 +101,19 @@ test("advanced filters update params and removable chips", async ({ page }) => {
 	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("maxPrice=130000");
 	await expect(page.getByText("Min ₼: 100000")).toBeVisible();
 
-	await page.getByText("Min ₼: 100000").getByRole("button", { name: "Remove filter" }).click();
+	await page
+		.getByText("Min ₼: 100000")
+		.getByRole("button", { name: "Remove filter" })
+		.click();
 	await expect(page.locator("#minPrice")).toHaveValue("");
-	await expect.poll(() => searchUrls.at(-1) ?? "").not.toContain("minPrice=100000");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.not.toContain("minPrice=100000");
 });
 
-test("advanced filters cover category, mortgage, description, and booleans", async ({ page }) => {
+test("advanced filters cover category, mortgage, description, and booleans", async ({
+	page,
+}) => {
 	const searchUrls: string[] = [];
 	await page.unroute("**/api/deals/undervalued**");
 	await page.route("**/api/deals/undervalued**", async (route) => {
@@ -127,17 +138,27 @@ test("advanced filters cover category, mortgage, description, and booleans", asy
 	await page.getByText("Has document").click();
 	await page.getByText("Urgent only").click();
 
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("category=Yeni+tikili");
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("hasActiveMortgage=true");
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("descriptionSearch=corner");
-	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("hasDocument=true");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("category=Yeni+tikili");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("hasActiveMortgage=true");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("descriptionSearch=corner");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.toContain("hasDocument=true");
 	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("isUrgent=true");
 	await expect(page.getByText("Category: Yeni tikili")).toBeVisible();
 	await expect(page.getByText("Active mortgage: Yes")).toBeVisible();
 
 	await page.getByRole("button", { name: /clear filters/i }).click();
 	await expect(page.getByLabel("Description keyword")).toHaveValue("");
-	await expect.poll(() => searchUrls.at(-1) ?? "").not.toContain("category=Yeni+tikili");
+	await expect
+		.poll(() => searchUrls.at(-1) ?? "")
+		.not.toContain("category=Yeni+tikili");
 });
 
 test("sort selection updates API params and persists", async ({ page }) => {
@@ -146,7 +167,9 @@ test("sort selection updates API params and persists", async ({ page }) => {
 	await page.route("**/api/deals/undervalued**", async (route) => {
 		const url = route.request().url();
 		searchUrls.push(url);
-		const data = url.includes("sort=price-asc") ? [cheaperDeal, deal] : [deal, cheaperDeal];
+		const data = url.includes("sort=price-asc")
+			? [cheaperDeal, deal]
+			: [deal, cheaperDeal];
 		await route.fulfill({
 			json: {
 				location: "__all__",
@@ -168,7 +191,9 @@ test("sort selection updates API params and persists", async ({ page }) => {
 	await expect(page.getByLabel("Sort by")).toHaveValue("price-asc");
 });
 
-test("trend panel renders and updates for selected location", async ({ page }) => {
+test("trend panel renders and updates for selected location", async ({
+	page,
+}) => {
 	const trendUrls: string[] = [];
 	await page.unroute("**/api/deals/trend**");
 	await page.route("**/api/deals/trend**", async (route) => {
@@ -201,4 +226,3 @@ test("trend failure leaves search results usable", async ({ page }) => {
 	await expect(page.getByText("₼ 2,000/m²")).toHaveCount(0);
 	await expect(page.locator(".product-card")).toHaveCount(1);
 });
-

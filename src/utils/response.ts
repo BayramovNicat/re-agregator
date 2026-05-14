@@ -1,4 +1,8 @@
-function cacheControl(scope: "public" | "private", cacheAge?: number, staleAge?: number): string {
+function cacheControl(
+	scope: "public" | "private",
+	cacheAge?: number,
+	staleAge?: number,
+): string {
 	if (cacheAge === undefined) return "no-store";
 	return `${scope}, max-age=${cacheAge}${staleAge ? `, stale-while-revalidate=${staleAge}` : ""}`;
 }

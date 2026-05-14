@@ -7,7 +7,10 @@ if (!databaseUrl) {
 	throw new Error("DATABASE_URL is required");
 }
 
-if (!allowReset && !/test|redeal_test|localhost|127\.0\.0\.1/i.test(databaseUrl)) {
+if (
+	!allowReset &&
+	!/test|redeal_test|localhost|127\.0\.0\.1/i.test(databaseUrl)
+) {
 	throw new Error(
 		"Refusing to reset database. Use a test DATABASE_URL or set TEST_SEED_ALLOW_RESET=1.",
 	);

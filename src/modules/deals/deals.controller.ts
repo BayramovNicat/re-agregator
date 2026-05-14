@@ -29,7 +29,11 @@ export async function getTrend(req: Request): Promise<Response> {
 	}
 	const cached = trendCache.get(location);
 	if (cached && Date.now() - cached.cachedAt < TREND_TTL_MS) {
-		return ResponseHelper.publicJson({ location, data: cached.data }, 1800, 300);
+		return ResponseHelper.publicJson(
+			{ location, data: cached.data },
+			1800,
+			300,
+		);
 	}
 	try {
 		const data = await dealsService.getPriceTrend(location);
@@ -97,7 +101,10 @@ export async function getMapPins(req: Request): Promise<Response> {
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
 	if (Number.isNaN(thresholdPct) || thresholdPct < 0 || thresholdPct > 100) {
-		return ResponseHelper.error('"threshold" must be a number between 0 and 100', 400);
+		return ResponseHelper.error(
+			'"threshold" must be a number between 0 and 100',
+			400,
+		);
 	}
 
 	let filters: PropertyFilters;
@@ -168,7 +175,10 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 	const thresholdRaw = q.get("threshold");
 	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
 	if (Number.isNaN(thresholdPct) || thresholdPct < 0 || thresholdPct > 100) {
-		return ResponseHelper.error('"threshold" must be a number between 0 and 100', 400);
+		return ResponseHelper.error(
+			'"threshold" must be a number between 0 and 100',
+			400,
+		);
 	}
 
 	const pg = parsePaginationParams(q);
@@ -216,7 +226,12 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 function parseLocationParams(q: URLSearchParams) {
 	const param = q.get("location");
 	if (!param) {
-		return { error: ResponseHelper.error('Query parameter "location" is required', 400) };
+		return {
+			error: ResponseHelper.error(
+				'Query parameter "location" is required',
+				400,
+			),
+		};
 	}
 
 	const isAll = param === "__all__";
@@ -224,7 +239,10 @@ function parseLocationParams(q: URLSearchParams) {
 
 	if (!isAll && list.length === 0) {
 		return {
-			error: ResponseHelper.error('Query parameter "location" cannot be empty', 400),
+			error: ResponseHelper.error(
+				'Query parameter "location" cannot be empty',
+				400,
+			),
 		};
 	}
 
@@ -248,7 +266,11 @@ function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
 	if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
 		throw new Error('"minPrice" cannot be greater than "maxPrice"');
 	}
-	if (minPriceSqm !== undefined && maxPriceSqm !== undefined && minPriceSqm > maxPriceSqm) {
+	if (
+		minPriceSqm !== undefined &&
+		maxPriceSqm !== undefined &&
+		minPriceSqm > maxPriceSqm
+	) {
 		throw new Error('"minPriceSqm" cannot be greater than "maxPriceSqm"');
 	}
 	if (minArea !== undefined && maxArea !== undefined && minArea > maxArea) {
@@ -260,7 +282,11 @@ function parsePropertyFilters(q: URLSearchParams): PropertyFilters {
 	if (minFloor !== undefined && maxFloor !== undefined && minFloor > maxFloor) {
 		throw new Error('"minFloor" cannot be greater than "maxFloor"');
 	}
-	if (minTotalFloors !== undefined && maxTotalFloors !== undefined && minTotalFloors > maxTotalFloors) {
+	if (
+		minTotalFloors !== undefined &&
+		maxTotalFloors !== undefined &&
+		minTotalFloors > maxTotalFloors
+	) {
 		throw new Error('"minTotalFloors" cannot be greater than "maxTotalFloors"');
 	}
 
@@ -301,7 +327,9 @@ const DEAL_SORTS = new Set<DealSort>([
 function parseDealSort(q: URLSearchParams) {
 	const raw = q.get("sort") ?? "disc";
 	if (!DEAL_SORTS.has(raw as DealSort)) {
-		return { error: ResponseHelper.error('"sort" must be a valid deal sort', 400) };
+		return {
+			error: ResponseHelper.error('"sort" must be a valid deal sort', 400),
+		};
 	}
 	return { value: raw as DealSort };
 }
@@ -311,7 +339,10 @@ function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {
 	const limit = limitRaw !== null ? Number(limitRaw) : defaultLimit;
 	if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
 		return {
-			error: ResponseHelper.error('"limit" must be an integer between 1 and 1000', 400),
+			error: ResponseHelper.error(
+				'"limit" must be an integer between 1 and 1000',
+				400,
+			),
 		};
 	}
 
@@ -319,7 +350,10 @@ function parsePaginationParams(q: URLSearchParams, defaultLimit = 200) {
 	const offset = offsetRaw !== null ? Number(offsetRaw) : 0;
 	if (!Number.isInteger(offset) || offset < 0) {
 		return {
-			error: ResponseHelper.error('"offset" must be a non-negative integer', 400),
+			error: ResponseHelper.error(
+				'"offset" must be a non-negative integer',
+				400,
+			),
 		};
 	}
 

@@ -1,5 +1,13 @@
-import { cleanPublicDir, copyLeafletAssets, copyStaticAssets } from "./build/assets";
-import { buildJavaScript, buildServiceWorker, buildStyles } from "./build/bundles";
+import {
+	cleanPublicDir,
+	copyLeafletAssets,
+	copyStaticAssets,
+} from "./build/assets";
+import {
+	buildJavaScript,
+	buildServiceWorker,
+	buildStyles,
+} from "./build/bundles";
 import { dirs, watchMode } from "./build/config";
 import { writeIndexHtml } from "./build/html";
 import { notifyReloadClients, startReloadServer } from "./build/reload";
@@ -35,7 +43,9 @@ async function logBuildSummary() {
 	if (watchMode) return;
 
 	const jsSizeKB = (Bun.file(`${dirs.public}/main.js`).size / 1024).toFixed(1);
-	const cssSizeKB = (Bun.file(`${dirs.public}/styles.css`).size / 1024).toFixed(1);
+	const cssSizeKB = (Bun.file(`${dirs.public}/styles.css`).size / 1024).toFixed(
+		1,
+	);
 	const swSizeKB = (Bun.file(`${dirs.public}/sw.js`).size / 1024).toFixed(1);
 	console.log(
 		`Built public/  main.js ${jsSizeKB} KB  styles.css ${cssSizeKB} KB  sw.js ${swSizeKB} KB  index.html ✓  manifest.json ✓`,

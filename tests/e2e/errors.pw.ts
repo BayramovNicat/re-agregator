@@ -47,6 +47,7 @@ test("locations API failure shows failed option", async ({ page }) => {
 	await page.reload();
 
 	await page.getByRole("combobox", { name: "Location" }).click();
-	await expect(page.getByRole("option", { name: "Failed to load locations" })).toBeVisible();
+	await expect(
+		page.getByRole("option", { name: "Failed to load locations" }),
+	).toBeVisible();
 });
-

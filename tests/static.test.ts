@@ -65,7 +65,10 @@ describe("serveStatic", () => {
 
 	test("rejects double-encoded dot-dot traversal", async () => {
 		// %252e%252e%252f → decoded once to %2e%2e%2f → still rejected
-		const res = await serveStatic(request("/%252e%252e%252fsecret.txt"), publicDir);
+		const res = await serveStatic(
+			request("/%252e%252e%252fsecret.txt"),
+			publicDir,
+		);
 
 		expect(res.status).toBe(404);
 		expect(await res.text()).toBe("Not Found");

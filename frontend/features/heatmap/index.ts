@@ -104,7 +104,11 @@ export function initHeatmap(root: HTMLElement): () => void {
 	};
 
 	const offOpen = bus.on(EVENTS.HEATMAP_OPEN, (payload) => {
-		void onOpen(payload.activeLocations, payload.onAction, payload.onSelectMany);
+		void onOpen(
+			payload.activeLocations,
+			payload.onAction,
+			payload.onSelectMany,
+		);
 	});
 
 	return () => {

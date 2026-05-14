@@ -186,12 +186,7 @@ export function initProducts(container: HTMLElement): () => void {
 				const badge = frag`<span style="color:${b.c}">${tierCounts[b.t]} ${tTier(b.t, true)}</span>`;
 				return i === 0
 					? [" ", badge]
-					: [
-							" ",
-							frag`<span style="color:var(--border)">·</span>`,
-							" ",
-							badge,
-						];
+					: [" ", frag`<span style="color:var(--border)">·</span>`, " ", badge];
 			},
 		);
 
@@ -294,6 +289,92 @@ export function initProducts(container: HTMLElement): () => void {
 
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
 	let cleanupMapView: (() => void) | null = null;
+	let typedIndexBuffer = "";
+	let jumpTimer: ReturnType<typeof setTimeout> | null = null;
+	let hideJumpTimer: ReturnType<typeof setTimeout> | null = null;
+	let invalidJumpTimer: ReturnType<typeof setTimeout> | null = null;
+	const jumpDelayMs = 550;
+	const maxJumpDigits = 6;
+	const jumpIndicator = html`<div
+		class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-1001 min-w-24 h-24 px-5 rounded-(--r-lg) border border-(--border) bg-(--surface-3) text-(--text) text-4xl font-bold tabular-nums inline-flex items-center justify-center shadow-[0_14px_40px_rgba(0,0,0,0.45)] opacity-0 pointer-events-none transition-opacity duration-120"
+		style="display:none"
+	></div>`;
+	document.body.appendChild(jumpIndicator);
+
+	const showJumpIndicator = (value: string) => {
+		if (hideJumpTimer) {
+			clearTimeout(hideJumpTimer);
+			hideJumpTimer = null;
+		}
+		jumpIndicator.textContent = value;
+		jumpIndicator.classList.remove("border-(--red-b)", "text-(--red)");
+		jumpIndicator.style.display = "inline-flex";
+		jumpIndicator.style.opacity = "1";
+	};
+
+	const hideJumpIndicator = () => {
+		if (hideJumpTimer) clearTimeout(hideJumpTimer);
+		jumpIndicator.style.opacity = "0";
+		hideJumpTimer = setTimeout(() => {
+			if (jumpIndicator.style.opacity === "0")
+				jumpIndicator.style.display = "none";
+			hideJumpTimer = null;
+		}, 120);
+	};
+
+	const flashInvalidJump = () => {
+		if (invalidJumpTimer) clearTimeout(invalidJumpTimer);
+		jumpIndicator.classList.add("border-(--red-b)", "text-(--red)");
+		invalidJumpTimer = setTimeout(() => {
+			jumpIndicator.classList.remove("border-(--red-b)", "text-(--red)");
+		}, 180);
+	};
+
+	const finishJump = () => {
+		if (
+			document.body.hasAttribute("data-dialog-open") ||
+			isTextEntryFocused()
+		) {
+			typedIndexBuffer = "";
+			jumpTimer = null;
+			hideJumpIndicator();
+			return;
+		}
+
+		const targetIndex = Number.parseInt(typedIndexBuffer, 10);
+		const allCards = Array.from(
+			ui.cardsContainer.firstElementChild?.children || [],
+		).filter((c) => c.classList.contains("product-card")) as HTMLElement[];
+
+		if (
+			Number.isFinite(targetIndex) &&
+			targetIndex >= 1 &&
+			targetIndex <= allCards.length
+		) {
+			const targetCard = allCards[targetIndex - 1];
+			targetCard?.focus({ preventScroll: true });
+			targetCard?.scrollIntoView({ block: "nearest", behavior: "instant" });
+		} else if (typedIndexBuffer) {
+			flashInvalidJump();
+		}
+
+		typedIndexBuffer = "";
+		jumpTimer = null;
+		hideJumpIndicator();
+	};
+
+	const resetJumpTimer = () => {
+		if (jumpTimer) clearTimeout(jumpTimer);
+		jumpTimer = setTimeout(finishJump, jumpDelayMs);
+	};
+
+	const isTextEntryFocused = () => {
+		const active = document.activeElement as HTMLElement | null;
+		return Boolean(
+			active &&
+				(active.matches("input, textarea, select") || active.isContentEditable),
+		);
+	};
 
 	const onScroll = () => {
 		const isScrolled = window.scrollY > 450;
@@ -314,7 +395,36 @@ export function initProducts(container: HTMLElement): () => void {
 		return style.gridTemplateColumns.split(" ").filter(Boolean).length || 1;
 	};
 
-	add(ui.cardsContainer, "keydown", (e: KeyboardEvent) => {
+	add(document, "keydown", (e: KeyboardEvent) => {
+		if (e.metaKey || e.ctrlKey || e.altKey) return;
+		if (document.body.hasAttribute("data-dialog-open")) return;
+
+		if (isTextEntryFocused()) return;
+
+		if (/^[0-9]$/.test(e.key)) {
+			typedIndexBuffer = (typedIndexBuffer + e.key).slice(0, maxJumpDigits);
+			showJumpIndicator(typedIndexBuffer);
+			resetJumpTimer();
+			e.preventDefault();
+			return;
+		}
+
+		if (e.key === "Backspace" && typedIndexBuffer.length > 0) {
+			typedIndexBuffer = typedIndexBuffer.slice(0, -1);
+			if (typedIndexBuffer.length > 0) {
+				showJumpIndicator(typedIndexBuffer);
+				resetJumpTimer();
+			} else {
+				if (jumpTimer) {
+					clearTimeout(jumpTimer);
+					jumpTimer = null;
+				}
+				hideJumpIndicator();
+			}
+			e.preventDefault();
+			return;
+		}
+
 		if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key))
 			return;
 
@@ -400,6 +510,9 @@ export function initProducts(container: HTMLElement): () => void {
 
 	return () => {
 		cleanupHandlers();
+		if (jumpTimer) clearTimeout(jumpTimer);
+		if (hideJumpTimer) clearTimeout(hideJumpTimer);
+		if (invalidJumpTimer) clearTimeout(invalidJumpTimer);
 		if (state.scrollObserver) {
 			state.scrollObserver.disconnect();
 			state.scrollObserver = null;
@@ -407,6 +520,7 @@ export function initProducts(container: HTMLElement): () => void {
 		offDeals();
 		offSearchStart();
 		ui.backToTopBtn.remove();
+		jumpIndicator.remove();
 		if (cleanupMapView) cleanupMapView();
 	};
 }

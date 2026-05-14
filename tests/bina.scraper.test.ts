@@ -36,6 +36,8 @@ describe("BinaScraper", () => {
 
 		expect(result).toEqual({ "123": ["https://example.test/photo.jpg"] });
 		expect(calls).toHaveLength(2);
-		expect(calls.every((call) => call.signal instanceof AbortSignal)).toBe(true);
+		expect(calls.every((call) => call.signal instanceof AbortSignal)).toBe(
+			true,
+		);
 	});
 });

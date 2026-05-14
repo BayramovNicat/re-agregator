@@ -23,7 +23,10 @@ export async function loginScrapeAdmin(req: Request): Promise<Response> {
 		return ResponseHelper.error("Invalid JSON body", 400);
 	}
 
-	if (typeof body.password !== "string" || !verifyScrapeAdminPassword(body.password)) {
+	if (
+		typeof body.password !== "string" ||
+		!verifyScrapeAdminPassword(body.password)
+	) {
 		return ResponseHelper.error("Unauthorized", 401);
 	}
 
@@ -34,7 +37,9 @@ export function logoutScrapeAdmin(): Response {
 	return clearScrapeAdminSessionResponse();
 }
 
-export async function getScrapeAdminSessionStatus(req: Request): Promise<Response> {
+export async function getScrapeAdminSessionStatus(
+	req: Request,
+): Promise<Response> {
 	if (!adminPasswordConfigured()) {
 		return ResponseHelper.privateJson({ ok: true, authenticated: false });
 	}
@@ -53,7 +58,10 @@ export async function getScrapeRuns(req: Request): Promise<Response> {
 		limit < 1 ||
 		limit > 100
 	) {
-		return ResponseHelper.error('"limit" must be an integer between 1 and 100', 400);
+		return ResponseHelper.error(
+			'"limit" must be an integer between 1 and 100',
+			400,
+		);
 	}
 
 	try {

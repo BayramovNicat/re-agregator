@@ -22,7 +22,9 @@ test("loads homepage and shows first result", async ({ page }) => {
 	await expect(page.getByText("Redeal")).toBeVisible();
 	await expect(page.locator(".product-card")).toHaveCount(1);
 	await expect(page.getByText("₼ 120,000")).toBeVisible();
-	await expect(page.locator(".product-card").getByText("High Value Deal")).toBeVisible();
+	await expect(
+		page.locator(".product-card").getByText("High Value Deal"),
+	).toBeVisible();
 });
 
 test("health status shows property count", async ({ page }) => {
@@ -45,7 +47,9 @@ test("failed health check shows offline status", async ({ page }) => {
 	await expect(page.getByText("Down")).toBeVisible();
 });
 
-test("broken card thumbnail hides without breaking listing", async ({ page }) => {
+test("broken card thumbnail hides without breaking listing", async ({
+	page,
+}) => {
 	await page.route("https://example.com/image-1.jpg*", async (route) => {
 		await route.abort();
 	});
@@ -54,7 +58,9 @@ test("broken card thumbnail hides without breaking listing", async ({ page }) =>
 
 	await expect(page.locator(".product-card")).toHaveCount(1);
 	await expect(image).toBeHidden();
-	await expect(page.locator(".product-card").getByText("High Value Deal")).toBeVisible();
+	await expect(
+		page.locator(".product-card").getByText("High Value Deal"),
+	).toBeVisible();
 });
 
 test("grid and list view switch", async ({ page }) => {
@@ -71,8 +77,13 @@ test("language switcher persists selected language", async ({ page }) => {
 	await page.getByRole("button", { name: "AZ" }).click();
 	await expect(page.locator(".product-card")).toHaveCount(1);
 
-	expect(await page.evaluate(() => localStorage.getItem("redeal-lang"))).toBe("az");
-	await expect(page.getByRole("button", { name: "AZ", exact: true })).toBeVisible();
-	await expect(page.getByRole("button", { name: /ətraflı filtrlər/i })).toBeVisible();
+	expect(await page.evaluate(() => localStorage.getItem("redeal-lang"))).toBe(
+		"az",
+	);
+	await expect(
+		page.getByRole("button", { name: "AZ", exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: /ətraflı filtrlər/i }),
+	).toBeVisible();
 });
-
