@@ -398,6 +398,56 @@ export async function getUndervalued(
 	};
 }
 
+export async function getUndervaluedUrlTiers(
+	locations: string[] | "__all__",
+	thresholdPercent = 10,
+	filters: PropertyFilters = {},
+	limit = 1000,
+): Promise<{ source_url: string; tier: DealTier }[]> {
+	const factor = (100 - thresholdPercent) / 100.0;
+
+	const avgsMap = await getLocationAverages(locations);
+	if (avgsMap.size === 0) return [];
+
+	const isAll = locations === "__all__";
+	const pLocCondition = isAll
+		? Prisma.sql`p.location_name IS NOT NULL`
+		: Prisma.sql`p.location_name IN (${Prisma.join(locations)})`;
+
+	const avgEntries = Array.from(avgsMap.entries()).map(
+		([loc, avg]) => Prisma.sql`(${loc}, ${avg}::numeric)`,
+	);
+
+	const conditions = [
+		pLocCondition,
+		Prisma.sql`p.price_per_sqm > 0`,
+		...(thresholdPercent > 0
+			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
+			: []),
+		...applyFilters(filters),
+	];
+
+	const rows = await queryRaw<
+		{ source_url: string; discount_percent: number | string }[]
+	>(Prisma.sql`
+		WITH loc_avg(location_name, avg_ppsm) AS (
+			VALUES ${Prisma.join(avgEntries)}
+		)
+		SELECT
+			p.source_url,
+			ROUND(((loc_avg.avg_ppsm - p.price_per_sqm) / loc_avg.avg_ppsm * 100)::numeric, 2) AS discount_percent
+		FROM "Property" p
+		JOIN loc_avg ON p.location_name = loc_avg.location_name
+		WHERE ${Prisma.join(conditions, " AND ")}
+		LIMIT ${limit}
+	`);
+
+	return rows.map((row) => ({
+		source_url: row.source_url,
+		tier: classifyDeal(Number(row.discount_percent)),
+	}));
+}
+
 export async function getPriceDropDeals(
 	location: string[] | "__all__",
 	options: { minDropCount?: number } & PaginationOptions = {},

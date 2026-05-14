@@ -151,13 +151,12 @@ export async function validateUndervaluedDeals(req: Request): Promise<Response> 
 	try {
 		const locations = loc.isAll ? "__all__" : loc.list;
 		const tier = q.get("tier") ?? undefined;
-		const initial = await dealsService.getUndervalued(
+		const urlTiers = await dealsService.getUndervaluedUrlTiers(
 			locations,
 			thresholdPct,
 			filterArgs,
-			{ limit: 1000, offset: 0, sort: sort.value },
 		);
-		const urls = initial.data
+		const urls = urlTiers
 			.filter((property) => !tier || property.tier === tier)
 			.map((property) => property.source_url);
 		const validation = await checkAndDeleteEndedListings(urls);
@@ -168,20 +167,16 @@ export async function validateUndervaluedDeals(req: Request): Promise<Response> 
 			{ limit: 1000, offset: 0, sort: sort.value },
 		);
 
-		return ResponseHelper.publicJson(
-			{
-				location: loc.raw,
-				threshold_pct: thresholdPct,
-				limit: 1000,
-				offset: 0,
-				count: data.length,
-				total,
-				validation,
-				data,
-			},
-			0,
-			0,
-		);
+		return ResponseHelper.publicJson({
+			location: loc.raw,
+			threshold_pct: thresholdPct,
+			limit: 1000,
+			offset: 0,
+			count: data.length,
+			total,
+			validation,
+			data,
+		});
 	} catch (err) {
 		console.error("[DealsController] validateUndervaluedDeals:", err);
 		return ResponseHelper.error("Failed to validate listings");
@@ -298,19 +293,15 @@ export async function getUndervaluedDeals(req: Request): Promise<Response> {
 			filterArgs,
 			pageArgs,
 		);
-		return ResponseHelper.publicJson(
-			{
-				location: loc.raw,
-				threshold_pct: thresholdPct,
-				limit: pg.limit,
-				offset: pg.offset,
-				count: data.length,
-				total,
-				data,
-			},
-			60,
-			30,
-		);
+		return ResponseHelper.publicJson({
+			location: loc.raw,
+			threshold_pct: thresholdPct,
+			limit: pg.limit,
+			offset: pg.offset,
+			count: data.length,
+			total,
+			data,
+		});
 	} catch (err) {
 		console.error("[DealsController] getUndervaluedDeals:", err);
 		return ResponseHelper.error("Failed to fetch undervalued listings");
