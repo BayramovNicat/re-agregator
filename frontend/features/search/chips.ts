@@ -74,19 +74,6 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		);
 	}
 
-	const selectedLocations = ui.locationSelect.getValue();
-	if (selectedLocations.length > 0 && !selectedLocations.includes("__all__")) {
-		for (const location of selectedLocations) {
-			activeChips.push(
-				createChip(location, () => {
-					ui.locationSelect.setValue(
-						ui.locationSelect.getValue().filter((v) => v !== location),
-					);
-				}),
-			);
-		}
-	}
-
 	ui.activeChipsContainer.replaceChildren(...activeChips);
 	if (activeChips.length) show(ui.activeChipsContainer, "flex");
 	else hide(ui.activeChipsContainer);
