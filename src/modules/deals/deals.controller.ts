@@ -96,6 +96,65 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 	}
 }
 
+type JsonReviewItem = Record<string, unknown> & { item_id?: unknown };
+
+export async function getDealsByJsonItems(req: Request): Promise<Response> {
+	const parsed = await readJsonBody<{ items?: unknown }>(req);
+	if (!parsed.ok) {
+		return ResponseHelper.error(
+			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
+			parsed.status,
+		);
+	}
+
+	const items = parsed.data?.items;
+	if (!Array.isArray(items) || items.length === 0) {
+		return ResponseHelper.error('"items" must be a non-empty array', 400);
+	}
+
+	const safeItems = items
+		.filter((item): item is JsonReviewItem => {
+			if (!item || typeof item !== "object") return false;
+			const rawId = (item as JsonReviewItem).item_id;
+			return typeof rawId === "string" || typeof rawId === "number";
+		})
+		.map((item) => ({ ...item, item_id: String(item.item_id).trim() }))
+		.filter((item) => /^\d+$/.test(item.item_id))
+		.slice(0, 200);
+
+	if (safeItems.length === 0) {
+		return ResponseHelper.error('Each item must include a numeric "item_id"', 400);
+	}
+
+	const itemIds = Array.from(new Set(safeItems.map((item) => item.item_id)));
+
+	try {
+		const properties = await dealsService.getPropertiesByItemIds(itemIds);
+		const byItemId = new Map(
+			properties.map((property) => [
+				property.source_url.match(/\/items\/(\d+)/)?.[1] ?? "",
+				property,
+			]),
+		);
+		const data = safeItems.map((item) => ({
+			item,
+			property: byItemId.get(item.item_id) ?? null,
+		}));
+
+		return ResponseHelper.publicJson({
+			count: data.length,
+			matched: data.filter((entry) => entry.property).length,
+			missing: safeItems
+				.filter((item) => !byItemId.has(item.item_id))
+				.map((item) => item.item_id),
+			data,
+		});
+	} catch (err) {
+		console.error("[DealsController] getDealsByJsonItems:", err);
+		return ResponseHelper.error("Failed to fetch JSON review properties");
+	}
+}
+
 export async function checkEndedListing(req: Request): Promise<Response> {
 	const parsed = await readJsonBody<{ url?: unknown }>(req);
 	if (!parsed.ok) {

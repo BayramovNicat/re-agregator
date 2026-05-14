@@ -13,8 +13,15 @@ export function renderProductsBar(
 	ui: ProductsUI,
 	callbacks: ProductsCallbacks,
 ): HTMLElement {
-	const { onExport, onValidate, onAlertsOpen, onSavedClick, onSortChange, onViewChange } =
-		callbacks;
+	const {
+		onExport,
+		onJsonReviewOpen,
+		onValidate,
+		onAlertsOpen,
+		onSavedClick,
+		onSortChange,
+		onViewChange,
+	} = callbacks;
 
 	ui.resultsMeta = html`<div
 		class="text-sm text-(--text-2) [&_strong]:text-(--text) [&_strong]:font-semibold"
@@ -85,6 +92,12 @@ export function renderProductsBar(
 					content: frag`${Icons.refresh(12)} ${t("validateBtn")}`,
 					color: "green",
 					onclick: (e) => onValidate(e.currentTarget as HTMLButtonElement),
+				})}
+				${Button({
+					title: t("jsonReviewBtn"),
+					content: frag`${Icons.desc(12)} ${t("jsonReviewBtn")}`,
+					color: "indigo",
+					onclick: onJsonReviewOpen,
 				})}
 				${Button({
 					title: t("exportBtn"),

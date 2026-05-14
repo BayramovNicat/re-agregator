@@ -258,6 +258,42 @@ export async function getPropertiesByUrls(
 	}));
 }
 
+export async function getPropertiesByItemIds(
+	itemIds: string[],
+): Promise<(PropertyRow & { tier: DealTier })[]> {
+	const rows = await queryRaw<PropertyRow[]>(Prisma.sql`
+		WITH needed AS (
+			SELECT DISTINCT location_name
+			FROM "Property"
+			WHERE REGEXP_REPLACE(source_url, '^.*/items/([0-9]+).*$','\1') = ANY(${itemIds})
+				AND location_name IS NOT NULL
+		),
+		avgs AS (
+			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
+			FROM "Property"
+			WHERE location_name IN (SELECT location_name FROM needed)
+				${locAvgBaseConditions()}
+			GROUP BY location_name
+			HAVING COUNT(*) >= 3
+		)
+		SELECT
+			p.*,
+			COALESCE(ROUND(a.avg_ppsm::numeric, 2), 0) AS location_avg_price_per_sqm,
+			CASE
+				WHEN a.avg_ppsm > 0 THEN ROUND(((a.avg_ppsm - p.price_per_sqm) / a.avg_ppsm * 100)::numeric, 2)
+				ELSE 0
+			END AS discount_percent
+		FROM "Property" p
+		LEFT JOIN avgs a ON a.location_name = p.location_name
+		WHERE REGEXP_REPLACE(p.source_url, '^.*/items/([0-9]+).*$','\1') = ANY(${itemIds})
+	`);
+
+	return rows.map((r) => ({
+		...r,
+		tier: classifyDeal(Number(r.discount_percent)),
+	}));
+}
+
 export async function getMapPins(options: {
 	locations: string[] | "__all__";
 	thresholdPercent: number;

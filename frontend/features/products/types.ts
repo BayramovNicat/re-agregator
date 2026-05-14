@@ -23,6 +23,7 @@ export interface ProductsCallbacks {
 	onSortChange: (val: string) => void;
 	onViewChange: (view: "grid" | "list" | "map") => void;
 	onExport: () => void;
+	onJsonReviewOpen: () => void;
 	onValidate: (button: HTMLButtonElement) => void;
 	onSavedClick: (e: MouseEvent) => void;
 	onAlertsOpen: () => void;

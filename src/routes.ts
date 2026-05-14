@@ -6,6 +6,7 @@ import {
 } from "@/modules/alerts/alerts.controller.js";
 import {
 	checkEndedListing,
+	getDealsByJsonItems,
 	getDealsByUrls,
 	getHeatmap,
 	getLocations,
@@ -59,6 +60,7 @@ export const routes = {
 	"/api/deals/undervalued/validate": { POST: br(validateUndervaluedDeals) },
 	"/api/deals/price-drops": { GET: br(getPriceDrops) },
 	"/api/deals/map-pins": { GET: br(getMapPins) },
+	"/api/deals/by-json-items": { POST: br(getDealsByJsonItems) },
 	"/api/deals/by-urls": { POST: br(getDealsByUrls) },
 	"/api/deals/check-ended": { POST: br(checkEndedListing) },
 	"/api/heatmap": { GET: br(getHeatmap) },
