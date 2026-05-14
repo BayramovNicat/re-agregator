@@ -160,6 +160,8 @@ const translations = {
 		toastRemoved: "Removed from saved",
 		toastSaved: "★ Deal saved",
 		toastHidden: "Item hidden",
+		listingEnded: "This listing has ended and was removed.",
+		listingEndedBanner: "This listing has ended on bina.az.",
 
 		// Units & Labels
 		listing: "listing",
@@ -397,6 +399,8 @@ const translations = {
 		toastRemoved: "Saxlanılanlardan silindi",
 		toastSaved: "★ Elan saxlanıldı",
 		toastHidden: "Elan gizlədildi",
+		listingEnded: "Elanın müddəti başa çatıb və silindi.",
+		listingEndedBanner: "Bu elanın müddəti bina.az-da başa çatıb.",
 
 		// Units & Labels
 		listing: "elan",
@@ -633,6 +637,8 @@ const translations = {
 		toastRemoved: "Удалено из сохранённых",
 		toastSaved: "★ Объявление сохранено",
 		toastHidden: "Объявление скрыто",
+		listingEnded: "Срок объявления истёк, оно удалено.",
+		listingEndedBanner: "Срок этого объявления на bina.az истёк.",
 
 		// Units & Labels
 		listing: "объявление",

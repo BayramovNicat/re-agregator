@@ -3,6 +3,7 @@ import { readJsonBody } from "@/utils/json-body.js";
 import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
 import { ResponseHelper } from "@/utils/response.js";
 import * as dealsService from "./deals.service.js";
+import { checkAndDeleteEndedListing } from "./listing-status.service.js";
 
 type TrendCacheEntry = {
 	data: Awaited<ReturnType<typeof dealsService.getPriceTrend>>;
@@ -89,6 +90,33 @@ export async function getDealsByUrls(req: Request): Promise<Response> {
 	} catch (err) {
 		console.error("[DealsController] getDealsByUrls:", err);
 		return ResponseHelper.error("Failed to fetch properties");
+	}
+}
+
+export async function checkEndedListing(req: Request): Promise<Response> {
+	const parsed = await readJsonBody<{ url?: unknown }>(req);
+	if (!parsed.ok) {
+		return ResponseHelper.error(
+			parsed.status === 413 ? "JSON body too large" : "Invalid JSON body",
+			parsed.status,
+		);
+	}
+
+	const url = parsed.data?.url;
+	if (typeof url !== "string" || url.trim().length === 0) {
+		return ResponseHelper.error('"url" must be a non-empty string', 400);
+	}
+
+	try {
+		const data = await checkAndDeleteEndedListing(url.trim());
+		return ResponseHelper.publicJson(data, 0, 0);
+	} catch (err) {
+		const message = (err as Error).message;
+		if (message.includes("Only bina.az")) {
+			return ResponseHelper.error(message, 400);
+		}
+		console.error("[DealsController] checkEndedListing:", err);
+		return ResponseHelper.error("Failed to check listing status");
 	}
 }
 

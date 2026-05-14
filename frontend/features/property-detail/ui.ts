@@ -29,6 +29,9 @@ export function renderPropertyDetailLayout(
 	ui.tierEl = html`<span
 		class="inline-flex items-center text-[10px] font-semibold tracking-wider px-2 py-0.75 rounded-full border border-current whitespace-nowrap"
 	></span>`;
+	ui.endedBannerEl = html`<div
+		class="hidden rounded-(--r) border border-(--red-b) bg-(--red-dim) px-4 py-3 text-sm font-semibold text-(--red)"
+	></div>`;
 
 	// Stats & Tags
 	ui.statsEl = html`<div class="grid grid-cols-4 gap-2 mb-3"></div>`;
@@ -117,6 +120,8 @@ export function renderPropertyDetailLayout(
 			class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-l border-(--border)"
 		>
 			<div class="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+				${ui.endedBannerEl}
+
 				<!-- Core Info -->
 				<div class="space-y-5">
 					<div class="space-y-3">

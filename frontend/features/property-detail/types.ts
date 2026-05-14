@@ -24,9 +24,11 @@ export interface PropertyDetailUI {
 	shareBtn: HTMLButtonElement;
 	bmarkBtn: HTMLButtonElement;
 	hideBtn: HTMLButtonElement;
+	endedBannerEl: HTMLElement;
 
 	// State/Refs
 	currentProperty: Property | null;
 	lmap: ReturnType<typeof map> | null;
 	lmark: ReturnType<typeof marker> | null;
+	statusAbort: AbortController | null;
 }

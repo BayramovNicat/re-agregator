@@ -5,6 +5,7 @@ import {
 	getAlerts,
 } from "@/modules/alerts/alerts.controller.js";
 import {
+	checkEndedListing,
 	getDealsByUrls,
 	getHeatmap,
 	getLocations,
@@ -57,6 +58,7 @@ export const routes = {
 	"/api/deals/price-drops": { GET: br(getPriceDrops) },
 	"/api/deals/map-pins": { GET: br(getMapPins) },
 	"/api/deals/by-urls": { POST: br(getDealsByUrls) },
+	"/api/deals/check-ended": { POST: br(checkEndedListing) },
 	"/api/heatmap": { GET: br(getHeatmap) },
 	"/api/scrape/runs": { GET: br(getScrapeRuns) },
 	"/api/scrape/session": { GET: br(getScrapeAdminSessionStatus) },

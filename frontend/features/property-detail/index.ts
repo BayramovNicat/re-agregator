@@ -1,7 +1,7 @@
 import { bus, EVENTS } from "@/core/events";
 import { t } from "@/core/i18n";
 import type { Property } from "@/core/types";
-import { makeEventManager } from "@/core/utils";
+import { makeEventManager, toast } from "@/core/utils";
 import { bindPropertyData, initMap } from "@/features/property-detail/logic";
 import type { PropertyDetailUI } from "@/features/property-detail/types";
 import { renderPropertyDetailLayout } from "@/features/property-detail/ui";
@@ -29,9 +29,11 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		shareBtn: null as unknown as HTMLButtonElement,
 		bmarkBtn: null as unknown as HTMLButtonElement,
 		hideBtn: null as unknown as HTMLButtonElement,
+		endedBannerEl: null as unknown as HTMLElement,
 		currentProperty: null,
 		lmap: null,
 		lmark: null,
+		statusAbort: null,
 	};
 
 	const { add, cleanup } = makeEventManager();
@@ -104,8 +106,12 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	add(ui.modal, "keydown", onKey);
 
 	const open = async (p: Property) => {
+		ui.statusAbort?.abort();
+		ui.statusAbort = new AbortController();
+		ui.endedBannerEl.classList.add("hidden");
 		bindPropertyData(ui, p);
 		ui.modal.showModal();
+		void checkEnded(ui, p, ui.statusAbort.signal);
 		// Reset scroll position after showModal
 		const body = ui.modal.querySelector(".overflow-y-auto");
 		if (body) setTimeout(() => (body.scrollTop = 0), 0);
@@ -115,6 +121,7 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 	const offOpen = bus.on(EVENTS.PROPERTY_OPEN, (p) => open(p));
 
 	return () => {
+		ui.statusAbort?.abort();
 		cleanup();
 		offOpen();
 		if (ui.lmap) {
@@ -124,6 +131,39 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 		}
 		ui.modal.remove();
 	};
+}
+
+async function checkEnded(
+	ui: PropertyDetailUI,
+	p: Property,
+	signal: AbortSignal,
+): Promise<void> {
+	try {
+		const res = await fetch("/api/deals/check-ended", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ url: p.source_url }),
+			signal,
+		});
+		if (!res.ok) return;
+
+		const status = (await res.json()) as { ended?: boolean };
+		if (!status.ended || signal.aborted) return;
+
+		ui.endedBannerEl.textContent = t("listingEndedBanner");
+		ui.endedBannerEl.classList.remove("hidden");
+		ui.modal.dispatchEvent(
+			new CustomEvent("pd:hide", {
+				bubbles: true,
+				detail: p,
+			}),
+		);
+		toast(t("listingEnded"));
+	} catch (err) {
+		if ((err as Error).name !== "AbortError") {
+			console.warn("Failed to check listing status", err);
+		}
+	}
 }
 
 /**
