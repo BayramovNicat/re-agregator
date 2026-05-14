@@ -10,7 +10,7 @@ import { refreshFilterChips } from "./chips";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import { renderSearchFilters } from "./filters";
 import type { SearchUI } from "./types";
-import { restoreStateFromUrl, syncStateToUrl } from "./url";
+import { restoreStateFromUrl, saveFiltersToStorage, syncStateToUrl } from "./url";
 
 export function initSearch(container: HTMLElement): () => void {
 	const globalElements = {
@@ -158,6 +158,7 @@ export function initSearch(container: HTMLElement): () => void {
 
 			if (!isPagination) {
 				refreshFilterChips(ui, debouncedSearch);
+				saveFiltersToStorage(ui);
 				syncStateToUrl(searchParams);
 
 				// Location broadcast
@@ -185,10 +186,12 @@ export function initSearch(container: HTMLElement): () => void {
 
 	function onFilterChange() {
 		refreshFilterChips(ui, debouncedSearch);
+		saveFiltersToStorage(ui);
 		debouncedSearch();
 	}
 
 	function onTierChange() {
+		saveFiltersToStorage(ui);
 		bus.emit(EVENTS.DEALS_UPDATED);
 	}
 
@@ -200,7 +203,9 @@ export function initSearch(container: HTMLElement): () => void {
 		ui.categorySelect.value = "";
 		ui.mortgageSelect.value = "";
 		ui.descriptionInput.value = "";
+		ui.tierSelect.value = "";
 		refreshFilterChips(ui, debouncedSearch);
+		saveFiltersToStorage(ui);
 		void executeSearch(false);
 	};
 
