@@ -129,7 +129,8 @@ export async function getDealsByJsonItems(req: Request): Promise<Response> {
 	const itemIds = Array.from(new Set(safeItems.map((item) => item.item_id)));
 
 	try {
-		const properties = await dealsService.getPropertiesByItemIds(itemIds);
+		const urls = itemIds.map((id) => `https://bina.az/items/${id}`);
+		const properties = await dealsService.getPropertiesByUrls(urls);
 		const byItemId = new Map(
 			properties.map((property) => [
 				property.source_url.match(/\/items\/(\d+)/)?.[1] ?? "",
