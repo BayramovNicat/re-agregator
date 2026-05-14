@@ -382,28 +382,26 @@ export function initProducts(container: HTMLElement): () => void {
 			class="w-full min-h-42 resize-y rounded-(--r) border border-(--border) bg-(--surface-2) text-(--text) text-xs leading-relaxed p-3 outline-none focus:border-(--accent-b) font-mono"
 			placeholder="${t("jsonReviewPlaceholder")}"
 		></textarea>` as HTMLTextAreaElement;
-		const status = html`<div class="text-xs text-(--muted)"></div>`;
 		const results = html`<div class="flex flex-col gap-3 min-h-0"></div>`;
 		const submit = Button({
 			content: frag`${Icons.search(12)} ${t("jsonReviewFetch")}`,
 			color: "accent",
 		});
+		const form = html`<div class="flex flex-col gap-3">
+			${textarea}
+			<div class="flex items-center justify-end">${submit}</div>
+		</div>`;
 
 		const dialog = Dialog({
 			maxWidth: "1120px",
-			title: t("jsonReviewTitle"),
-			description: t("jsonReviewDesc"),
+			showClose: true,
 			content: html`<div class="p-4 flex flex-col gap-3 min-h-0">
-				${textarea}
-				<div class="flex items-center justify-between gap-3 flex-wrap">
-					${status}
-					${submit}
-				</div>
+				${form}
 				${results}
 			</div>`,
 		});
 
-		submit.onclick = () => void fetchJsonReview(textarea, status, results, submit);
+		submit.onclick = () => void fetchJsonReview(textarea, form, results, submit);
 		dialog.addEventListener("close", () => dialog.remove(), { once: true });
 		document.body.appendChild(dialog);
 		dialog.showModal();
@@ -412,7 +410,7 @@ export function initProducts(container: HTMLElement): () => void {
 
 	async function fetchJsonReview(
 		textarea: HTMLTextAreaElement,
-		status: HTMLElement,
+		form: HTMLElement,
 		results: HTMLElement,
 		submit: HTMLButtonElement,
 	): Promise<void> {
@@ -428,7 +426,6 @@ export function initProducts(container: HTMLElement): () => void {
 
 		submit.disabled = true;
 		submit.replaceChildren(frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("jsonReviewLoading")}`);
-		status.textContent = t("jsonReviewLoading");
 		results.replaceChildren();
 
 		try {
@@ -446,17 +443,15 @@ export function initProducts(container: HTMLElement): () => void {
 
 			if (json.error) throw new Error(json.error);
 			const entries = json.data ?? [];
-			status.textContent = t("jsonReviewStatus", {
-				matched: json.matched ?? 0,
-				total: json.count ?? entries.length,
-			});
+			form.remove();
 			renderJsonReviewResults(results, entries);
 		} catch (err) {
-			status.textContent = "";
 			toast((err as Error).message, true);
 		} finally {
-			submit.disabled = false;
-			submit.replaceChildren(frag`${Icons.search(12)} ${t("jsonReviewFetch")}`);
+			if (form.isConnected) {
+				submit.disabled = false;
+				submit.replaceChildren(frag`${Icons.search(12)} ${t("jsonReviewFetch")}`);
+			}
 		}
 	}
 
@@ -464,55 +459,33 @@ export function initProducts(container: HTMLElement): () => void {
 		container: HTMLElement,
 		entries: JsonReviewEntry[],
 	): void {
-		const wrap = html`<div class="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5 overflow-auto pr-1 max-h-[52vh]"></div>`;
+		const wrap = html`<div class="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5 overflow-auto pr-1 max-h-[calc(100vh-4rem)]"></div>`;
 
 		for (const entry of entries) {
-			const extra = renderJsonReviewExtra(entry.item, Boolean(entry.property));
 			if (!entry.property) {
-				wrap.appendChild(extra);
 				continue;
 			}
 
+			const why = renderJsonReviewWhy(entry.item);
 			const card = Product({
 				property: entry.property,
 				bookmarked: state.bookmarks.has(entry.property.source_url),
 				view: "grid",
 				callbacks: cardCallbacks,
 			});
-			wrap.appendChild(html`<div class="flex flex-col gap-2">${extra}${card}</div>`);
+			wrap.appendChild(html`<div class="flex flex-col gap-2">${why}${card}</div>`);
 		}
 
 		container.replaceChildren(wrap);
 	}
 
-	function renderJsonReviewExtra(
-		item: JsonReviewItem,
-		matched: boolean,
-	): HTMLElement {
+	function renderJsonReviewWhy(item: JsonReviewItem): HTMLElement | string {
+		if (!item.why) return "";
 		return html`<section
-			class="rounded-(--r) border ${matched ? "border-(--border)" : "border-(--red-b)"} bg-(--surface-2) p-3 text-xs text-(--text-2) flex flex-col gap-2"
+			class="rounded-(--r) border border-(--border) bg-(--surface-2) p-3 text-xs text-(--text-2) leading-relaxed"
 		>
-			<div class="flex items-center justify-between gap-2">
-				<strong class="text-(--text)">#${String(item.item_id)}</strong>
-				<span class="text-[10px] px-2 py-0.5 rounded-full border ${matched ? "border-(--green-b) text-(--green) bg-(--green-dim)" : "border-(--red-b) text-(--red) bg-(--red-dim)"}">
-					${matched ? t("jsonReviewMatched") : t("jsonReviewMissing")}
-				</span>
-			</div>
-			${item.why ? html`<p class="leading-relaxed">${item.why}</p>` : ""}
-			<div class="grid grid-cols-2 gap-1.5 text-(--muted)">
-				${jsonReviewField(t("location"), item.location)}
-				${jsonReviewField(t("price"), item.price)}
-				${jsonReviewField(t("area"), item.area_sqm ? `${item.area_sqm} m²` : undefined)}
-				${jsonReviewField(t("floor"), item.floor)}
-				${jsonReviewField(t("jsonReviewPaved"), item.infrastructure_paved === undefined ? undefined : item.infrastructure_paved ? t("yes") : t("no"))}
-			</div>
-			${item.url ? html`<a class="text-(--accent) hover:underline" href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a>` : ""}
+			${item.why}
 		</section>`;
-	}
-
-	function jsonReviewField(label: string, value: unknown): HTMLElement | string {
-		if (value === undefined || value === null || value === "") return "";
-		return html`<div><span class="text-(--muted)">${label}:</span> <span class="text-(--text-2)">${String(value)}</span></div>`;
 	}
 
 	const { add, cleanup: cleanupHandlers } = makeEventManager();
