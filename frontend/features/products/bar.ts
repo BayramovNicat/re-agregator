@@ -13,7 +13,7 @@ export function renderProductsBar(
 	ui: ProductsUI,
 	callbacks: ProductsCallbacks,
 ): HTMLElement {
-	const { onExport, onAlertsOpen, onSavedClick, onSortChange, onViewChange } =
+	const { onExport, onValidate, onAlertsOpen, onSavedClick, onSortChange, onViewChange } =
 		callbacks;
 
 	ui.resultsMeta = html`<div
@@ -80,6 +80,12 @@ export function renderProductsBar(
 		>
 			${ui.resultsMeta}
 			<div class="flex items-center gap-1.75">
+				${Button({
+					title: t("validateBtn"),
+					content: frag`${Icons.refresh(12)} ${t("validateBtn")}`,
+					color: "green",
+					onclick: (e) => onValidate(e.currentTarget as HTMLButtonElement),
+				})}
 				${Button({
 					title: t("exportBtn"),
 					content: frag`${Icons.download(12)} ${t("exportBtn")}`,

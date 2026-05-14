@@ -13,6 +13,7 @@ import {
 	getPriceDrops,
 	getTrend,
 	getUndervaluedDeals,
+	validateUndervaluedDeals,
 } from "@/modules/deals/deals.controller.js";
 import {
 	getScrapeAdminSessionStatus,
@@ -55,6 +56,7 @@ export const routes = {
 	"/api/deals/locations": { GET: br(getLocations) },
 	"/api/deals/trend": { GET: br(getTrend) },
 	"/api/deals/undervalued": { GET: br(getUndervaluedDeals) },
+	"/api/deals/undervalued/validate": { POST: br(validateUndervaluedDeals) },
 	"/api/deals/price-drops": { GET: br(getPriceDrops) },
 	"/api/deals/map-pins": { GET: br(getMapPins) },
 	"/api/deals/by-urls": { POST: br(getDealsByUrls) },

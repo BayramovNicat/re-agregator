@@ -3,7 +3,10 @@ import { readJsonBody } from "@/utils/json-body.js";
 import { parseQueryBool, parseQueryNum } from "@/utils/query.js";
 import { ResponseHelper } from "@/utils/response.js";
 import * as dealsService from "./deals.service.js";
-import { checkAndDeleteEndedListing } from "./listing-status.service.js";
+import {
+	checkAndDeleteEndedListing,
+	checkAndDeleteEndedListings,
+} from "./listing-status.service.js";
 
 type TrendCacheEntry = {
 	data: Awaited<ReturnType<typeof dealsService.getPriceTrend>>;
@@ -117,6 +120,71 @@ export async function checkEndedListing(req: Request): Promise<Response> {
 		}
 		console.error("[DealsController] checkEndedListing:", err);
 		return ResponseHelper.error("Failed to check listing status");
+	}
+}
+
+export async function validateUndervaluedDeals(req: Request): Promise<Response> {
+	const q = new URL(req.url).searchParams;
+
+	const loc = parseLocationParams(q);
+	if (loc.error) return loc.error;
+
+	const thresholdRaw = q.get("threshold");
+	const thresholdPct = thresholdRaw !== null ? Number(thresholdRaw) : 10;
+	if (Number.isNaN(thresholdPct) || thresholdPct < 0 || thresholdPct > 100) {
+		return ResponseHelper.error(
+			'"threshold" must be a number between 0 and 100',
+			400,
+		);
+	}
+
+	const sort = parseDealSort(q);
+	if (sort.error) return sort.error;
+
+	let filterArgs: PropertyFilters;
+	try {
+		filterArgs = parsePropertyFilters(q);
+	} catch (err) {
+		return ResponseHelper.error((err as Error).message, 400);
+	}
+
+	try {
+		const locations = loc.isAll ? "__all__" : loc.list;
+		const tier = q.get("tier") ?? undefined;
+		const initial = await dealsService.getUndervalued(
+			locations,
+			thresholdPct,
+			filterArgs,
+			{ limit: 1000, offset: 0, sort: sort.value },
+		);
+		const urls = initial.data
+			.filter((property) => !tier || property.tier === tier)
+			.map((property) => property.source_url);
+		const validation = await checkAndDeleteEndedListings(urls);
+		const { total, data } = await dealsService.getUndervalued(
+			locations,
+			thresholdPct,
+			filterArgs,
+			{ limit: 1000, offset: 0, sort: sort.value },
+		);
+
+		return ResponseHelper.publicJson(
+			{
+				location: loc.raw,
+				threshold_pct: thresholdPct,
+				limit: 1000,
+				offset: 0,
+				count: data.length,
+				total,
+				validation,
+				data,
+			},
+			0,
+			0,
+		);
+	} catch (err) {
+		console.error("[DealsController] validateUndervaluedDeals:", err);
+		return ResponseHelper.error("Failed to validate listings");
 	}
 }
 

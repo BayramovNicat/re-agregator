@@ -9,6 +9,7 @@ import {
 	html,
 	makeEventManager,
 	show,
+	toast,
 	tTier,
 } from "@/core/utils";
 // Lazy triggered via bus.emit(EVENTS.GALLERY_OPEN)
@@ -100,6 +101,7 @@ export function initProducts(container: HTMLElement): () => void {
 		},
 		onViewChange: (view) => setView(view),
 		onExport: () => handleExport(ui.sortSelect.value),
+		onValidate: (button) => void handleValidate(button),
 		onSavedClick: (e) => void handleSavedClick(e),
 		onAlertsOpen: () => bus.emit(EVENTS.ALERTS_OPEN),
 		onBackToTop: () => window.scrollTo({ top: 0, behavior: "instant" }),
@@ -285,6 +287,73 @@ export function initProducts(container: HTMLElement): () => void {
 			}
 		} catch {
 			// Silently fail, cached data is already shown
+		}
+	}
+
+	async function handleValidate(button: HTMLButtonElement): Promise<void> {
+		if (state.loading || !state.hasSearched || state.showingSaved) return;
+
+		state.loading = true;
+		button.disabled = true;
+		button.replaceChildren(frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("validating")}`);
+
+		try {
+			const filters = state.getFilters();
+			const searchParams = new URLSearchParams({
+				location: filters.location,
+				threshold: String(filters.threshold),
+				sort: ui.sortSelect.value || "disc",
+			});
+
+			Object.entries(filters).forEach(([key, val]) => {
+				if (key !== "location" && key !== "threshold" && val !== undefined) {
+					searchParams.set(key, String(val));
+				}
+			});
+
+			const descriptionQuery =
+				(document.getElementById("descriptionSearch") as HTMLInputElement | null)
+					?.value.trim() || "";
+			if (descriptionQuery) {
+				searchParams.set("descriptionSearch", descriptionQuery);
+			}
+			if (state.refs.tierFilter?.value) {
+				searchParams.set("tier", state.refs.tierFilter.value);
+			}
+
+			const response = await fetch(`/api/deals/undervalued/validate?${searchParams}`, {
+				method: "POST",
+			});
+			const result = (await response.json()) as {
+				error?: string;
+				data: Property[];
+				total: number;
+				validation?: { checked: number; deleted: number; failed: number };
+			};
+
+			if (result.error) {
+				throw new Error(result.error);
+			}
+
+			state.allResults = result.data.filter(
+				(p) => !state.hidden.has(p.source_url),
+			);
+			state.currentTotal = result.total;
+			state.currentOffset = result.data.length;
+			state.renderedSet.clear();
+			render();
+			toast(
+				t("validateDone", {
+					deleted: result.validation?.deleted ?? 0,
+					total: result.total,
+				}),
+			);
+		} catch (err) {
+			toast((err as Error).message, true);
+		} finally {
+			state.loading = false;
+			button.disabled = false;
+			button.replaceChildren(frag`${Icons.refresh(12)} ${t("validateBtn")}`);
 		}
 	}
 
