@@ -487,12 +487,40 @@ export function initProducts(container: HTMLElement): () => void {
 	const onPdHide = (e: Event) => {
 		const p = (e as CustomEvent<Property>).detail;
 		if (p) {
+			const restoreFocus = prepareFocusRestore(p.source_url);
+			const dialog = e.target instanceof HTMLDialogElement ? e.target : null;
 			hideItem(p.source_url);
 			updateSavedBadge();
+
+			if (dialog?.open) {
+				dialog.addEventListener("close", restoreFocus, { once: true });
+			} else {
+				restoreFocus();
+			}
 		}
 	};
 	add(document, "pd:bmark", onPdBmark);
 	add(document, "pd:hide", onPdHide);
+
+	function prepareFocusRestore(url: string): () => void {
+		const cards = Array.from(
+			ui.cardsContainer.firstElementChild?.children || [],
+		).filter((c) => c.classList.contains("product-card")) as HTMLElement[];
+		const removedIndex = Math.max(
+			0,
+			cards.findIndex((card) => card.dataset.url === url),
+		);
+
+		return () => {
+			requestAnimationFrame(() => {
+				const remainingCards = Array.from(
+					ui.cardsContainer.firstElementChild?.children || [],
+				).filter((c) => c.classList.contains("product-card")) as HTMLElement[];
+				const targetCard = remainingCards[Math.min(removedIndex, remainingCards.length - 1)];
+				targetCard?.focus({ preventScroll: true });
+			});
+		};
+	}
 
 	// Populate global refs for other features
 	state.refs.cards = ui.cardsContainer;
