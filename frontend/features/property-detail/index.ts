@@ -72,13 +72,15 @@ export function initPropertyDetail(root: HTMLElement): () => void {
 			}
 		},
 		onBookmark: () => {
-			if (ui.currentProperty)
+			if (ui.currentProperty) {
 				ui.modal.dispatchEvent(
 					new CustomEvent("pd:bmark", {
 						bubbles: true,
 						detail: ui.currentProperty,
 					}),
 				);
+				bindPropertyData(ui, ui.currentProperty);
+			}
 		},
 		onHide: () => {
 			if (ui.currentProperty) {

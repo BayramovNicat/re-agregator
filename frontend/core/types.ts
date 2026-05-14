@@ -94,7 +94,7 @@ export interface Alert {
 }
 
 export interface CardCallbacks {
-	onBM: (p: Property) => void;
+	onBM: (p: Property) => boolean;
 	onHide: (url: string) => void;
 	onGallery: (urls: string[], index?: number) => void;
 	onDetail: (p: Property) => void;

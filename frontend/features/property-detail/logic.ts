@@ -1,7 +1,9 @@
 import { t } from "@/core/i18n";
+import { state } from "@/core/state";
 import type { Property } from "@/core/types";
 import { fmt, fmtFloor, getLocale, timeAgo, tTier } from "@/core/utils";
 import { Tag } from "@/ui/chip";
+import { Icons } from "@/ui/icons";
 import { initLeaflet } from "@/ui/map-base";
 import { StatBox } from "@/ui/stat-box";
 import { ts } from "@/ui/tier";
@@ -14,7 +16,10 @@ import type { PropertyDetailUI } from "./types";
 export function bindPropertyData(ui: PropertyDetailUI, p: Property): void {
 	ui.currentProperty = p;
 	const tier = ts(p.tier);
+	const bookmarked = state.bookmarks.has(p.source_url);
 
+	ui.bmarkBtn.classList.toggle("on", bookmarked);
+	ui.bmarkBtn.replaceChildren(Icons.bookmark({ size: 18, fill: bookmarked }));
 	ui.gallery.setUrls(p.image_urls ?? []);
 	ui.locationEl.textContent = p.location_name ?? p.district ?? "—";
 	ui.priceEl.textContent = `₼ ${fmt(p.price)}`;

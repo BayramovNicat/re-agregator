@@ -122,6 +122,7 @@ export function initProducts(container: HTMLElement): () => void {
 		onBM: (p) => {
 			toggleBM(p);
 			updateSavedBadge();
+			return state.bookmarks.has(p.source_url);
 		},
 		onHide: (url) => {
 			hideItem(url);

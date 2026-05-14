@@ -90,7 +90,7 @@ export function renderPropertyDetailLayout(
 	ui.bmarkBtn = Button({
 		content: Icons.bookmark({ size: 18, fill: false }),
 		variant: "padded",
-		color: "indigo",
+		color: "yellow",
 		className: "w-12.5 h-12.5 flex items-center justify-center shrink-0",
 		onclick: onBookmark,
 		title: t("btnSave"),

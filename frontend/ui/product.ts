@@ -388,9 +388,12 @@ function attachActionListeners({
 		if (btn) {
 			const action = btn.getAttribute("data-action");
 			switch (action) {
-				case "bmark":
-					callbacks.onBM(property);
+				case "bmark": {
+					const bookmarked = callbacks.onBM(property);
+					btn.classList.toggle("on", bookmarked);
+					btn.replaceChildren(Icons.bookmark({ size: 12, fill: bookmarked }));
 					break;
+				}
 				case "hide":
 					callbacks.onHide(property.source_url);
 					break;
