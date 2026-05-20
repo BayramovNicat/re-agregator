@@ -36,6 +36,15 @@ let locationsCache: { data: string[]; at: number } | null = null;
 
 const AVG_CACHE_TTL = 30 * 60_000;
 const avgCache = new Map<string, { avg: number; at: number }>();
+const avgPromises = new Map<string, Promise<Map<string, number>>>();
+
+function effectiveCategory(filters: PropertyFilters = {}): string {
+	return filters.category ?? "new";
+}
+
+function categoryCondition(category: string, alias = "p"): Prisma.Sql {
+	return Prisma.sql`${Prisma.raw(alias)}.category::text = ${category}`;
+}
 
 function getUndervaluedOrderBy(sort: DealSort = "disc"): Prisma.Sql {
 	switch (sort) {
@@ -64,6 +73,7 @@ export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 			COUNT(*)                                              AS listing_count
 		FROM "Property"
 		WHERE location_name = ${location}
+			AND category::text = 'new'
 			AND price_per_sqm > 0
 			AND (floor IS NULL OR floor <> 1)
 			AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
@@ -104,19 +114,23 @@ export async function getLocations(): Promise<string[]> {
 	return locationsPromise;
 }
 
-let avgPromise: Promise<Map<string, number>> | null = null;
 async function getLocationAverages(
 	locations: string[] | "__all__",
+	category = "new",
 ): Promise<Map<string, number>> {
 	const now = Date.now();
 	const isAll = locations === "__all__";
 	const locList = isAll ? [] : (locations as string[]);
+	const cacheKey = (location: string) => `${category}:${location}`;
+	const promiseKey = isAll
+		? `${category}:__all__`
+		: `${category}:${locList.join("|")}`;
 
 	if (!isAll) {
 		const cached = new Map<string, number>();
 		let allInCache = true;
 		for (const l of locList) {
-			const entry = avgCache.get(l);
+			const entry = avgCache.get(cacheKey(l));
 			if (entry && now - entry.at < AVG_CACHE_TTL) {
 				cached.set(l, entry.avg);
 			} else {
@@ -125,8 +139,9 @@ async function getLocationAverages(
 			}
 		}
 		if (allInCache) return cached;
-	} else if (avgPromise) {
-		return avgPromise;
+	} else {
+		const avgPromise = avgPromises.get(promiseKey);
+		if (avgPromise) return avgPromise;
 	}
 
 	const fetchPromise = (async () => {
@@ -139,6 +154,7 @@ async function getLocationAverages(
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE ${avgLocCondition}
+				AND category::text = ${category}
 				${locAvgBaseConditions()}
 			GROUP BY location_name
 			HAVING COUNT(*) >= 3
@@ -149,17 +165,17 @@ async function getLocationAverages(
 		for (const r of rows) {
 			const avg = Number(r.avg_ppsm);
 			result.set(r.location_name, avg);
-			avgCache.set(r.location_name, { avg, at: now });
+			avgCache.set(cacheKey(r.location_name), { avg, at: now });
 		}
 		return result;
 	})();
 
 	if (isAll) {
-		avgPromise = fetchPromise;
+		avgPromises.set(promiseKey, fetchPromise);
 		try {
 			return await fetchPromise;
 		} finally {
-			avgPromise = null;
+			avgPromises.delete(promiseKey);
 		}
 	}
 
@@ -191,6 +207,7 @@ export async function getHeatmapData(): Promise<HeatmapPoint[]> {
 							THEN price_per_sqm END))::int                                        AS prior_avg
 		FROM "Property"
 		WHERE location_name IS NOT NULL
+			AND category::text = 'new'
 			AND price_per_sqm > 0
 			AND (floor IS NULL OR floor <> 1)
 			AND (floor IS NULL OR total_floors IS NULL OR floor <> total_floors)
@@ -236,6 +253,7 @@ export async function getPropertiesByUrls(
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE location_name IN (SELECT location_name FROM needed)
+				AND category::text = 'new'
 				${locAvgBaseConditions()}
 			GROUP BY location_name
 			HAVING COUNT(*) >= 3
@@ -264,9 +282,10 @@ export async function getMapPins(options: {
 	filters: PropertyFilters;
 }): Promise<MapPin[]> {
 	const { locations, thresholdPercent, filters } = options;
+	const category = effectiveCategory(filters);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations);
+	const avgsMap = await getLocationAverages(locations, category);
 	if (avgsMap.size === 0) return [];
 
 	const isAll = locations === "__all__";
@@ -283,6 +302,7 @@ export async function getMapPins(options: {
 		Prisma.sql`p.latitude IS NOT NULL`,
 		Prisma.sql`p.longitude IS NOT NULL`,
 		Prisma.sql`p.price_per_sqm > 0`,
+		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
 			: []),
@@ -337,10 +357,11 @@ export async function getUndervalued(
 	pagination: PaginationOptions = {},
 ): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
 	const { limit = 200, offset = 0, sort = "disc" } = pagination;
+	const category = effectiveCategory(filters);
 	const orderBy = getUndervaluedOrderBy(sort);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations);
+	const avgsMap = await getLocationAverages(locations, category);
 	if (avgsMap.size === 0) return { total: 0, data: [] };
 
 	const isAll = locations === "__all__";
@@ -355,6 +376,7 @@ export async function getUndervalued(
 	const conditions = [
 		pLocCondition,
 		Prisma.sql`p.price_per_sqm > 0`,
+		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
 			: []),
@@ -404,9 +426,10 @@ export async function getUndervaluedUrlTiers(
 	filters: PropertyFilters = {},
 	limit = 1000,
 ): Promise<{ source_url: string; tier: DealTier }[]> {
+	const category = effectiveCategory(filters);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations);
+	const avgsMap = await getLocationAverages(locations, category);
 	if (avgsMap.size === 0) return [];
 
 	const isAll = locations === "__all__";
@@ -421,6 +444,7 @@ export async function getUndervaluedUrlTiers(
 	const conditions = [
 		pLocCondition,
 		Prisma.sql`p.price_per_sqm > 0`,
+		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
 			: []),
@@ -459,11 +483,12 @@ export async function getPriceDropDeals(
 	})[];
 }> {
 	const { minDropCount = 1, limit = 200, offset = 0 } = options;
+	const category = "new";
 
 	const isAll = location === "__all__";
 	const locationList = isAll ? [] : (location as string[]);
 
-	const avgsMap = await getLocationAverages(location);
+	const avgsMap = await getLocationAverages(location, category);
 	if (avgsMap.size === 0) return { total: 0, data: [] };
 
 	const locCondition = isAll
@@ -487,6 +512,7 @@ export async function getPriceDropDeals(
 			GROUP BY property_id
 		) h ON h.property_id = p.id
 		WHERE ${locCondition}
+			AND ${categoryCondition(category)}
 			AND p.price_drop_count >= ${minDropCount}
 	`;
 
