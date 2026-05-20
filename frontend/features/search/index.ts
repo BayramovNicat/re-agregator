@@ -41,7 +41,6 @@ export function initSearch(container: HTMLElement): () => void {
 		listingTypeSelect: null as unknown as HTMLSelectElement,
 		mortgageSelect: null as unknown as HTMLSelectElement,
 		descriptionInput: null as unknown as HTMLInputElement,
-		tierSelect: null as unknown as HTMLSelectElement,
 		priceMapActionBtn: null as unknown as HTMLButtonElement,
 		numericInputs: {},
 		booleanInputs: {},
@@ -198,11 +197,6 @@ export function initSearch(container: HTMLElement): () => void {
 		debouncedSearch();
 	}
 
-	function onTierChange() {
-		saveFiltersToStorage(ui);
-		bus.emit(EVENTS.DEALS_UPDATED);
-	}
-
 	const onClear = () => {
 		for (const config of getNumericFilters())
 			ui.numericInputs[config.id].value = "";
@@ -211,7 +205,6 @@ export function initSearch(container: HTMLElement): () => void {
 		ui.categorySelect.value = "";
 		ui.mortgageSelect.value = "";
 		ui.descriptionInput.value = "";
-		ui.tierSelect.value = "";
 		refreshFilterChips(ui, debouncedSearch);
 		saveFiltersToStorage(ui);
 		void executeSearch(false);
@@ -245,10 +238,8 @@ export function initSearch(container: HTMLElement): () => void {
 	const searchLayout = renderSearchFilters(ui, {
 		onFilterChange,
 		onPriceMap,
-		onTierChange,
 		onClear,
 	});
-	state.refs.tierFilter = ui.tierSelect;
 	container.append(searchLayout, ui.activeChipsContainer);
 
 	const { add, cleanup: cleanupHandlers } = makeEventManager();

@@ -18,7 +18,7 @@ export function renderSearchFilters(
 	ui: SearchUI,
 	callbacks: SearchCallbacks,
 ): HTMLElement {
-	const { onFilterChange, onPriceMap, onTierChange, onClear } = callbacks;
+	const { onFilterChange, onPriceMap, onClear } = callbacks;
 
 	ui.locationSelect = MultiSelect({
 		id: "loc-trigger",
@@ -124,19 +124,6 @@ export function renderSearchFilters(
 		oninput: onFilterChange,
 	});
 
-	ui.tierSelect = Select({
-		id: "tier-filter",
-		className: "w-full",
-		options: [
-			{ value: "", label: t("tierFilterAll") },
-			{ value: "High Value Deal", label: t("tierHigh") },
-			{ value: "Good Deal", label: t("tierGood") },
-			{ value: "Fair Price", label: t("tierFair") },
-			{ value: "Overpriced", label: t("tierOverpriced") },
-		],
-		onchange: onTierChange,
-	});
-
 	ui.clearAllBtn = RawButton({
 		className:
 			"inline-flex items-center gap-1 text-xs text-(--muted) hover:text-(--text) transition-colors border border-(--border) hover:border-(--border-h) rounded-(--r-sm) px-2.5 py-1.25",
@@ -191,11 +178,6 @@ export function renderSearchFilters(
 					label: t("descriptionSearch"),
 					htmlFor: "descriptionSearch",
 					input: ui.descriptionInput,
-				})}
-				${Field({
-					label: t("tierFilter"),
-					htmlFor: "tier-filter",
-					input: ui.tierSelect,
 				})}
 			</div>
 			<div class="flex flex-wrap gap-1.75 pt-3.5">

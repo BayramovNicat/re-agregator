@@ -13,7 +13,6 @@ export interface SearchUI {
 	listingTypeSelect: HTMLSelectElement;
 	mortgageSelect: HTMLSelectElement;
 	descriptionInput: HTMLInputElement;
-	tierSelect: HTMLSelectElement;
 	priceMapActionBtn: HTMLButtonElement;
 	numericInputs: Record<string, HTMLInputElement>;
 	booleanInputs: Record<string, HTMLInputElement>;
@@ -22,6 +21,5 @@ export interface SearchUI {
 export interface SearchCallbacks {
 	onFilterChange: () => void;
 	onPriceMap: () => void;
-	onTierChange: () => void;
 	onClear: () => void;
 }

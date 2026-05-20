@@ -40,7 +40,6 @@ export const state = {
 		savedBtn: null as HTMLElement | null,
 		trendPanel: null as HTMLElement | null,
 		resultsMeta: null as HTMLElement | null,
-		tierFilter: null as HTMLSelectElement | null,
 		sortSelect: null as HTMLSelectElement | null,
 	},
 	/** Shared bridge to retrieve current search filters across features. */

@@ -14,7 +14,6 @@ type PersistedFilters = {
 	listingType?: string;
 	hasActiveMortgage?: string;
 	descriptionSearch?: string;
-	tier?: string;
 };
 
 function setThreshold(ui: SearchUI, threshold: string): void {
@@ -35,8 +34,7 @@ function hasFilterParams(params: URLSearchParams): boolean {
 		params.has("category") ||
 		params.has("listingType") ||
 		params.has("hasActiveMortgage") ||
-		params.has("descriptionSearch") ||
-		params.has("tier")
+		params.has("descriptionSearch")
 	) {
 		return true;
 	}
@@ -80,7 +78,6 @@ function restoreFromStorage(ui: SearchUI): void {
 	ui.listingTypeSelect.value = saved.listingType ?? "sale";
 	ui.mortgageSelect.value = saved.hasActiveMortgage ?? "";
 	ui.descriptionInput.value = saved.descriptionSearch ?? "";
-	ui.tierSelect.value = saved.tier ?? "";
 }
 
 export function saveFiltersToStorage(ui: SearchUI): void {
@@ -105,7 +102,6 @@ export function saveFiltersToStorage(ui: SearchUI): void {
 			listingType: ui.listingTypeSelect.value,
 			hasActiveMortgage: ui.mortgageSelect.value,
 			descriptionSearch: ui.descriptionInput.value.trim(),
-			tier: ui.tierSelect.value,
 		};
 
 		localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(saved));
@@ -171,9 +167,6 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 	if (desc && desc !== "undefined" && desc !== "null") {
 		ui.descriptionInput.value = desc;
 	}
-
-	const tier = urlParams.get("tier");
-	if (tier) ui.tierSelect.value = tier;
 
 	const location = urlParams.get("location");
 	if (location) {

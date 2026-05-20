@@ -143,8 +143,6 @@ export function initProducts(container: HTMLElement): () => void {
 			: state.allResults.filter((p) => !state.hidden.has(p.source_url));
 
 		const sortBy = ui.sortSelect.value || "disc";
-		const tierSel = state.refs.tierFilter?.value || "";
-		if (tierSel) list = list.filter((p) => p.tier === tierSel);
 
 		if (state.currentView === "map") {
 			show(ui.resultsBarInner);
@@ -324,9 +322,6 @@ export function initProducts(container: HTMLElement): () => void {
 				)?.value.trim() || "";
 			if (descriptionQuery) {
 				searchParams.set("descriptionSearch", descriptionQuery);
-			}
-			if (state.refs.tierFilter?.value) {
-				searchParams.set("tier", state.refs.tierFilter.value);
 			}
 
 			const response = await fetch(
