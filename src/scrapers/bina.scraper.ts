@@ -174,15 +174,28 @@ export class BinaScraper extends BaseScraper {
 			startPage = 1,
 			endPage,
 			delayMs = 800,
+			listingType,
+			categoryId,
 		} = options;
 		const finalMaxPages = endPage ?? defaultMax;
 		const all: ScrapedListing[] = [];
+
+		const activePropertyTypes = BINA_PROPERTY_TYPES.filter((type) => {
+			if (listingType && type.listingType !== listingType) {
+				return false;
+			}
+			if (categoryId && type.categoryId !== categoryId) {
+				return false;
+			}
+			return true;
+		});
+
 		const totalPlannedPages =
-			(finalMaxPages - startPage + 1) * BINA_PROPERTY_TYPES.length;
+			(finalMaxPages - startPage + 1) * activePropertyTypes.length;
 		let totalFetchedPages = 0;
 
 		console.log(
-			`[${this.platform}] Starting GraphQL scrape (${BINA_PROPERTY_TYPES.map((type) => type.label).join(", ")}; startPage=${startPage}, limit=${finalMaxPages})...`,
+			`[${this.platform}] Starting GraphQL scrape (${activePropertyTypes.map((type) => type.label).join(", ")}; startPage=${startPage}, limit=${finalMaxPages})...`,
 		);
 		options.onProgress?.({
 			type: "start",
@@ -192,7 +205,7 @@ export class BinaScraper extends BaseScraper {
 			endPage,
 		});
 
-		for (const propertyType of BINA_PROPERTY_TYPES) {
+		for (const propertyType of activePropertyTypes) {
 			let cursor: string | null = null;
 			let page = 0;
 			let hasNext = true;

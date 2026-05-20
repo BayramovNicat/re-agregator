@@ -58,6 +58,10 @@ export interface ScraperOptions {
 	delayMs?: number;
 	/** Optional callback for streaming progress events */
 	onProgress?: (event: ScrapeProgressEvent) => void;
+	/** Optional filter for listing type ('sale' | 'rent') */
+	listingType?: "sale" | "rent";
+	/** Optional filter for category id */
+	categoryId?: string;
 }
 
 /** Contract every scraper implementation must satisfy */

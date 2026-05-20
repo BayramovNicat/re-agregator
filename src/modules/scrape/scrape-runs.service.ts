@@ -143,6 +143,8 @@ export class ScrapeRunsService {
 		if (typeof rest.startPage === "number") stored.startPage = rest.startPage;
 		if (typeof rest.endPage === "number") stored.endPage = rest.endPage;
 		if (typeof rest.delayMs === "number") stored.delayMs = rest.delayMs;
+		if (typeof rest.listingType === "string") stored.listingType = rest.listingType;
+		if (typeof rest.categoryId === "string") stored.categoryId = rest.categoryId;
 		return Object.keys(stored).length > 0 ? stored : null;
 	}
 
@@ -255,6 +257,8 @@ type StoredRunOptions = {
 	startPage?: number;
 	endPage?: number;
 	delayMs?: number;
+	listingType?: "sale" | "rent";
+	categoryId?: string;
 };
 
 type PlatformSummary = {
