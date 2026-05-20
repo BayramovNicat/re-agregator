@@ -100,7 +100,7 @@ export function Dialog({
 			<dialog class="${BACKDROP}" aria-modal="true">
 				<div
 					class="${cn(INNER, className)}"
-					style="width:calc(100vw - 2rem);max-width:${maxWidth}"
+					style="width:${maxWidth === "none" ? "100%" : "calc(100vw - 2rem)"};max-width:${maxWidth}"
 				>
 					${header}
 					<div class="flex-1 flex flex-col min-h-0">${content}</div>

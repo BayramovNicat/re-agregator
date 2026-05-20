@@ -120,6 +120,8 @@ export function Gallery({
 		props,
 	) as GalleryElement;
 
+	rootElm.style.touchAction = fullscreen ? "none" : "pan-y";
+
 	const _loadImage = (idx: number): void => {
 		if (count === 0) return;
 		const i = (idx + count) % count;
@@ -168,12 +170,46 @@ export function Gallery({
 
 	// Events
 	let swipeStartX = 0;
+	let swipeStartY = 0;
+	let activePointerId: number | null = null;
+
 	eventManager.add(rootElm, "pointerdown", (e: PointerEvent) => {
+		if (activePointerId !== null) return;
+		if ((e.target as HTMLElement).closest("button")) return;
 		swipeStartX = e.clientX;
+		swipeStartY = e.clientY;
+		activePointerId = e.pointerId;
+		try {
+			rootElm.setPointerCapture(e.pointerId);
+		} catch {
+			// fallback
+		}
 	});
+
 	eventManager.add(rootElm, "pointerup", (e: PointerEvent) => {
+		if (e.pointerId !== activePointerId) return;
+		activePointerId = null;
+		try {
+			rootElm.releasePointerCapture(e.pointerId);
+		} catch {
+			// ignore
+		}
 		const dx = e.clientX - swipeStartX;
-		if (Math.abs(dx) > 40) _navigate(dx < 0 ? 1 : -1);
+		const dy = e.clientY - swipeStartY;
+		if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+			_navigate(dx < 0 ? 1 : -1);
+		}
+	});
+
+	eventManager.add(rootElm, "pointercancel", (e: PointerEvent) => {
+		if (e.pointerId === activePointerId) {
+			activePointerId = null;
+			try {
+				rootElm.releasePointerCapture(e.pointerId);
+			} catch {
+				// ignore
+			}
+		}
 	});
 	eventManager.add<KeyboardEvent>(rootElm, "keydown", (e) => {
 		if (e.key === "ArrowLeft") {
