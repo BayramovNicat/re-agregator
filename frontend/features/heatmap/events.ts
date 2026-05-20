@@ -70,7 +70,7 @@ export function setupCircleEvents(
 export async function setupMapDragSelection(
 	lmap: LMap,
 	group: FeatureGroup,
-	getActiveLocations: () => string[],
+	_getActiveLocations: () => string[],
 	onSelectMany: (names: string[]) => void,
 ): Promise<() => void> {
 	const { latLngBounds, rectangle } = await import("leaflet");

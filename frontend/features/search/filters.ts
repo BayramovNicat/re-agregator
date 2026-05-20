@@ -90,6 +90,7 @@ export function renderSearchFilters(
 			{ value: "", label: t("any") },
 			{ value: "Yeni tikili", label: t("newBuild") },
 			{ value: "Köhnə tikili", label: t("secondary") },
+			{ value: "Həyət evi/Bağ evi", label: t("house") },
 		],
 		onchange: onFilterChange,
 	});

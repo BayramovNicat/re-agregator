@@ -1,5 +1,5 @@
 import { t } from "@/core/i18n";
-import { frag, html } from "@/core/utils";
+import { html } from "@/core/utils";
 import { Button } from "@/ui/button";
 import { Dialog } from "@/ui/dialog";
 import { Gallery } from "@/ui/gallery";

@@ -25,8 +25,24 @@ const FETCH_TIMEOUT_MS = 15_000;
 const MAX_FETCH_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 500;
 
-/** Filter params for "apartments for sale in Baku" */
-const DEFAULT_FILTER = { categoryId: "1", cityId: "1", leased: false };
+/** Filter params for "properties for sale in Baku". */
+const CITY_ID_BAKU = "1";
+const LEASED_FOR_SALE = false;
+
+const BINA_PROPERTY_TYPES = [
+	{
+		categoryId: "1",
+		label: "apartments",
+		referer: "https://bina.az/baki/alqi-satqi/menziller",
+	},
+	{
+		categoryId: "5",
+		label: "houses/villas",
+		referer: "https://bina.az/baki/alqi-satqi/heyet-evleri",
+	},
+] as const;
+
+type BinaPropertyType = (typeof BINA_PROPERTY_TYPES)[number];
 
 const USER_AGENTS: [string, ...string[]] = [
 	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -48,7 +64,9 @@ function pick<T>(arr: [T, ...T[]]): T {
 	return arr[Math.floor(Math.random() * arr.length)] as T;
 }
 
-function randomHeaders(): Record<string, string> {
+function randomHeaders(
+	referer = "https://bina.az/baki/alqi-satqi/menziller",
+): Record<string, string> {
 	const ua = pick(USER_AGENTS);
 	const lang = pick(ACCEPT_LANGUAGES);
 	return {
@@ -56,7 +74,7 @@ function randomHeaders(): Record<string, string> {
 		"User-Agent": ua,
 		Accept: "application/json, text/plain, */*",
 		Origin: "https://bina.az",
-		Referer: "https://bina.az/baki/alqi-satqi/menziller",
+		Referer: referer,
 		"Accept-Language": lang,
 		"Accept-Encoding": "gzip, deflate, br",
 		"sec-ch-ua": `"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"`,
@@ -142,106 +160,117 @@ export class BinaScraper extends BaseScraper {
 		} = options;
 		const finalMaxPages = endPage ?? defaultMax;
 		const all: ScrapedListing[] = [];
-
-		let cursor: string | null = null;
-		let page = 0;
-		let hasNext = true;
+		const totalPlannedPages =
+			(finalMaxPages - startPage + 1) * BINA_PROPERTY_TYPES.length;
+		let totalFetchedPages = 0;
 
 		console.log(
-			`[${this.platform}] Starting GraphQL scrape (startPage=${startPage}, limit=${finalMaxPages})...`,
+			`[${this.platform}] Starting GraphQL scrape (${BINA_PROPERTY_TYPES.map((type) => type.label).join(", ")}; startPage=${startPage}, limit=${finalMaxPages})...`,
 		);
 		options.onProgress?.({
 			type: "start",
 			platform: this.platform,
-			maxPages: finalMaxPages,
+			maxPages: totalPlannedPages,
 			startPage,
 			endPage,
 		});
 
-		// Advance the cursor cheaply to startPage without fetching edge data.
-		while (page < startPage - 1 && hasNext) {
-			page++;
+		for (const propertyType of BINA_PROPERTY_TYPES) {
+			let cursor: string | null = null;
+			let page = 0;
+			let hasNext = true;
+
 			console.log(
-				`[${this.platform}] Advancing cursor to startPage (${page}/${startPage - 1})...`,
+				`[${this.platform}] Scraping ${propertyType.label} (categoryId=${propertyType.categoryId})...`,
 			);
-			const pageInfo = await this.fetchCursor(cursor);
-			hasNext = pageInfo.hasNextPage;
-			cursor = pageInfo.endCursor;
-			await this.delay(150);
-		}
 
-		while (hasNext && page < finalMaxPages) {
-			page++;
-
-			const { edges, pageInfo } = await this.fetchPage(cursor);
-
-			if (edges.length === 0) break;
-
-			// Fetch full item details in one batched GraphQL request
-			const ids = edges.map((e) => e.node.id);
-			const details = await this.batchFetchDetails(ids);
-
-			for (const { node } of edges) {
-				const price = node.price.value;
-				const area = node.area.value;
-				if (price <= 0 || area <= 0) continue;
-
-				const detail = details[node.id];
-				const urgencyText = `${detail?.title ?? ""} ${detail?.description ?? ""}`;
-				const mortgageText = detail?.description ?? "";
-
-				const normalizedDistrict = slugToDistrict(node.location.slug);
-				// Fall back to the exact location name from the API when district can't be resolved
-				const district =
-					normalizedDistrict === "Unknown"
-						? node.location.name
-						: normalizedDistrict;
-
-				all.push({
-					source_url: `${ITEM_BASE_URL}/${node.id}`,
-					price,
-					area_sqm: area,
-					district,
-					location_name: node.location.slug,
-					latitude: detail?.latitude ?? node.location.latitude ?? undefined,
-					longitude: detail?.longitude ?? node.location.longitude ?? undefined,
-					rooms: node.rooms ?? undefined,
-					floor: node.floor ?? undefined,
-					total_floors: node.floors ?? undefined,
-					category: detail?.category?.name,
-					has_document: node.hasBillOfSale ?? undefined,
-					has_mortgage: node.hasMortgage ?? undefined,
-					has_repair: node.hasRepair ?? undefined,
-					description: detail?.description,
-					image_urls: detail?.photos?.map((p) => p.full) ?? [],
-					is_urgent: this.isUrgent(urgencyText),
-					has_active_mortgage: this.isActiveMortgage(mortgageText),
-					posted_date: detail?.updatedAt
-						? new Date(detail.updatedAt)
-						: undefined,
-				});
+			// Advance the cursor cheaply to startPage without fetching edge data.
+			while (page < startPage - 1 && hasNext) {
+				page++;
+				console.log(
+					`[${this.platform}] Advancing ${propertyType.label} cursor to startPage (${page}/${startPage - 1})...`,
+				);
+				const pageInfo = await this.fetchCursor(cursor, propertyType);
+				hasNext = pageInfo.hasNextPage;
+				cursor = pageInfo.endCursor;
+				await this.delay(150);
 			}
 
-			console.log(
-				`[${this.platform}] Page ${page}: ${edges.length} listings fetched` +
-					` (total so far: ${all.length})`,
-			);
-			options.onProgress?.({
-				type: "page",
-				platform: this.platform,
-				page,
-				fetched: edges.length,
-				total: all.length,
-			});
+			while (hasNext && page < finalMaxPages) {
+				page++;
+				totalFetchedPages++;
 
-			hasNext = pageInfo.hasNextPage;
-			cursor = pageInfo.endCursor;
+				const { edges, pageInfo } = await this.fetchPage(cursor, propertyType);
 
-			if (hasNext && page < finalMaxPages) {
-				// Occasionally pause longer (simulates reading a page)
-				const longPause = Math.random() < 0.15;
-				const jitter = Math.random() * 600;
-				await this.delay(longPause ? delayMs * 3 + jitter : delayMs + jitter);
+				if (edges.length === 0) break;
+
+				// Fetch full item details in one batched GraphQL request
+				const ids = edges.map((e) => e.node.id);
+				const details = await this.batchFetchDetails(ids, propertyType.referer);
+
+				for (const { node } of edges) {
+					const price = node.price.value;
+					const area = node.area.value;
+					if (price <= 0 || area <= 0) continue;
+
+					const detail = details[node.id];
+					const urgencyText = `${detail?.title ?? ""} ${detail?.description ?? ""}`;
+					const mortgageText = detail?.description ?? "";
+
+					const normalizedDistrict = slugToDistrict(node.location.slug);
+					// Fall back to the exact location name from the API when district can't be resolved
+					const district =
+						normalizedDistrict === "Unknown"
+							? node.location.name
+							: normalizedDistrict;
+
+					all.push({
+						source_url: `${ITEM_BASE_URL}/${node.id}`,
+						price,
+						area_sqm: area,
+						district,
+						location_name: node.location.slug,
+						latitude: detail?.latitude ?? node.location.latitude ?? undefined,
+						longitude:
+							detail?.longitude ?? node.location.longitude ?? undefined,
+						rooms: node.rooms ?? undefined,
+						floor: node.floor ?? undefined,
+						total_floors: node.floors ?? undefined,
+						category: detail?.category?.name,
+						has_document: node.hasBillOfSale ?? undefined,
+						has_mortgage: node.hasMortgage ?? undefined,
+						has_repair: node.hasRepair ?? undefined,
+						description: detail?.description,
+						image_urls: detail?.photos?.map((p) => p.full) ?? [],
+						is_urgent: this.isUrgent(urgencyText),
+						has_active_mortgage: this.isActiveMortgage(mortgageText),
+						posted_date: detail?.updatedAt
+							? new Date(detail.updatedAt)
+							: undefined,
+					});
+				}
+
+				console.log(
+					`[${this.platform}] ${propertyType.label} page ${page}: ${edges.length} listings fetched` +
+						` (total so far: ${all.length})`,
+				);
+				options.onProgress?.({
+					type: "page",
+					platform: this.platform,
+					page: totalFetchedPages,
+					fetched: edges.length,
+					total: all.length,
+				});
+
+				hasNext = pageInfo.hasNextPage;
+				cursor = pageInfo.endCursor;
+
+				if (hasNext && page < finalMaxPages) {
+					// Occasionally pause longer (simulates reading a page)
+					const longPause = Math.random() < 0.15;
+					const jitter = Math.random() * 600;
+					await this.delay(longPause ? delayMs * 3 + jitter : delayMs + jitter);
+				}
 			}
 		}
 
@@ -255,14 +284,17 @@ export class BinaScraper extends BaseScraper {
 	 * Advances the cursor by one page without fetching edge data.
 	 * Used to skip pages cheaply when startPage > 1.
 	 */
-	private async fetchCursor(after: string | null): Promise<PageInfo> {
+	private async fetchCursor(
+		after: string | null,
+		propertyType: BinaPropertyType,
+	): Promise<PageInfo> {
 		const query = /* graphql */ `
       query FetchCursor($after: String) {
         itemsConnection(
           filter: {
-            categoryId: "${DEFAULT_FILTER.categoryId}"
-            cityId: "${DEFAULT_FILTER.cityId}"
-            leased: ${DEFAULT_FILTER.leased}
+            categoryId: "${propertyType.categoryId}"
+            cityId: "${CITY_ID_BAKU}"
+            leased: ${LEASED_FOR_SALE}
           }
           after: $after
         ) {
@@ -273,6 +305,7 @@ export class BinaScraper extends BaseScraper {
 		const json = await this.gql<{ itemsConnection: { pageInfo: PageInfo } }>(
 			query,
 			{ after },
+			propertyType.referer,
 		);
 		return json.itemsConnection.pageInfo;
 	}
@@ -283,14 +316,15 @@ export class BinaScraper extends BaseScraper {
 	 */
 	private async fetchPage(
 		after: string | null,
+		propertyType: BinaPropertyType,
 	): Promise<{ edges: Array<{ node: ESItemNode }>; pageInfo: PageInfo }> {
 		const query = /* graphql */ `
       query FetchPage($after: String) {
         itemsConnection(
           filter: {
-            categoryId: "${DEFAULT_FILTER.categoryId}"
-            cityId: "${DEFAULT_FILTER.cityId}"
-            leased: ${DEFAULT_FILTER.leased}
+            categoryId: "${propertyType.categoryId}"
+            cityId: "${CITY_ID_BAKU}"
+            leased: ${LEASED_FOR_SALE}
           }
           after: $after
         ) {
@@ -311,9 +345,13 @@ export class BinaScraper extends BaseScraper {
           }
         }
       }
-    `;
+	    `;
 
-		const json = await this.gql<ItemsConnectionData>(query, { after });
+		const json = await this.gql<ItemsConnectionData>(
+			query,
+			{ after },
+			propertyType.referer,
+		);
 		return json.itemsConnection;
 	}
 
@@ -328,6 +366,7 @@ export class BinaScraper extends BaseScraper {
 	 */
 	private async batchFetchDetails(
 		ids: string[],
+		referer?: string,
 	): Promise<Record<string, ItemDetail>> {
 		const fields = ids
 			.map(
@@ -338,7 +377,7 @@ export class BinaScraper extends BaseScraper {
 
 		const query = `{ ${fields} }`;
 
-		const raw = await this.gqlRaw<Record<string, ItemDetail>>(query);
+		const raw = await this.gqlRaw<Record<string, ItemDetail>>(query, referer);
 
 		// Collect whatever came back; ignore errors for individual items
 		const result: Record<string, ItemDetail> = {};
@@ -364,14 +403,17 @@ export class BinaScraper extends BaseScraper {
 		return result;
 	}
 
-	private async fetchGraphQL(body: string): Promise<Response> {
+	private async fetchGraphQL(
+		body: string,
+		referer?: string,
+	): Promise<Response> {
 		let lastError: unknown;
 
 		for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
 			try {
 				const resp = await fetch(GRAPHQL_URL, {
 					method: "POST",
-					headers: randomHeaders(),
+					headers: randomHeaders(referer),
 					body,
 					signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
 				});
@@ -402,8 +444,12 @@ export class BinaScraper extends BaseScraper {
 	private async gql<T>(
 		query: string,
 		variables?: Record<string, unknown>,
+		referer?: string,
 	): Promise<T> {
-		const resp = await this.fetchGraphQL(JSON.stringify({ query, variables }));
+		const resp = await this.fetchGraphQL(
+			JSON.stringify({ query, variables }),
+			referer,
+		);
 
 		if (!resp.ok) {
 			throw new Error(
@@ -428,8 +474,9 @@ export class BinaScraper extends BaseScraper {
 	 */
 	private async gqlRaw<T extends Record<string, unknown>>(
 		query: string,
+		referer?: string,
 	): Promise<T> {
-		const resp = await this.fetchGraphQL(JSON.stringify({ query }));
+		const resp = await this.fetchGraphQL(JSON.stringify({ query }), referer);
 
 		if (!resp.ok) {
 			throw new Error(

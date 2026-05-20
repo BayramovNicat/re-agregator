@@ -6,7 +6,7 @@ export function startCron(): void {
 		console.log("[Cron] Hourly scrape started", new Date().toISOString());
 		try {
 			const run = await scrapeRunsService.run("cron", {
-				maxPages: 20,
+				maxPages: 10,
 				delayMs: 800,
 			});
 			if (run.status === "success") {
