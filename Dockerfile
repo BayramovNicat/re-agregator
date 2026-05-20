@@ -24,7 +24,7 @@ ENV NODE_ENV=production
 COPY --from=prisma --chown=1001:1001 /app/node_modules ./node_modules
 COPY --from=prisma --chown=1001:1001 /app/prisma ./prisma
 COPY --chown=1001:1001 src ./src
-COPY --chown=1001:1001 scripts/update-active-mortgages.ts ./scripts/update-active-mortgages.ts
+COPY --chown=1001:1001 scripts ./scripts
 COPY --from=build --chown=1001:1001 /app/public ./public
 COPY --chown=1001:1001 package.json tsconfig.json ./
 
