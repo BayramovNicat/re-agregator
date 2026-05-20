@@ -68,7 +68,7 @@ const translations = {
 		yes: "Yes",
 
 		// Description search
-		descriptionSearch: "Description keyword",
+		descriptionSearch: "Keyword",
 		descriptionSearchPlaceholder: "e.g. corner, sea view...",
 		chipDescSearch: "Description",
 

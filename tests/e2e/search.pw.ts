@@ -134,7 +134,7 @@ test("advanced filters cover category, mortgage, description, and booleans", asy
 	await page.getByRole("button", { name: /advanced filters/i }).click();
 	await page.getByLabel("Category").selectOption("new");
 	await page.getByLabel("Active mortgage").selectOption("true");
-	await page.getByLabel("Description keyword").fill("corner");
+	await page.getByLabel("Keyword").fill("corner");
 	await page.getByText("Has document").click();
 	await page.getByText("Urgent only").click();
 
@@ -153,7 +153,7 @@ test("advanced filters cover category, mortgage, description, and booleans", asy
 	await expect(page.getByText("Active mortgage: Yes")).toBeVisible();
 
 	await page.getByRole("button", { name: /clear filters/i }).click();
-	await expect(page.getByLabel("Description keyword")).toHaveValue("");
+	await expect(page.getByLabel("Keyword")).toHaveValue("");
 	await expect
 		.poll(() => searchUrls.at(-1) ?? "")
 		.not.toContain("category=new");
