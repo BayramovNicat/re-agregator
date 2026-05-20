@@ -10,7 +10,11 @@ import { refreshFilterChips } from "./chips";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import { renderSearchFilters } from "./filters";
 import type { SearchUI } from "./types";
-import { restoreStateFromUrl, saveFiltersToStorage, syncStateToUrl } from "./url";
+import {
+	restoreStateFromUrl,
+	saveFiltersToStorage,
+	syncStateToUrl,
+} from "./url";
 
 export function initSearch(container: HTMLElement): () => void {
 	const globalElements = {

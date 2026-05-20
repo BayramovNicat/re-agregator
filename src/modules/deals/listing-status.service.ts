@@ -115,11 +115,16 @@ export async function checkAndDeleteEndedListings(
 			const batch = chunks[index++];
 			if (!batch) continue;
 			try {
-				const statuses = await fetchBinaGraphQLStatuses(batch.map(([id]) => id));
+				const statuses = await fetchBinaGraphQLStatuses(
+					batch.map(([id]) => id),
+				);
 				checked += batch.length;
 				for (const [id, url] of batch) {
 					const item = statuses[`i${id}`] ?? null;
-					if (!item || (item.expiresAt && Date.parse(item.expiresAt) <= Date.now())) {
+					if (
+						!item ||
+						(item.expiresAt && Date.parse(item.expiresAt) <= Date.now())
+					) {
 						ended++;
 						endedUrls.add(url);
 					}

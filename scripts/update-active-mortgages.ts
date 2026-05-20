@@ -1,5 +1,5 @@
-import { prisma } from "../src/utils/prisma";
 import { detectActiveMortgage } from "../src/scrapers/base.scraper";
+import { prisma } from "../src/utils/prisma";
 
 const BATCH_SIZE = 500;
 

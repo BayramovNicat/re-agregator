@@ -84,8 +84,8 @@ export abstract class BaseScraper implements IScraper {
 	/**
 	 * Detects listings where the property already carries an active mortgage or debt.
 	 * Matches Azerbaijani phrases used by sellers to indicate the property is
-		 * encumbered: "hazır/hazir ipoteka" (existing mortgage), "borc" (debt),
-		 * "dövlət ipotekası" (state mortgage), etc.
+	 * encumbered: "hazır/hazir ipoteka" (existing mortgage), "borc" (debt),
+	 * "dövlət ipotekası" (state mortgage), etc.
 	 *
 	 * Tolerates ASCII fallbacks for Azerbaijani characters
 	 * (ı→i, ə→e, ğ→g, ş→s, ö→o, ü→u) that users commonly type on non-AZ keyboards.

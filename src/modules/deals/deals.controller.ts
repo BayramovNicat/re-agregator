@@ -123,7 +123,10 @@ export async function getDealsByJsonItems(req: Request): Promise<Response> {
 		.slice(0, 200);
 
 	if (safeItems.length === 0) {
-		return ResponseHelper.error('Each item must include a numeric "item_id"', 400);
+		return ResponseHelper.error(
+			'Each item must include a numeric "item_id"',
+			400,
+		);
 	}
 
 	const itemIds = Array.from(new Set(safeItems.map((item) => item.item_id)));
@@ -183,7 +186,9 @@ export async function checkEndedListing(req: Request): Promise<Response> {
 	}
 }
 
-export async function validateUndervaluedDeals(req: Request): Promise<Response> {
+export async function validateUndervaluedDeals(
+	req: Request,
+): Promise<Response> {
 	const q = new URL(req.url).searchParams;
 
 	const loc = parseLocationParams(q);

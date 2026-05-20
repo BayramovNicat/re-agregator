@@ -15,8 +15,7 @@ import {
 // Lazy triggered via bus.emit(EVENTS.GALLERY_OPEN)
 // Map View is lazy loaded in setView()
 // Lazy triggered via bus.emit(EVENTS.PROPERTY_OPEN)
-import { RawButton } from "@/ui/button";
-import { Button } from "@/ui/button";
+import { Button, RawButton } from "@/ui/button";
 import { Dialog } from "@/ui/dialog";
 import { EmptyState } from "@/ui/empty-state";
 import { Icons } from "@/ui/icons";
@@ -299,7 +298,9 @@ export function initProducts(container: HTMLElement): () => void {
 
 		state.loading = true;
 		button.disabled = true;
-		button.replaceChildren(frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("validating")}`);
+		button.replaceChildren(
+			frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("validating")}`,
+		);
 
 		try {
 			const filters = state.getFilters();
@@ -316,8 +317,11 @@ export function initProducts(container: HTMLElement): () => void {
 			});
 
 			const descriptionQuery =
-				(document.getElementById("descriptionSearch") as HTMLInputElement | null)
-					?.value.trim() || "";
+				(
+					document.getElementById(
+						"descriptionSearch",
+					) as HTMLInputElement | null
+				)?.value.trim() || "";
 			if (descriptionQuery) {
 				searchParams.set("descriptionSearch", descriptionQuery);
 			}
@@ -325,9 +329,12 @@ export function initProducts(container: HTMLElement): () => void {
 				searchParams.set("tier", state.refs.tierFilter.value);
 			}
 
-			const response = await fetch(`/api/deals/undervalued/validate?${searchParams}`, {
-				method: "POST",
-			});
+			const response = await fetch(
+				`/api/deals/undervalued/validate?${searchParams}`,
+				{
+					method: "POST",
+				},
+			);
 			const result = (await response.json()) as {
 				error?: string;
 				data: Property[];
@@ -401,7 +408,8 @@ export function initProducts(container: HTMLElement): () => void {
 			</div>`,
 		});
 
-		submit.onclick = () => void fetchJsonReview(textarea, form, results, submit);
+		submit.onclick = () =>
+			void fetchJsonReview(textarea, form, results, submit);
 		dialog.addEventListener("close", () => dialog.remove(), { once: true });
 		document.body.appendChild(dialog);
 		dialog.showModal();
@@ -425,7 +433,9 @@ export function initProducts(container: HTMLElement): () => void {
 		}
 
 		submit.disabled = true;
-		submit.replaceChildren(frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("jsonReviewLoading")}`);
+		submit.replaceChildren(
+			frag`${Icons.spinner({ size: 12, className: "animate-spin" })} ${t("jsonReviewLoading")}`,
+		);
 		results.replaceChildren();
 
 		try {
@@ -450,7 +460,9 @@ export function initProducts(container: HTMLElement): () => void {
 		} finally {
 			if (form.isConnected) {
 				submit.disabled = false;
-				submit.replaceChildren(frag`${Icons.search(12)} ${t("jsonReviewFetch")}`);
+				submit.replaceChildren(
+					frag`${Icons.search(12)} ${t("jsonReviewFetch")}`,
+				);
 			}
 		}
 	}
@@ -473,7 +485,9 @@ export function initProducts(container: HTMLElement): () => void {
 				view: "grid",
 				callbacks: cardCallbacks,
 			});
-			wrap.appendChild(html`<div class="flex flex-col gap-2">${why}${card}</div>`);
+			wrap.appendChild(
+				html`<div class="flex flex-col gap-2">${why}${card}</div>`,
+			);
 		}
 
 		container.replaceChildren(wrap);
@@ -716,7 +730,8 @@ export function initProducts(container: HTMLElement): () => void {
 				const remainingCards = Array.from(
 					ui.cardsContainer.firstElementChild?.children || [],
 				).filter((c) => c.classList.contains("product-card")) as HTMLElement[];
-				const targetCard = remainingCards[Math.min(removedIndex, remainingCards.length - 1)];
+				const targetCard =
+					remainingCards[Math.min(removedIndex, remainingCards.length - 1)];
 				targetCard?.focus({ preventScroll: true });
 			});
 		};
