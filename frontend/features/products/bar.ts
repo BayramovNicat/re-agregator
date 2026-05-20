@@ -67,6 +67,7 @@ export function renderProductsBar(
 		color: "indigo",
 		active: state.currentView === "list",
 		title: t("listView"),
+		className: "hidden md:inline-flex",
 		content: Icons.list(13),
 		onclick: () => onViewChange("list"),
 	}) as HTMLButtonElement;
