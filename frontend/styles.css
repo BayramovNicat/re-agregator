@@ -104,19 +104,55 @@ input[type="number"] {
 	background: #0d0d14;
 	font-family: ui-sans-serif, system-ui, sans-serif;
 }
-.leaflet-control-zoom a {
+.leaflet-container .leaflet-bar {
+	border: 1px solid var(--border);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+	border-radius: var(--r-sm);
+	overflow: hidden;
+	background: var(--surface);
+}
+.leaflet-container.leaflet-touch .leaflet-bar {
+	border: 1px solid var(--border);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.leaflet-container .leaflet-control-zoom a {
 	background: var(--surface);
 	color: var(--text-2);
-	border-color: var(--border);
+	border: none;
+	border-bottom: 1px solid var(--border);
+	transition: background 0.15s ease, color 0.15s ease;
 }
-.leaflet-control-zoom a:hover {
+.leaflet-container .leaflet-control-zoom a:last-child {
+	border-bottom: none;
+}
+.leaflet-container .leaflet-control-zoom a:hover,
+.leaflet-container .leaflet-control-zoom a:focus {
 	background: var(--surface-2);
 	color: var(--text);
+}
+.leaflet-container .leaflet-control-zoom a.leaflet-disabled {
+	background: var(--surface);
+	color: var(--border-h);
+	opacity: 0.5;
+	cursor: default;
 }
 .leaflet-zoom-box {
 	background: rgba(129, 140, 248, 0.18);
 	border: 1px solid rgba(165, 180, 252, 0.65);
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.leaflet-container .leaflet-tooltip {
+	background: var(--surface-3);
+	border: 1px solid var(--border-h);
+	border-radius: var(--r-sm);
+	color: var(--text);
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-size: 13px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+	padding: 6px 10px;
+}
+.leaflet-container .leaflet-tooltip::before {
+	display: none;
 }
 
 @keyframes mpulse {
