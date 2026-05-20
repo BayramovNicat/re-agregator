@@ -8,6 +8,7 @@ const categoryLabels: Record<string, string> = {
 	new: t("newBuild"),
 	old: t("secondary"),
 	house: t("house"),
+	rent: t("rent"),
 };
 
 /**

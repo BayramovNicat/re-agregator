@@ -61,6 +61,7 @@ const translations = {
 		newBuild: "New build",
 		secondary: "Secondary",
 		house: "House / villa",
+		rent: "Rent",
 		no: "No",
 		yes: "Yes",
 
@@ -328,6 +329,7 @@ const translations = {
 		newBuild: "Yeni tikili",
 		secondary: "Köhnə tikili",
 		house: "Həyət evi/Bağ evi",
+		rent: "Kirayə",
 		no: "Xeyr",
 		yes: "Bəli",
 
@@ -583,6 +585,7 @@ const translations = {
 		newBuild: "Новостройка",
 		secondary: "Вторичный рынок",
 		house: "Дом / дача",
+		rent: "Аренда",
 		no: "Нет",
 		yes: "Да",
 

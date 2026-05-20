@@ -91,6 +91,7 @@ export function renderSearchFilters(
 			{ value: "new", label: t("newBuild") },
 			{ value: "old", label: t("secondary") },
 			{ value: "house", label: t("house") },
+			{ value: "rent", label: t("rent") },
 		],
 		onchange: onFilterChange,
 	});

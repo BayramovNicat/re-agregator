@@ -600,7 +600,7 @@ function applyFilters(filters: PropertyFilters): Prisma.Sql[] {
 	if (hasActiveMortgage !== undefined)
 		conditions.push(Prisma.sql`p.has_active_mortgage = ${hasActiveMortgage}`);
 	if (category !== undefined)
-		conditions.push(Prisma.sql`p.category = ${category}`);
+		conditions.push(Prisma.sql`p.category::text = ${category}`);
 	if (since !== undefined) conditions.push(Prisma.sql`p.created_at > ${since}`);
 	if (descriptionSearch !== undefined && descriptionSearch.trim() !== "")
 		conditions.push(
