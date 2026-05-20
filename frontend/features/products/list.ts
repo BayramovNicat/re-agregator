@@ -17,7 +17,7 @@ export function renderList(
 	const ct = ui.cardsContainer;
 	const viewClass =
 		state.currentView === "grid"
-			? "grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5 max-[480px]:grid-cols-1"
+			? "grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5 max-[480px]:grid-cols-2 max-[480px]:gap-2"
 			: "flex flex-col gap-2";
 
 	const wrap = ct.firstElementChild as HTMLElement;

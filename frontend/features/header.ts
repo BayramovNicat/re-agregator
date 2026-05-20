@@ -139,18 +139,18 @@ export function initHeader(container: HTMLElement): () => void {
 			>
 				${Icons.home(20)}
 			</div>
-			<div class="flex flex-col -space-y-1">
-				<span class="text-[15px] font-extrabold tracking-tight text-(--text)">
-					${t("appName")}
-				</span>
-				<div class="flex items-center gap-1.5">
-					<span
-						class="text-[10px] font-medium text-(--muted) uppercase tracking-wider"
-					>
-						Real Estate Aggregator
+			<div class="flex flex-col">
+				<div class="flex items-center gap-2">
+					<span class="text-[15px] font-extrabold tracking-tight text-(--text)">
+						${t("appName")}
 					</span>
 					${HealthStatus()}
 				</div>
+				<span
+					class="text-[10px] font-medium text-(--muted) uppercase tracking-wider max-[480px]:hidden mt-0.5"
+				>
+					Real Estate Aggregator
+				</span>
 			</div>
 		</div>
 	`;
