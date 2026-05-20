@@ -91,6 +91,15 @@ export function renderSearchFilters(
 			{ value: "new", label: t("newBuild") },
 			{ value: "old", label: t("secondary") },
 			{ value: "house", label: t("house") },
+		],
+		onchange: onFilterChange,
+	});
+
+	ui.listingTypeSelect = Select({
+		id: "listingType",
+		className: "w-full",
+		options: [
+			{ value: "sale", label: t("sale") },
 			{ value: "rent", label: t("rent") },
 		],
 		onchange: onFilterChange,
@@ -162,6 +171,11 @@ export function renderSearchFilters(
 						htmlFor: config.id,
 						input: ui.numericInputs[config.id],
 					});
+				})}
+				${Field({
+					label: t("listingType"),
+					htmlFor: "listingType",
+					input: ui.listingTypeSelect,
 				})}
 				${Field({
 					label: t("category"),

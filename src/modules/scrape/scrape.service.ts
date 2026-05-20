@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, type PropertyCategory } from "@prisma/client";
 import type {
 	IScraper,
 	ScrapedListing,
@@ -18,7 +18,8 @@ type PreparedRow = {
 	rooms: number | null;
 	floor: number | null;
 	total_floors: number | null;
-	category: string | null;
+	category: PropertyCategory | null;
+	listing_type: "sale" | "rent";
 	has_document: boolean | null;
 	has_mortgage: boolean | null;
 	has_repair: boolean | null;
@@ -123,7 +124,8 @@ export class ScrapingService {
 			rooms: l.rooms ?? null,
 			floor: l.floor ?? null,
 			total_floors: l.total_floors ?? null,
-			category: l.category ?? null,
+			category: (l.category as PropertyCategory | undefined) ?? null,
+			listing_type: l.listing_type ?? "sale",
 			has_document: l.has_document ?? null,
 			has_mortgage: l.has_mortgage ?? null,
 			has_repair: l.has_repair ?? null,
@@ -134,7 +136,7 @@ export class ScrapingService {
 			posted_date: l.posted_date ?? null,
 		}));
 
-		// 23 params per row → max safe chunk well below PG's 65 535-param limit.
+		// 24 params per row → max safe chunk well below PG's 65 535-param limit.
 		const CHUNK_SIZE = 500;
 
 		for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
@@ -146,7 +148,7 @@ export class ScrapingService {
 					(r) => Prisma.sql`(
             ${r.source_url}, ${r.price}, ${r.area_sqm}, ${r.price_per_sqm},
             ${r.district}, ${r.location_name}, ${r.latitude}, ${r.longitude},
-            ${r.rooms}, ${r.floor}, ${r.total_floors}, ${r.category},
+            ${r.rooms}, ${r.floor}, ${r.total_floors}, ${r.category}, ${r.listing_type},
             ${r.has_document}, ${r.has_mortgage}, ${r.has_repair},
             ${r.description}, ${r.image_urls}, ${r.is_urgent}, ${r.has_active_mortgage}, ${r.posted_date},
             ${0},
@@ -166,7 +168,7 @@ export class ScrapingService {
 							INSERT INTO "Property" (
 								source_url, price, area_sqm, price_per_sqm,
 								district, location_name, latitude, longitude,
-								rooms, floor, total_floors, category,
+								rooms, floor, total_floors, category, listing_type,
 								has_document, has_mortgage, has_repair,
 								description, image_urls, is_urgent, has_active_mortgage, posted_date,
 								price_drop_count,
@@ -185,6 +187,7 @@ export class ScrapingService {
 								floor               = EXCLUDED.floor,
 								total_floors        = EXCLUDED.total_floors,
 								category            = EXCLUDED.category,
+								listing_type        = EXCLUDED.listing_type,
 								has_document        = EXCLUDED.has_document,
 								has_mortgage        = EXCLUDED.has_mortgage,
 								has_repair          = EXCLUDED.has_repair,
@@ -264,6 +267,7 @@ export class ScrapingService {
 					floor: r.floor,
 					total_floors: r.total_floors,
 					category: r.category,
+					listing_type: r.listing_type,
 					has_document: r.has_document,
 					has_mortgage: r.has_mortgage,
 					has_repair: r.has_repair,
@@ -287,6 +291,7 @@ export class ScrapingService {
 					floor: r.floor,
 					total_floors: r.total_floors,
 					category: r.category,
+					listing_type: r.listing_type,
 					has_document: r.has_document,
 					has_mortgage: r.has_mortgage,
 					has_repair: r.has_repair,

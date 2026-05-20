@@ -79,6 +79,7 @@ export interface AlertFilters {
 	minTotalFloors?: number;
 	maxTotalFloors?: number;
 	category?: string;
+	listingType?: "sale" | "rent";
 	hasRepair?: boolean;
 	hasDocument?: boolean;
 	hasMortgage?: boolean;

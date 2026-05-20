@@ -56,8 +56,10 @@ const translations = {
 
 		// Selects
 		category: "Category",
+		listingType: "Listing type",
 		activeMortgage: "Active mortgage",
 		any: "Any",
+		sale: "Sale",
 		newBuild: "New build",
 		secondary: "Secondary",
 		house: "House / villa",
@@ -324,8 +326,10 @@ const translations = {
 		notLastFloor: "Son mərtəbə deyil",
 
 		category: "Kateqoriya",
+		listingType: "Elan tipi",
 		activeMortgage: "Aktiv ipoteka",
 		any: "Hər hansı",
+		sale: "Satış",
 		newBuild: "Yeni tikili",
 		secondary: "Köhnə tikili",
 		house: "Həyət evi/Bağ evi",
@@ -580,8 +584,10 @@ const translations = {
 		notLastFloor: "Не последний этаж",
 
 		category: "Категория",
+		listingType: "Тип объявления",
 		activeMortgage: "Активная ипотека",
 		any: "Любой",
+		sale: "Продажа",
 		newBuild: "Новостройка",
 		secondary: "Вторичный рынок",
 		house: "Дом / дача",

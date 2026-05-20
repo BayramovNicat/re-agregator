@@ -42,8 +42,19 @@ function effectiveCategory(filters: PropertyFilters = {}): string {
 	return filters.category ?? "new";
 }
 
+function effectiveListingType(filters: PropertyFilters = {}): "sale" | "rent" {
+	return filters.listingType ?? "sale";
+}
+
 function categoryCondition(category: string, alias = "p"): Prisma.Sql {
 	return Prisma.sql`${Prisma.raw(alias)}.category::text = ${category}`;
+}
+
+function listingTypeCondition(
+	listingType: "sale" | "rent",
+	alias = "p",
+): Prisma.Sql {
+	return Prisma.sql`${Prisma.raw(alias)}.listing_type::text = ${listingType}`;
 }
 
 function getUndervaluedOrderBy(sort: DealSort = "disc"): Prisma.Sql {
@@ -73,6 +84,7 @@ export async function getPriceTrend(location: string): Promise<TrendPoint[]> {
 			COUNT(*)                                              AS listing_count
 		FROM "Property"
 		WHERE location_name = ${location}
+			AND listing_type::text = 'sale'
 			AND category::text = 'new'
 			AND price_per_sqm > 0
 			AND (floor IS NULL OR floor <> 1)
@@ -117,14 +129,16 @@ export async function getLocations(): Promise<string[]> {
 async function getLocationAverages(
 	locations: string[] | "__all__",
 	category = "new",
+	listingType: "sale" | "rent" = "sale",
 ): Promise<Map<string, number>> {
 	const now = Date.now();
 	const isAll = locations === "__all__";
 	const locList = isAll ? [] : (locations as string[]);
-	const cacheKey = (location: string) => `${category}:${location}`;
+	const cacheKey = (location: string) =>
+		`${listingType}:${category}:${location}`;
 	const promiseKey = isAll
-		? `${category}:__all__`
-		: `${category}:${locList.join("|")}`;
+		? `${listingType}:${category}:__all__`
+		: `${listingType}:${category}:${locList.join("|")}`;
 
 	if (!isAll) {
 		const cached = new Map<string, number>();
@@ -154,6 +168,7 @@ async function getLocationAverages(
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE ${avgLocCondition}
+				AND listing_type::text = ${listingType}
 				AND category::text = ${category}
 				${locAvgBaseConditions()}
 			GROUP BY location_name
@@ -207,6 +222,7 @@ export async function getHeatmapData(): Promise<HeatmapPoint[]> {
 							THEN price_per_sqm END))::int                                        AS prior_avg
 		FROM "Property"
 		WHERE location_name IS NOT NULL
+			AND listing_type::text = 'sale'
 			AND category::text = 'new'
 			AND price_per_sqm > 0
 			AND (floor IS NULL OR floor <> 1)
@@ -253,6 +269,7 @@ export async function getPropertiesByUrls(
 			SELECT location_name, AVG(price_per_sqm) AS avg_ppsm
 			FROM "Property"
 			WHERE location_name IN (SELECT location_name FROM needed)
+				AND listing_type::text = 'sale'
 				AND category::text = 'new'
 				${locAvgBaseConditions()}
 			GROUP BY location_name
@@ -283,9 +300,10 @@ export async function getMapPins(options: {
 }): Promise<MapPin[]> {
 	const { locations, thresholdPercent, filters } = options;
 	const category = effectiveCategory(filters);
+	const listingType = effectiveListingType(filters);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations, category);
+	const avgsMap = await getLocationAverages(locations, category, listingType);
 	if (avgsMap.size === 0) return [];
 
 	const isAll = locations === "__all__";
@@ -302,6 +320,7 @@ export async function getMapPins(options: {
 		Prisma.sql`p.latitude IS NOT NULL`,
 		Prisma.sql`p.longitude IS NOT NULL`,
 		Prisma.sql`p.price_per_sqm > 0`,
+		listingTypeCondition(listingType),
 		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
@@ -358,10 +377,11 @@ export async function getUndervalued(
 ): Promise<{ total: number; data: (PropertyRow & { tier: DealTier })[] }> {
 	const { limit = 200, offset = 0, sort = "disc" } = pagination;
 	const category = effectiveCategory(filters);
+	const listingType = effectiveListingType(filters);
 	const orderBy = getUndervaluedOrderBy(sort);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations, category);
+	const avgsMap = await getLocationAverages(locations, category, listingType);
 	if (avgsMap.size === 0) return { total: 0, data: [] };
 
 	const isAll = locations === "__all__";
@@ -376,6 +396,7 @@ export async function getUndervalued(
 	const conditions = [
 		pLocCondition,
 		Prisma.sql`p.price_per_sqm > 0`,
+		listingTypeCondition(listingType),
 		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
@@ -426,10 +447,11 @@ export async function getUndervaluedUrlTiers(
 	filters: PropertyFilters = {},
 	limit = 1000,
 ): Promise<{ source_url: string; tier: DealTier }[]> {
+	const listingType = effectiveListingType(filters);
 	const category = effectiveCategory(filters);
 	const factor = (100 - thresholdPercent) / 100.0;
 
-	const avgsMap = await getLocationAverages(locations, category);
+	const avgsMap = await getLocationAverages(locations, category, listingType);
 	if (avgsMap.size === 0) return [];
 
 	const isAll = locations === "__all__";
@@ -444,6 +466,7 @@ export async function getUndervaluedUrlTiers(
 	const conditions = [
 		pLocCondition,
 		Prisma.sql`p.price_per_sqm > 0`,
+		listingTypeCondition(listingType),
 		categoryCondition(category),
 		...(thresholdPercent > 0
 			? [Prisma.sql`p.price_per_sqm <= loc_avg.avg_ppsm * ${factor}`]
@@ -484,11 +507,12 @@ export async function getPriceDropDeals(
 }> {
 	const { minDropCount = 1, limit = 200, offset = 0 } = options;
 	const category = "new";
+	const listingType = "sale";
 
 	const isAll = location === "__all__";
 	const locationList = isAll ? [] : (location as string[]);
 
-	const avgsMap = await getLocationAverages(location, category);
+	const avgsMap = await getLocationAverages(location, category, listingType);
 	if (avgsMap.size === 0) return { total: 0, data: [] };
 
 	const locCondition = isAll
@@ -512,6 +536,7 @@ export async function getPriceDropDeals(
 			GROUP BY property_id
 		) h ON h.property_id = p.id
 		WHERE ${locCondition}
+			AND ${listingTypeCondition(listingType)}
 			AND ${categoryCondition(category)}
 			AND p.price_drop_count >= ${minDropCount}
 	`;
@@ -583,6 +608,7 @@ function applyFilters(filters: PropertyFilters): Prisma.Sql[] {
 		notLastFloor,
 		hasActiveMortgage,
 		category,
+		listingType,
 		since,
 		descriptionSearch,
 	} = filters;
@@ -627,6 +653,8 @@ function applyFilters(filters: PropertyFilters): Prisma.Sql[] {
 		conditions.push(Prisma.sql`p.has_active_mortgage = ${hasActiveMortgage}`);
 	if (category !== undefined)
 		conditions.push(Prisma.sql`p.category::text = ${category}`);
+	if (listingType !== undefined)
+		conditions.push(Prisma.sql`p.listing_type::text = ${listingType}`);
 	if (since !== undefined) conditions.push(Prisma.sql`p.created_at > ${since}`);
 	if (descriptionSearch !== undefined && descriptionSearch.trim() !== "")
 		conditions.push(

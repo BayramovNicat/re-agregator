@@ -16,6 +16,7 @@ export interface ScrapedListing {
 	floor?: number;
 	total_floors?: number;
 	category?: string;
+	listing_type?: "sale" | "rent";
 	has_document?: boolean;
 	has_mortgage?: boolean;
 	has_repair?: boolean;

@@ -28,18 +28,34 @@ const RETRY_BASE_DELAY_MS = 500;
 
 /** Filter params for "properties for sale in Baku". */
 const CITY_ID_BAKU = "1";
-const LEASED_FOR_SALE = false;
-
 const BINA_PROPERTY_TYPES = [
 	{
 		categoryId: "1",
 		label: "apartments",
 		referer: "https://bina.az/baki/alqi-satqi/menziller",
+		leased: false,
+		listingType: "sale",
 	},
 	{
 		categoryId: "5",
 		label: "houses/villas",
 		referer: "https://bina.az/baki/alqi-satqi/heyet-evleri",
+		leased: false,
+		listingType: "sale",
+	},
+	{
+		categoryId: "1",
+		label: "rental apartments",
+		referer: "https://bina.az/kiraye",
+		leased: true,
+		listingType: "rent",
+	},
+	{
+		categoryId: "5",
+		label: "rental houses/villas",
+		referer: "https://bina.az/kiraye",
+		leased: true,
+		listingType: "rent",
 	},
 ] as const;
 
@@ -238,6 +254,7 @@ export class BinaScraper extends BaseScraper {
 						floor: node.floor ?? undefined,
 						total_floors: node.floors ?? undefined,
 						category: normalizePropertyCategory(detail?.category?.name),
+						listing_type: propertyType.listingType,
 						has_document: node.hasBillOfSale ?? undefined,
 						has_mortgage: node.hasMortgage ?? undefined,
 						has_repair: node.hasRepair ?? undefined,
@@ -293,9 +310,9 @@ export class BinaScraper extends BaseScraper {
       query FetchCursor($after: String) {
         itemsConnection(
           filter: {
-            categoryId: "${propertyType.categoryId}"
             cityId: "${CITY_ID_BAKU}"
-            leased: ${LEASED_FOR_SALE}
+            leased: ${propertyType.leased}
+            ${propertyType.categoryId ? `categoryId: "${propertyType.categoryId}"` : ""}
           }
           after: $after
         ) {
@@ -323,9 +340,9 @@ export class BinaScraper extends BaseScraper {
       query FetchPage($after: String) {
         itemsConnection(
           filter: {
-            categoryId: "${propertyType.categoryId}"
             cityId: "${CITY_ID_BAKU}"
-            leased: ${LEASED_FOR_SALE}
+            leased: ${propertyType.leased}
+            ${propertyType.categoryId ? `categoryId: "${propertyType.categoryId}"` : ""}
           }
           after: $after
         ) {

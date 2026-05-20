@@ -23,6 +23,10 @@ enum PropertyCategory {
   new
   old
   house
+}
+
+enum ListingType {
+  sale
   rent
 }
 
@@ -40,6 +44,7 @@ model Property {
   floor               Int?
   total_floors        Int?
   category            PropertyCategory?
+  listing_type        ListingType        @default(sale)
   has_document        Boolean?
   has_mortgage        Boolean?
   has_repair          Boolean?
@@ -59,6 +64,7 @@ model Property {
   @@index([is_urgent])
   @@index([has_active_mortgage])
   @@index([price_drop_count])
+  @@index([listing_type])
   @@index([price_per_sqm])
   @@index([location_name, price_per_sqm])
   @@index([location_name, is_urgent, posted_date])

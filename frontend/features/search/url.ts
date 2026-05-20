@@ -11,6 +11,7 @@ type PersistedFilters = {
 	numeric?: Record<string, string>;
 	boolean?: Record<string, boolean>;
 	category?: string;
+	listingType?: string;
 	hasActiveMortgage?: string;
 	descriptionSearch?: string;
 	tier?: string;
@@ -32,6 +33,7 @@ function hasFilterParams(params: URLSearchParams): boolean {
 		params.has("location") ||
 		params.has("threshold") ||
 		params.has("category") ||
+		params.has("listingType") ||
 		params.has("hasActiveMortgage") ||
 		params.has("descriptionSearch") ||
 		params.has("tier")
@@ -75,6 +77,7 @@ function restoreFromStorage(ui: SearchUI): void {
 	}
 
 	ui.categorySelect.value = saved.category ?? "";
+	ui.listingTypeSelect.value = saved.listingType ?? "sale";
 	ui.mortgageSelect.value = saved.hasActiveMortgage ?? "";
 	ui.descriptionInput.value = saved.descriptionSearch ?? "";
 	ui.tierSelect.value = saved.tier ?? "";
@@ -99,6 +102,7 @@ export function saveFiltersToStorage(ui: SearchUI): void {
 			numeric,
 			boolean,
 			category: ui.categorySelect.value,
+			listingType: ui.listingTypeSelect.value,
 			hasActiveMortgage: ui.mortgageSelect.value,
 			descriptionSearch: ui.descriptionInput.value.trim(),
 			tier: ui.tierSelect.value,
@@ -156,6 +160,9 @@ export function restoreStateFromUrl(ui: SearchUI): void {
 
 	const category = urlParams.get("category");
 	if (category) ui.categorySelect.value = category;
+
+	const listingType = urlParams.get("listingType");
+	if (listingType) ui.listingTypeSelect.value = listingType;
 
 	const mortgage = urlParams.get("hasActiveMortgage");
 	if (mortgage) ui.mortgageSelect.value = mortgage;

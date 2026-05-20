@@ -10,6 +10,7 @@ export interface SearchUI {
 	activeChipsContainer: HTMLElement;
 	clearAllBtn: HTMLButtonElement;
 	categorySelect: HTMLSelectElement;
+	listingTypeSelect: HTMLSelectElement;
 	mortgageSelect: HTMLSelectElement;
 	descriptionInput: HTMLInputElement;
 	tierSelect: HTMLSelectElement;

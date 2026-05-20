@@ -1,4 +1,4 @@
-export const PROPERTY_CATEGORIES = ["new", "old", "house", "rent"] as const;
+export const PROPERTY_CATEGORIES = ["new", "old", "house"] as const;
 
 export type PropertyCategory = (typeof PROPERTY_CATEGORIES)[number];
 

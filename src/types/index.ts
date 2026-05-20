@@ -20,6 +20,7 @@ export type PropertyFilters = {
 	notLastFloor?: boolean;
 	hasActiveMortgage?: boolean;
 	category?: string;
+	listingType?: "sale" | "rent";
 	since?: Date;
 	descriptionSearch?: string;
 };
@@ -53,6 +54,7 @@ export type PropertyRow = {
 	floor: number | null;
 	total_floors: number | null;
 	category: string | null;
+	listing_type: "sale" | "rent";
 	has_document: boolean | null;
 	has_mortgage: boolean | null;
 	has_repair: boolean | null;

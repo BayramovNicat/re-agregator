@@ -38,6 +38,7 @@ export function initSearch(container: HTMLElement): () => void {
 		activeChipsContainer: null as unknown as HTMLElement,
 		clearAllBtn: null as unknown as HTMLButtonElement,
 		categorySelect: null as unknown as HTMLSelectElement,
+		listingTypeSelect: null as unknown as HTMLSelectElement,
 		mortgageSelect: null as unknown as HTMLSelectElement,
 		descriptionInput: null as unknown as HTMLInputElement,
 		tierSelect: null as unknown as HTMLSelectElement,
@@ -64,6 +65,9 @@ export function initSearch(container: HTMLElement): () => void {
 		}
 
 		if (ui.categorySelect?.value) filters.category = ui.categorySelect.value;
+		if (ui.listingTypeSelect?.value) {
+			filters.listingType = ui.listingTypeSelect.value as "sale" | "rent";
+		}
 		if (ui.mortgageSelect?.value) {
 			filters.hasActiveMortgage = ui.mortgageSelect.value === "true";
 		}

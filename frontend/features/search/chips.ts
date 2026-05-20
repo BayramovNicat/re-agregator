@@ -8,6 +8,10 @@ const categoryLabels: Record<string, string> = {
 	new: t("newBuild"),
 	old: t("secondary"),
 	house: t("house"),
+};
+
+const listingTypeLabels: Record<string, string> = {
+	sale: t("sale"),
 	rent: t("rent"),
 };
 
@@ -61,6 +65,17 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 		activeChips.push(
 			createChip(`${t("chipCategory")}: ${label}`, () => {
 				ui.categorySelect.value = "";
+			}),
+		);
+	}
+
+	if (ui.listingTypeSelect.value && ui.listingTypeSelect.value !== "sale") {
+		const label =
+			listingTypeLabels[ui.listingTypeSelect.value] ??
+			ui.listingTypeSelect.value;
+		activeChips.push(
+			createChip(`${t("listingType")}: ${label}`, () => {
+				ui.listingTypeSelect.value = "sale";
 			}),
 		);
 	}

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../src/utils/prisma";
 
 const DRY_RUN = process.argv.includes("--dry-run");
@@ -12,17 +13,23 @@ try {
 	const results = [];
 
 	for (const [from, to] of mappings) {
-		const count = await prisma.property.count({ where: { category: from } });
+		const countRows = await prisma.$queryRaw<Array<{ count: bigint }>>`
+			SELECT COUNT(*) AS count
+			FROM "Property"
+			WHERE category::text = ${from}
+		`;
+		const count = countRows[0]?.count ?? 0n;
+		const countNumber = Number(count ?? 0n);
 
-		if (!DRY_RUN && count > 0) {
+		if (!DRY_RUN && countNumber > 0) {
 			await prisma.$executeRaw`
 				UPDATE "Property"
-				SET category = ${to}, updated_at = updated_at
-				WHERE category = ${from}
+				SET category = ${Prisma.raw(`'${to}'::"PropertyCategory"`)}, updated_at = updated_at
+				WHERE category::text = ${from}
 			`;
 		}
 
-		results.push({ from, to, count });
+		results.push({ from, to, count: countNumber });
 	}
 
 	const remaining = await prisma.$queryRaw<
