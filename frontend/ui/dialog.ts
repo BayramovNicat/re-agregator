@@ -26,6 +26,8 @@ export type DialogProps = {
 	description?: unknown;
 	/** Whether to show a close button in the top-right. Defaults to true if title is provided. */
 	showClose?: boolean;
+	/** Optional custom classes for the close button. */
+	closeClassName?: string;
 	/** Main content of the dialog. */
 	content: unknown;
 } & Partial<HTMLDialogElement>;
@@ -45,6 +47,7 @@ export function Dialog({
 	title,
 	description,
 	showClose,
+	closeClassName = "",
 	content,
 	className = "",
 	...props
@@ -57,8 +60,10 @@ export function Dialog({
 				variant: "ghost",
 				color: "muted",
 				ariaLabel: "Close dialog",
-				className:
+				className: cn(
 					"absolute top-5 right-5 size-8 flex items-center justify-center rounded-full hover:bg-(--surface-3) transition-colors z-[1001]",
+					closeClassName,
+				),
 				onclick: (e) => {
 					const d = (e.currentTarget as HTMLElement).closest(
 						"dialog",

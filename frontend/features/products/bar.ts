@@ -91,18 +91,21 @@ export function renderProductsBar(
 					title: t("validateBtn"),
 					content: frag`${Icons.refresh(12)} ${t("validateBtn")}`,
 					color: "green",
+					className: "hidden md:inline-flex",
 					onclick: (e) => onValidate(e.currentTarget as HTMLButtonElement),
 				})}
 				${Button({
 					title: t("jsonReviewBtn"),
 					content: frag`${Icons.desc(12)} ${t("jsonReviewBtn")}`,
 					color: "indigo",
+					className: "hidden md:inline-flex",
 					onclick: onJsonReviewOpen,
 				})}
 				${Button({
 					title: t("exportBtn"),
 					content: frag`${Icons.download(12)} ${t("exportBtn")}`,
 					color: "blue",
+					className: "hidden md:inline-flex",
 					onclick: onExport,
 				})}
 				${Button({
@@ -118,7 +121,7 @@ export function renderProductsBar(
 	`;
 
 	ui.resultsBarContainer = html`
-		<div class="sticky top-0 z-10" style="background:var(--bg)">
+		<div class="sticky top-0 z-30" style="background:var(--bg)">
 			${ui.resultsBarInner}
 		</div>
 	`;

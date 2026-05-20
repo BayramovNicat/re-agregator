@@ -42,6 +42,18 @@ export function Product({
 	let element: HTMLElement;
 
 	if (view === "grid") {
+		const bmarkBtnMob = Button({
+			variant: "square",
+			color: "yellow",
+			active: bookmarked,
+			title: t("btnSave"),
+			ariaLabel: t("btnSave"),
+			className: "rounded-full bg-black/60 border-none text-white backdrop-blur-sm shadow-sm size-7.5 hover:bg-black/80 !text-white [&.on]:!text-(--yellow)",
+			dataset: { action: "bmark" },
+			content: Icons.bookmark({ size: 12, fill: bookmarked }),
+		});
+
+
 		const barW = Math.min(100, Math.max(2, property.discount_percent * 2.5));
 		const ago = timeAgo(property.posted_date);
 
@@ -132,14 +144,21 @@ export function Product({
 		const imgCount = property.image_urls?.length ?? 0;
 		const thumb = thumbUrl
 			? html`<div
-					class="relative rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3)"
+					class="relative rounded-(--r) overflow-hidden -mx-4 -mt-4 mb-0.5 h-40 bg-(--surface-3) max-[480px]:-mx-2.5 max-[480px]:-mt-2.5 max-[480px]:h-28 max-[480px]:mb-1.5"
 				>
 					${Image({
 						src: toThumbUrl(thumbUrl),
 						className: "w-full h-full object-cover",
 					})}
+					<div class="absolute top-2 right-2 flex items-center gap-1.5 z-2 min-[481px]:hidden">
+						${bmarkBtnMob}
+					</div>
 				</div>`
-			: null;
+			: html`<div class="relative min-[481px]:hidden h-1">
+					<div class="absolute top-0 right-0 flex items-center gap-1.5 z-2">
+						${bmarkBtnMob}
+					</div>
+				</div>`;
 
 		if (thumb && imgCount > 1) {
 			const badge = html`<span
@@ -161,37 +180,47 @@ export function Product({
       border
       rounded-(--r-lg)
       p-4
+      max-[480px]:p-2.5
       flex flex-col
       gap-3.5
+      max-[480px]:gap-2
       cursor-pointer
       transition-[border-color,box-shadow,transform]
       duration-200
       hover:shadow-[0_6px_28px_rgba(0,0,0,0.35)]
       hover:-translate-y-0.5
       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent) focus-visible:ring-offset-2 focus-visible:ring-offset-(--bg)
+      relative
       ${isNew ? "new-deal-anim" : ""}"
 			style="border-color:${
 				property.tier === "Overpriced" ? "var(--red-b)" : "var(--border)"
 			}"
 		>
 			${thumb}
-			<div class="flex justify-between items-start gap-2">
-				<div class="min-w-0">
-					<div class="text-xs text-(--muted) mb-0.75 tracking-tight">
+			<div class="flex justify-between items-start gap-2 max-[480px]:flex-col max-[480px]:items-start max-[480px]:gap-1">
+				<div class="min-w-0 w-full">
+					<div class="text-xs text-(--muted) mb-0.75 tracking-tight max-[480px]:text-[10px] max-[480px]:mb-0.5">
 						${property.location_name ?? property.district ?? "—"}
 					</div>
-					<div class="text-xl font-bold tracking-[-0.5px] leading-[1.1]">
-						₼ ${fmt(property.price)}
+					<div class="flex items-baseline gap-1.5">
+						<span class="text-xl max-[480px]:text-base font-bold tracking-[-0.5px] leading-[1.1]">
+							₼ ${fmt(property.price)}
+						</span>
+						<span class="text-[11px] font-bold max-[480px]:inline hidden" style="color:${tier.c}">
+							${property.discount_percent >= 0 ? "-" : "+"}${Math.abs(
+								property.discount_percent,
+							)}%
+						</span>
 					</div>
 				</div>
 				<span
-					class="inline-flex items-center text-[10px] font-semibold tracking-wider px-2 py-0.75 rounded-full border border-current whitespace-nowrap"
+					class="inline-flex items-center text-[10px] font-semibold tracking-wider px-2 py-0.75 rounded-full border border-current whitespace-nowrap max-[480px]:text-[8px] max-[480px]:px-1.5 max-[480px]:py-0.5 max-[480px]:mt-1"
 					style="color:${tier.c};background:${tier.bg};border-color:${tier.b}"
 					title="${tierTip}"
 					>${tTier(property.tier)}</span
 				>
 			</div>
-			<div>
+			<div class="max-[480px]:hidden">
 				<div class="flex items-center justify-between mb-1.75">
 					<span class="text-xs text-(--muted)"
 						>${t("marketAvg")}
@@ -213,7 +242,7 @@ export function Product({
 					></div>
 				</div>
 			</div>
-			<div class="grid grid-cols-4 gap-1.5">
+			<div class="grid grid-cols-4 gap-1.5 max-[480px]:hidden">
 				${StatBox({
 					label: t("area"),
 					value: fmt(property.area_sqm, 1),
@@ -222,20 +251,23 @@ export function Product({
 				${StatBox({ label: t("rooms"), value: property.rooms ?? "—" })}
 				${StatBox({ label: t("floor"), value: floorStr })}
 			</div>
+			<div class="hidden max-[480px]:block text-[11px] text-(--muted) truncate leading-tight mt-0.5">
+				${fmt(property.area_sqm, 1)}m² · ${property.rooms ?? "—"} ${t("rooms_")} · ${floorStr}
+			</div>
 			${
 				tags.length
-					? html`<div class="flex flex-wrap gap-1.25">${tags}</div>`
+					? html`<div class="flex flex-wrap gap-1.25 max-[480px]:hidden">${tags}</div>`
 					: ""
 			}
-			<div class="flex items-center justify-between mt-auto">
+			<div class="flex items-center justify-between mt-auto max-[480px]:mt-1">
 				<a
-					class="inline-flex items-center gap-1.25 text-xs text-(--muted) transition-colors duration-150 hover:text-(--text)"
+					class="inline-flex items-center gap-1.25 text-xs max-[480px]:text-[10px] text-(--muted) transition-colors duration-150 hover:text-(--text)"
 					href="${property.source_url}"
 					target="_blank"
 					rel="noopener noreferrer"
 					>${t("viewListing")} ${Icons.external(10)}</a
 				>
-				<div class="flex items-center gap-1">
+				<div class="flex items-center gap-1 max-[480px]:hidden">
 					${galleryBtn}${bmarkBtn}${hideBtn}
 				</div>
 			</div>

@@ -65,7 +65,7 @@ export function renderPropertyDetailLayout(
 
 	ui.mapCtEl = html`<div class="w-full h-full bg-(--surface-3)"></div>`;
 	ui.mapSecEl = html`<div
-		class="flex-1 min-h-0 border-t border-(--border) hidden h-full"
+		class="flex-1 min-h-0 border-t border-(--border) hidden h-48 md:h-full shrink-0"
 	>
 		${ui.mapCtEl}
 	</div>`;
@@ -109,17 +109,17 @@ export function renderPropertyDetailLayout(
 	}) as HTMLButtonElement;
 
 	const leftCol = html`
-		<div class="flex-1 min-w-0 overflow-hidden bg-(--surface) flex flex-col">
-			<div class="flex-1 min-h-0 overflow-hidden">${ui.gallery}</div>
+		<div class="w-full md:flex-1 min-w-0 bg-(--surface) flex flex-col h-auto md:h-full shrink-0">
+			<div class="h-64 md:h-auto md:flex-1 min-h-0 overflow-hidden">${ui.gallery}</div>
 			${ui.mapSecEl}
 		</div>
 	`;
 
 	const rightCol = html`
 		<div
-			class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-l border-(--border)"
+			class="w-full md:w-95 shrink-0 flex flex-col bg-(--surface-2) border-t md:border-t-0 md:border-l border-(--border) h-auto md:h-full"
 		>
-			<div class="p-6 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
+			<div class="p-5 md:p-6 flex-1 overflow-y-visible md:overflow-y-auto space-y-5 md:space-y-6 custom-scrollbar">
 				${ui.endedBannerEl}
 
 				<!-- Core Info -->
@@ -168,7 +168,7 @@ export function renderPropertyDetailLayout(
 
 			<!-- Sticky Actions -->
 			<div
-				class="p-6 border-t border-(--border) bg-(--surface) space-y-4 shrink-0"
+				class="p-5 md:p-6 border-t border-(--border) bg-(--surface) space-y-4 shrink-0 max-md:absolute max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:z-30 max-md:shadow-[0_-8px_24px_rgba(0,0,0,0.12)]"
 			>
 				${ui.linkEl}
 				<div class="flex items-center justify-center gap-3">
@@ -182,9 +182,12 @@ export function renderPropertyDetailLayout(
 		id: "prop-detail-modal",
 		maxWidth: "1150px",
 		showClose: true,
+		closeClassName: "bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-95 duration-200",
 		className: "text-(--text) h-full flex-1 min-h-0",
 		content: html`
-			<div class="flex flex-col md:flex-row h-full min-h-0">
+			<div
+				class="flex flex-col md:flex-row h-full min-h-0 overflow-y-auto md:overflow-y-hidden pb-44 md:pb-0 bg-(--surface-2)"
+			>
 				${leftCol} ${rightCol}
 			</div>
 		`,
