@@ -4,6 +4,12 @@ import { CloseableChip } from "@/ui/chip";
 import { getBooleanFilters, getNumericFilters } from "./constants";
 import type { SearchUI } from "./types";
 
+const categoryLabels: Record<string, string> = {
+	new: t("newBuild"),
+	old: t("secondary"),
+	house: t("house"),
+};
+
 /**
  * Updates the filter chips display based on current UI state.
  */
@@ -49,8 +55,10 @@ export function refreshFilterChips(ui: SearchUI, onSearch: () => void): void {
 	}
 
 	if (ui.categorySelect.value) {
+		const label =
+			categoryLabels[ui.categorySelect.value] ?? ui.categorySelect.value;
 		activeChips.push(
-			createChip(`${t("chipCategory")}: ${ui.categorySelect.value}`, () => {
+			createChip(`${t("chipCategory")}: ${label}`, () => {
 				ui.categorySelect.value = "";
 			}),
 		);

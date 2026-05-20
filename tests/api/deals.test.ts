@@ -209,7 +209,7 @@ describe("public API", () => {
 	test("seeded category and boolean filters narrow results", async () => {
 		if (skipIfNoSeed()) return;
 		const { res, body } = await getJson(
-			"/api/deals/undervalued?location=__all__&threshold=0&category=Yeni%20tikili&hasDocument=true&hasRepair=true&limit=20&offset=0",
+			"/api/deals/undervalued?location=__all__&threshold=0&category=new&hasDocument=true&hasRepair=true&limit=20&offset=0",
 		);
 
 		expect(res.status).toBe(200);
@@ -226,7 +226,7 @@ describe("public API", () => {
 		expect(
 			data.every(
 				(deal) =>
-					deal.category === "Yeni tikili" &&
+					deal.category === "new" &&
 					deal.has_document === true &&
 					deal.has_repair === true,
 			),

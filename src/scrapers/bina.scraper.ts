@@ -13,6 +13,7 @@
  */
 
 import { slugToDistrict } from "@/utils/district-normalizer.js";
+import { normalizePropertyCategory } from "@/utils/property-category.js";
 import {
 	BaseScraper,
 	type ScrapedListing,
@@ -236,7 +237,7 @@ export class BinaScraper extends BaseScraper {
 						rooms: node.rooms ?? undefined,
 						floor: node.floor ?? undefined,
 						total_floors: node.floors ?? undefined,
-						category: detail?.category?.name,
+						category: normalizePropertyCategory(detail?.category?.name),
 						has_document: node.hasBillOfSale ?? undefined,
 						has_mortgage: node.hasMortgage ?? undefined,
 						has_repair: node.hasRepair ?? undefined,

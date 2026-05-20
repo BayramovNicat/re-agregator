@@ -17,6 +17,7 @@
 		"test": "bun test",
 		"test:e2e": "bunx playwright test",
 		"scrape:db": "bun scripts/scrape-to-db.ts",
+		"db:normalize-categories": "bun scripts/normalize-property-categories.ts",
 		"update:active-mortgages": "bun scripts/update-active-mortgages.ts",
 		"verify": "bun run typecheck && bun test && bun run test:e2e",
 		"verify:db": "bun scripts/verify-db.ts"

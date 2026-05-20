@@ -88,9 +88,9 @@ export function renderSearchFilters(
 		className: "w-full",
 		options: [
 			{ value: "", label: t("any") },
-			{ value: "Yeni tikili", label: t("newBuild") },
-			{ value: "Köhnə tikili", label: t("secondary") },
-			{ value: "Həyət evi/Bağ evi", label: t("house") },
+			{ value: "new", label: t("newBuild") },
+			{ value: "old", label: t("secondary") },
+			{ value: "house", label: t("house") },
 		],
 		onchange: onFilterChange,
 	});

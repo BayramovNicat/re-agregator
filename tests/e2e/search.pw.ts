@@ -132,15 +132,13 @@ test("advanced filters cover category, mortgage, description, and booleans", asy
 	});
 
 	await page.getByRole("button", { name: /advanced filters/i }).click();
-	await page.getByLabel("Category").selectOption("Yeni tikili");
+	await page.getByLabel("Category").selectOption("new");
 	await page.getByLabel("Active mortgage").selectOption("true");
 	await page.getByLabel("Description keyword").fill("corner");
 	await page.getByText("Has document").click();
 	await page.getByText("Urgent only").click();
 
-	await expect
-		.poll(() => searchUrls.at(-1) ?? "")
-		.toContain("category=Yeni+tikili");
+	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("category=new");
 	await expect
 		.poll(() => searchUrls.at(-1) ?? "")
 		.toContain("hasActiveMortgage=true");
@@ -151,14 +149,14 @@ test("advanced filters cover category, mortgage, description, and booleans", asy
 		.poll(() => searchUrls.at(-1) ?? "")
 		.toContain("hasDocument=true");
 	await expect.poll(() => searchUrls.at(-1) ?? "").toContain("isUrgent=true");
-	await expect(page.getByText("Category: Yeni tikili")).toBeVisible();
+	await expect(page.getByText("Category: New build")).toBeVisible();
 	await expect(page.getByText("Active mortgage: Yes")).toBeVisible();
 
 	await page.getByRole("button", { name: /clear filters/i }).click();
 	await expect(page.getByLabel("Description keyword")).toHaveValue("");
 	await expect
 		.poll(() => searchUrls.at(-1) ?? "")
-		.not.toContain("category=Yeni+tikili");
+		.not.toContain("category=new");
 });
 
 test("sort selection updates API params and persists", async ({ page }) => {
