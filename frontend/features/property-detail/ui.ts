@@ -182,7 +182,8 @@ export function renderPropertyDetailLayout(
 		id: "prop-detail-modal",
 		maxWidth: "1150px",
 		showClose: true,
-		closeClassName: "bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-95 duration-200",
+		closeClassName:
+			"bg-black/50 hover:bg-black/70 text-white border border-white/10 backdrop-blur-sm transition-all active:scale-95 duration-200",
 		className: "text-(--text) h-full flex-1 min-h-0",
 		content: html`
 			<div

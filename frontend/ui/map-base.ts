@@ -16,9 +16,11 @@ function ensureLeafletStyles(): Promise<void> {
 		link.href = "/leaflet.css";
 		link.onload = () => resolve();
 		link.onerror = () => resolve(); // Proceed even on error to avoid hanging
-		
+
 		// Insert before the first stylesheet to ensure our custom styles in styles.css can override Leaflet's defaults
-		const firstStylesheet = document.head.querySelector('link[rel="stylesheet"]');
+		const firstStylesheet = document.head.querySelector(
+			'link[rel="stylesheet"]',
+		);
 		if (firstStylesheet) {
 			document.head.insertBefore(link, firstStylesheet);
 		} else {

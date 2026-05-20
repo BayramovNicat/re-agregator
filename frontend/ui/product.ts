@@ -48,11 +48,11 @@ export function Product({
 			active: bookmarked,
 			title: t("btnSave"),
 			ariaLabel: t("btnSave"),
-			className: "rounded-full bg-black/60 border-none text-white backdrop-blur-sm shadow-sm size-7.5 hover:bg-black/80 !text-white [&.on]:!text-(--yellow)",
+			className:
+				"rounded-full bg-black/60 border-none text-white backdrop-blur-sm shadow-sm size-7.5 hover:bg-black/80 !text-white [&.on]:!text-(--yellow)",
 			dataset: { action: "bmark" },
 			content: Icons.bookmark({ size: 12, fill: bookmarked }),
 		});
-
 
 		const barW = Math.min(100, Math.max(2, property.discount_percent * 2.5));
 		const ago = timeAgo(property.posted_date);

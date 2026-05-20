@@ -120,7 +120,9 @@ input[type="number"] {
 	color: var(--text-2);
 	border: none;
 	border-bottom: 1px solid var(--border);
-	transition: background 0.15s ease, color 0.15s ease;
+	transition:
+		background 0.15s ease,
+		color 0.15s ease;
 }
 .leaflet-container .leaflet-control-zoom a:last-child {
 	border-bottom: none;
